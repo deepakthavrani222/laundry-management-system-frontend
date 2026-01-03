@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { useAuthStore } from '@/store/authStore'
+import { useTenancyTheme } from '@/contexts/TenancyThemeContext'
 import {
   Bell,
   Plus,
@@ -36,6 +37,7 @@ interface CustomerHeaderProps {
 
 export default function CustomerHeader({ onMenuClick, sidebarCollapsed = false }: CustomerHeaderProps) {
   const { user, _hasHydrated, logout } = useAuthStore()
+  const { theme } = useTenancyTheme()
   const [unreadCount, setUnreadCount] = useState(0)
   const [notifications, setNotifications] = useState<Notification[]>([])
   const [showNotifDropdown, setShowNotifDropdown] = useState(false)
@@ -177,7 +179,12 @@ export default function CustomerHeader({ onMenuClick, sidebarCollapsed = false }
         <div className="flex items-center space-x-1 sm:space-x-3 flex-shrink-0">
           {/* New Order Button */}
           <Link href="/customer/orders/new">
-            <Button className="bg-gradient-to-r from-teal-500 to-cyan-500 hover:from-teal-600 hover:to-cyan-600 text-white shadow-lg shadow-teal-500/30 text-xs sm:text-sm px-2 sm:px-4">
+            <Button 
+              className="text-white shadow-lg text-xs sm:text-sm px-2 sm:px-4"
+              style={{ 
+                background: `linear-gradient(to right, ${theme?.primaryColor || '#14b8a6'}, ${theme?.accentColor || '#06b6d4'})`,
+              }}
+            >
               <Plus className="w-4 h-4 sm:mr-2" />
               <span className="hidden sm:inline">New Order</span>
             </Button>
@@ -271,7 +278,12 @@ export default function CustomerHeader({ onMenuClick, sidebarCollapsed = false }
               onClick={handleUserClick}
               className="flex items-center space-x-3 p-2 rounded-xl hover:bg-gray-100 transition-colors cursor-pointer"
             >
-              <div className="w-9 h-9 bg-gradient-to-r from-teal-500 to-cyan-500 rounded-full flex items-center justify-center">
+              <div 
+                className="w-9 h-9 rounded-full flex items-center justify-center"
+                style={{ 
+                  background: `linear-gradient(to right, ${theme?.primaryColor || '#14b8a6'}, ${theme?.accentColor || '#06b6d4'})`,
+                }}
+              >
                 <span className="text-white text-sm font-medium">
                   {user?.name?.charAt(0).toUpperCase()}
                 </span>

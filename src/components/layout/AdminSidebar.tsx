@@ -21,6 +21,7 @@ import {
   Sparkles,
   LogOut,
   Ticket,
+  Palette,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useState, useEffect, createContext, useContext } from 'react'
@@ -40,6 +41,7 @@ const navigation = [
   { name: 'Payments', href: '/admin/payments', icon: CreditCard, permission: { module: 'performance', action: 'view' } },
   { name: 'Analytics', href: '/admin/analytics', icon: BarChart3, permission: { module: 'performance', action: 'view' } },
   { name: 'Staff', href: '/admin/staff', icon: UserCheck, permission: { module: 'staff', action: 'view' } },
+  { name: 'Branding', href: '/admin/branding', icon: Palette, permission: { module: 'settings', action: 'view' } },
   { name: 'Settings', href: '/admin/settings', icon: Settings, permission: { module: 'settings', action: 'view' } },
   { name: 'Help', href: '/admin/support', icon: HelpCircle, permission: null }, // Always visible
 ]

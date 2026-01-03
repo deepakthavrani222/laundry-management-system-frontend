@@ -4,6 +4,7 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useAuthStore } from '@/store/authStore'
+import { useTenancyTheme } from '@/contexts/TenancyThemeContext'
 import { 
   LayoutDashboard,
   ShoppingBag,
@@ -45,6 +46,7 @@ export default function CustomerSidebar({
 }: CustomerSidebarProps) {
   const pathname = usePathname()
   const { user, logout } = useAuthStore()
+  const { theme } = useTenancyTheme()
 
   const handleLogout = () => {
     logout()
@@ -93,11 +95,20 @@ export default function CustomerSidebar({
       <div className="flex-shrink-0 flex items-center justify-between h-16 px-4 border-b border-gray-200">
         {!collapsed && (
           <Link href="/" className="flex items-center space-x-3">
-            <div className="w-8 h-8 bg-gradient-to-r from-teal-500 to-cyan-500 rounded-lg flex items-center justify-center">
-              <Sparkles className="w-5 h-5 text-white" />
-            </div>
+            {theme?.logo ? (
+              <img src={theme.logo} alt={theme.name} className="w-8 h-8 object-contain rounded-lg" />
+            ) : (
+              <div 
+                className="w-8 h-8 rounded-lg flex items-center justify-center"
+                style={{ 
+                  background: `linear-gradient(to right, ${theme?.primaryColor || '#14b8a6'}, ${theme?.accentColor || '#06b6d4'})`,
+                }}
+              >
+                <Sparkles className="w-5 h-5 text-white" />
+              </div>
+            )}
             <div>
-              <h1 className="text-lg font-bold text-gray-900">LaundryPro</h1>
+              <h1 className="text-lg font-bold text-gray-900">{theme?.name || 'LaundryPro'}</h1>
             </div>
           </Link>
         )}
@@ -117,9 +128,19 @@ export default function CustomerSidebar({
 
       {/* User Info */}
       {!collapsed && user && (
-        <div className="flex-shrink-0 p-4 border-b border-gray-200 bg-gradient-to-r from-teal-50 to-cyan-50">
+        <div 
+          className="flex-shrink-0 p-4 border-b border-gray-200"
+          style={{ 
+            background: `linear-gradient(to right, ${theme?.primaryColor || '#14b8a6'}15, ${theme?.accentColor || '#06b6d4'}15)`,
+          }}
+        >
           <div className="flex items-center space-x-3">
-            <div className="w-10 h-10 bg-gradient-to-r from-teal-500 to-cyan-500 rounded-full flex items-center justify-center">
+            <div 
+              className="w-10 h-10 rounded-full flex items-center justify-center"
+              style={{ 
+                background: `linear-gradient(to right, ${theme?.primaryColor || '#14b8a6'}, ${theme?.accentColor || '#06b6d4'})`,
+              }}
+            >
               <span className="text-white font-medium text-sm">
                 {user.name?.charAt(0)?.toUpperCase() || 'U'}
               </span>
@@ -152,13 +173,16 @@ export default function CustomerSidebar({
               onClick={handleNavClick}
               className={`group flex items-center px-3 py-2.5 text-sm font-medium rounded-xl transition-all ${
                 isActive
-                  ? 'bg-gradient-to-r from-teal-500 to-cyan-500 text-white shadow-lg shadow-teal-500/30'
-                  : 'text-gray-700 hover:bg-teal-50'
+                  ? 'text-white shadow-lg'
+                  : 'text-gray-700 hover:bg-gray-100'
               }`}
+              style={isActive ? { 
+                background: `linear-gradient(to right, ${theme?.primaryColor || '#14b8a6'}, ${theme?.accentColor || '#06b6d4'})`,
+              } : undefined}
             >
               <Icon className={`flex-shrink-0 w-5 h-5 ${
                 collapsed ? 'mx-auto' : 'mr-3'
-              } ${isActive ? 'text-white' : 'text-gray-400 group-hover:text-teal-500'}`} />
+              } ${isActive ? 'text-white' : 'text-gray-400 group-hover:text-gray-600'}`} />
               {!collapsed && item.name}
             </Link>
           )

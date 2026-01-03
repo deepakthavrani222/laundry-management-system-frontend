@@ -24,6 +24,12 @@
     --input: 214.3 31.8% 91.4%;
     --ring: 221.2 83.2% 53.3%;
     --radius: 0.5rem;
+    
+    /* Tenancy theme variables (defaults) */
+    --tenancy-primary: #3B82F6;
+    --tenancy-secondary: #1E40AF;
+    --tenancy-accent: #60A5FA;
+    --tenancy-font: 'Inter', sans-serif;
   }
 
   .dark {
