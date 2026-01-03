@@ -10,6 +10,8 @@ const CENTER_ADMIN_MODULES = [
   { key: 'inventory', label: 'Inventory', icon: '📦' },
   { key: 'services', label: 'Services', icon: '🧺' },
   { key: 'customers', label: 'Customers', icon: '👤' },
+  { key: 'logistics', label: 'Logistics', icon: '🚚' },
+  { key: 'tickets', label: 'Support Tickets', icon: '🎫' },
   { key: 'performance', label: 'Performance', icon: '📊' },
   { key: 'settings', label: 'Branch Settings', icon: '⚙️' }
 ]
@@ -21,6 +23,8 @@ const CENTER_ADMIN_ADVANCED_ACTIONS: Record<string, string[]> = {
   staff: ['assignShift', 'manageAttendance'],
   inventory: ['restock', 'writeOff'],
   services: ['updatePricing'],
+  logistics: ['assign', 'track'],
+  tickets: ['assign', 'resolve', 'escalate'],
   performance: ['export']
 }
 
@@ -37,6 +41,8 @@ const ACTION_LABELS: Record<string, string> = {
   restock: 'Restock',
   writeOff: 'Write Off',
   updatePricing: 'Update Pricing',
+  resolve: 'Resolve',
+  escalate: 'Escalate',
   export: 'Export'
 }
 
@@ -226,6 +232,8 @@ export const getDefaultCenterAdminPermissions = () => ({
   inventory: { view: false, create: false, update: false, delete: false, restock: false, writeOff: false },
   services: { view: false, create: false, update: false, delete: false, updatePricing: false },
   customers: { view: false, create: false, update: false, delete: false },
+  logistics: { view: false, create: false, update: false, delete: false, assign: false, track: false },
+  tickets: { view: false, create: false, update: false, delete: false, assign: false, resolve: false, escalate: false },
   performance: { view: false, create: false, update: false, delete: false, export: false },
   settings: { view: false, create: false, update: false, delete: false }
 })
@@ -237,6 +245,8 @@ export const getFullCenterAdminPermissions = () => ({
   inventory: { view: true, create: true, update: true, delete: true, restock: true, writeOff: true },
   services: { view: true, create: false, update: true, delete: false, updatePricing: false },
   customers: { view: true, create: false, update: true, delete: false },
+  logistics: { view: true, create: true, update: true, delete: false, assign: true, track: true },
+  tickets: { view: true, create: true, update: true, delete: false, assign: true, resolve: true, escalate: true },
   performance: { view: true, create: false, update: false, delete: false, export: true },
   settings: { view: true, create: false, update: true, delete: false }
 })

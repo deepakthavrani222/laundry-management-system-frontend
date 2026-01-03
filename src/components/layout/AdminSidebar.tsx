@@ -31,15 +31,15 @@ const navigation = [
   { name: 'Dashboard', href: '/admin/dashboard', icon: Home, permission: null }, // Always visible
   { name: 'Orders', href: '/admin/orders', icon: ShoppingBag, permission: { module: 'orders', action: 'view' } },
   { name: 'Customers', href: '/admin/customers', icon: Users, permission: { module: 'customers', action: 'view' } },
-  { name: 'Branches', href: '/admin/branches', icon: Building2, permission: { module: 'branches', action: 'view' } },
+  { name: 'Inventory', href: '/admin/inventory', icon: Package, permission: { module: 'inventory', action: 'view' } },
   { name: 'Services', href: '/admin/services', icon: Sparkles, permission: { module: 'services', action: 'view' } },
-  { name: 'Logistics', href: '/admin/logistics', icon: Truck, permission: { module: 'orders', action: 'assign' } },
-  { name: 'Support Tickets', href: '/admin/tickets', icon: Ticket, permission: { module: 'support', action: 'view' } },
+  { name: 'Logistics', href: '/admin/logistics', icon: Truck, permission: { module: 'logistics', action: 'view' } },
+  { name: 'Support Tickets', href: '/admin/tickets', icon: Ticket, permission: { module: 'tickets', action: 'view' } },
   { name: 'Complaints', href: '/admin/complaints', icon: MessageSquare, permission: { module: 'customers', action: 'view' } },
-  { name: 'Refunds', href: '/admin/refunds', icon: RefreshCw, permission: { module: 'orders', action: 'refund' } },
-  { name: 'Payments', href: '/admin/payments', icon: CreditCard, permission: { module: 'financial', action: 'view' } },
-  { name: 'Analytics', href: '/admin/analytics', icon: BarChart3, permission: { module: 'reports', action: 'view' } },
-  { name: 'Users', href: '/admin/staff', icon: UserCheck, permission: { module: 'users', action: 'view' } },
+  { name: 'Refunds', href: '/admin/refunds', icon: RefreshCw, permission: { module: 'orders', action: 'cancel' } },
+  { name: 'Payments', href: '/admin/payments', icon: CreditCard, permission: { module: 'performance', action: 'view' } },
+  { name: 'Analytics', href: '/admin/analytics', icon: BarChart3, permission: { module: 'performance', action: 'view' } },
+  { name: 'Staff', href: '/admin/staff', icon: UserCheck, permission: { module: 'staff', action: 'view' } },
   { name: 'Settings', href: '/admin/settings', icon: Settings, permission: { module: 'settings', action: 'view' } },
   { name: 'Help', href: '/admin/support', icon: HelpCircle, permission: null }, // Always visible
 ]
