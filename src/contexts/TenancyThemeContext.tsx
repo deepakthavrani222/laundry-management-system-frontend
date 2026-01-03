@@ -57,13 +57,19 @@ export function TenancyThemeProvider({ children, subdomain }: TenancyThemeProvid
       const hostname = window.location.hostname;
       // Extract subdomain (e.g., "cleanfresh" from "cleanfresh.laundry-platform.com")
       const parts = hostname.split('.');
-      if (parts.length > 2 || (parts.length === 2 && !['localhost', 'vercel'].includes(parts[1]))) {
+      // Only extract subdomain if we have more than 2 parts (e.g., sub.domain.com)
+      // and it's not a known deployment domain
+      const knownDomains = ['localhost', 'vercel', 'app', 'onrender', 'netlify', 'pages', 'dev'];
+      if (parts.length > 2 && !knownDomains.some(d => hostname.includes(d))) {
         tenancySubdomain = parts[0];
       }
     }
 
-    // Skip fetching for localhost without subdomain
-    if (!tenancySubdomain || tenancySubdomain === 'localhost' || tenancySubdomain === 'www') {
+    // Skip fetching for localhost, deployment platforms, or no subdomain
+    if (!tenancySubdomain || 
+        tenancySubdomain === 'localhost' || 
+        tenancySubdomain === 'www' ||
+        tenancySubdomain.includes('laundry-management')) {
       setTheme(defaultTheme);
       return;
     }
