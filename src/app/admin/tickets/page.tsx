@@ -157,7 +157,7 @@ export default function AdminTicketsPage() {
     }
   }
 
-  if (loading && tickets.length === 0) {
+  if (loading && (!Array.isArray(tickets) || tickets.length === 0)) {
     return (
       <div className="space-y-6 mt-16">
         <div className="animate-pulse">
@@ -203,7 +203,7 @@ export default function AdminTicketsPage() {
             <div>
               <p className="text-sm text-gray-600">Open</p>
               <p className="text-2xl font-bold text-red-600">
-                {tickets.filter(t => t.status === 'open').length}
+                {Array.isArray(tickets) ? tickets.filter(t => t.status === 'open').length : 0}
               </p>
             </div>
             <AlertCircle className="w-8 h-8 text-red-500" />
@@ -215,7 +215,7 @@ export default function AdminTicketsPage() {
             <div>
               <p className="text-sm text-gray-600">In Progress</p>
               <p className="text-2xl font-bold text-blue-600">
-                {tickets.filter(t => t.status === 'in_progress').length}
+                {Array.isArray(tickets) ? tickets.filter(t => t.status === 'in_progress').length : 0}
               </p>
             </div>
             <Clock className="w-8 h-8 text-blue-500" />
@@ -227,7 +227,7 @@ export default function AdminTicketsPage() {
             <div>
               <p className="text-sm text-gray-600">Resolved</p>
               <p className="text-2xl font-bold text-green-600">
-                {tickets.filter(t => t.status === 'resolved').length}
+                {Array.isArray(tickets) ? tickets.filter(t => t.status === 'resolved').length : 0}
               </p>
             </div>
             <CheckCircle className="w-8 h-8 text-green-500" />
@@ -299,7 +299,7 @@ export default function AdminTicketsPage() {
         </div>
         
         <div className="divide-y divide-gray-200">
-          {tickets.length === 0 ? (
+          {!Array.isArray(tickets) || tickets.length === 0 ? (
             <div className="p-12 text-center">
               <Ticket className="w-12 h-12 text-gray-400 mx-auto mb-4" />
               <h3 className="text-lg font-medium text-gray-900 mb-2">No Tickets Found</h3>
