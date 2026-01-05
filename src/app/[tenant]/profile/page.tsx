@@ -82,7 +82,7 @@ export default function TenantProfilePage() {
     }
   }
 
-  const handleLogout = () => { logout(); router.push(`/${tenant}`) }
+  const handleLogout = () => { logout(); router.push(`/auth/login?redirect=${encodeURIComponent(`/${tenant}/profile`)}`) }
 
   if (!isAuthenticated) return null
 

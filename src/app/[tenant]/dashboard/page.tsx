@@ -294,7 +294,7 @@ export default function TenantDashboard() {
 
   const handleLogout = () => {
     logout()
-    router.push(`/${tenant}`)
+    router.push(`/auth/login?redirect=${encodeURIComponent(`/${tenant}/dashboard`)}`)
   }
 
   if (!isAuthenticated) return null

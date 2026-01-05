@@ -123,7 +123,7 @@ export default function TenantOrderDetail() {
 
   const handleLogout = () => {
     logout()
-    router.push(`/${tenant}`)
+    router.push(`/auth/login?redirect=${encodeURIComponent(`/${tenant}/orders/${orderId}`)}`)
   }
 
   if (!isAuthenticated) return null

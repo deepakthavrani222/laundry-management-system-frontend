@@ -33,10 +33,10 @@ export default function LoginPage() {
       setAuth(user, token)
       toast.success('Login successful!')
 
-      // Handle redirect URL (decode if needed)
-      if (redirectUrl && user.role === 'customer') {
+      // Handle redirect URL for all users (decode if needed)
+      if (redirectUrl) {
         const decodedUrl = decodeURIComponent(redirectUrl)
-        console.log('Redirecting customer to:', decodedUrl)
+        console.log('Redirecting to:', decodedUrl)
         setTimeout(() => {
           router.push(decodedUrl)
         }, 100)
