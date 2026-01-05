@@ -23,6 +23,8 @@ interface LaundryMasterTemplateProps {
   onLanguageChange?: (language: Language) => void
   onTemplateChange?: (template: string) => void
   currentTemplate?: string
+  isTenantPage?: boolean
+  tenantName?: string
 }
 
 // Professional Color Palettes - Harmonious combinations
@@ -635,12 +637,25 @@ function SettingsPanel({
   )
 }
 
-export default function LaundryMasterTemplate({ themeColor, isAuthenticated, onBookNow, onColorChange, onLanguageChange, onTemplateChange, currentTemplate }: LaundryMasterTemplateProps) {
+export default function LaundryMasterTemplate({ themeColor, isAuthenticated, onBookNow, onColorChange, onLanguageChange, onTemplateChange, currentTemplate, isTenantPage, tenantName }: LaundryMasterTemplateProps) {
   // Use language hook for reactive translations
   const { language, t } = useLanguage()
   const colors = colorClasses[themeColor]
   const [isScrolled, setIsScrolled] = useState(false)
   const [scheme, setScheme] = useState<SchemeMode>('light')
+  
+  // Handle logout - redirect to tenant page if on tenant, otherwise to home
+  const handleLogout = () => {
+    useAuthStore.getState().logout()
+    if (isTenantPage && tenantName) {
+      const pathParts = window.location.pathname.split('/')
+      if (pathParts.length > 1 && pathParts[1]) {
+        window.location.href = `/${pathParts[1]}`
+        return
+      }
+    }
+    window.location.href = '/'
+  }
   
   // Get computed theme colors based on scheme
   const theme = getThemeColors(themeColor, scheme)
@@ -777,7 +792,7 @@ export default function LaundryMasterTemplate({ themeColor, isAuthenticated, onB
                         </Link>
                         <hr style={{ borderColor: theme.border }} className="my-2" />
                         <button 
-                          onClick={() => { useAuthStore.getState().logout(); window.location.href = '/' }} 
+                          onClick={handleLogout} 
                           className="flex items-center w-full px-4 py-2 text-red-500 hover:bg-red-50/10"
                         >
                           <LogOut className="w-4 h-4 mr-3" />{t('nav.logout')}
@@ -1295,3 +1310,4 @@ export default function LaundryMasterTemplate({ themeColor, isAuthenticated, onB
     </div>
   )
 }
+

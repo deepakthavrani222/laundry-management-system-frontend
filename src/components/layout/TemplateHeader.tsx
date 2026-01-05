@@ -102,6 +102,16 @@ export default function TemplateHeader() {
     }
   }
 
+  // Handle Logout - redirect to tenant page if on tenant, otherwise to home
+  const handleLogout = () => {
+    useAuthStore.getState().logout()
+    if (isTenantPage && tenant?.slug) {
+      window.location.href = `/${tenant.slug}`
+    } else {
+      window.location.href = '/'
+    }
+  }
+
   // Dark mode toggle handler
   const toggleDarkMode = () => {
     const newMode = !isDarkMode
@@ -300,7 +310,7 @@ export default function TemplateHeader() {
                         </div>
                         <hr className={`my-2 ${isDarkMode ? 'border-gray-700' : ''}`} />
                         <button 
-                          onClick={() => { useAuthStore.getState().logout(); window.location.href = '/' }} 
+                          onClick={handleLogout} 
                           className={`flex items-center w-full px-4 py-2 text-red-600 ${isDarkMode ? 'hover:bg-red-900/30' : 'hover:bg-red-50'}`}
                         >
                           <LogOut className="w-4 h-4 mr-3" />{t('nav.logout')}
@@ -443,7 +453,7 @@ export default function TemplateHeader() {
                         </div>
                         <hr className={`my-2 ${isDarkMode ? 'border-gray-700' : ''}`} />
                         <button 
-                          onClick={() => { useAuthStore.getState().logout(); window.location.href = '/' }} 
+                          onClick={handleLogout} 
                           className={`flex items-center w-full px-4 py-2 text-red-600 ${isDarkMode ? 'hover:bg-red-900/30' : 'hover:bg-red-50'}`}
                         >
                           <LogOut className="w-4 h-4 mr-3" />{t('nav.logout')}
@@ -596,7 +606,7 @@ export default function TemplateHeader() {
                         </div>
                         <hr className={`my-2 ${isDarkMode ? 'border-gray-700' : ''}`} />
                         <button 
-                          onClick={() => { useAuthStore.getState().logout(); window.location.href = '/' }} 
+                          onClick={handleLogout} 
                           className={`flex items-center w-full px-4 py-2.5 text-red-500 ${isDarkMode ? 'hover:bg-red-900/30' : 'hover:bg-red-50'}`}
                         >
                           <LogOut className="w-4 h-4 mr-3" />{t('nav.logout')}
@@ -758,7 +768,7 @@ export default function TemplateHeader() {
                       </div>
                       <hr className={`my-2 ${isDarkMode ? 'border-gray-700' : ''}`} />
                       <button 
-                        onClick={() => { useAuthStore.getState().logout(); window.location.href = '/' }}
+                        onClick={handleLogout}
                         className={`flex items-center w-full px-4 py-2 text-red-600 ${isDarkMode ? 'hover:bg-red-900/30' : 'hover:bg-red-50'}`}
                       >
                         <LogOut className="w-4 h-4 mr-3" />{t('nav.logout')}
@@ -795,3 +805,4 @@ export default function TemplateHeader() {
     </nav>
   )
 }
+

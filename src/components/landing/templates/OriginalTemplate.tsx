@@ -25,6 +25,9 @@ interface OriginalTemplateProps {
   onLanguageChange?: (language: Language) => void
   onTemplateChange?: (template: string) => void
   currentTemplate?: string
+  isTenantPage?: boolean
+  tenantName?: string
+  tenantLogo?: string
 }
 
 type SchemeMode = 'light' | 'dark' | 'auto'
@@ -753,9 +756,24 @@ function ScrollBannerSection({ isAuthenticated, onGalleryVisible, colors, themeC
 
 
 // Main Component
-export default function OriginalTemplate({ themeColor, isAuthenticated, user, onBookNow, onColorChange, onLanguageChange, onTemplateChange, currentTemplate }: OriginalTemplateProps) {
+export default function OriginalTemplate({ themeColor, isAuthenticated, user, onBookNow, onColorChange, onLanguageChange, onTemplateChange, currentTemplate, isTenantPage, tenantName }: OriginalTemplateProps) {
   // Use language hook for reactive translations
   const { language, t } = useLanguage()
+  const router = useRouter()
+  
+  // Handle logout - redirect to tenant page if on tenant, otherwise to home
+  const handleLogout = () => {
+    useAuthStore.getState().logout()
+    if (isTenantPage && tenantName) {
+      // Get tenant slug from URL
+      const pathParts = window.location.pathname.split('/')
+      if (pathParts.length > 1 && pathParts[1]) {
+        window.location.href = `/${pathParts[1]}`
+        return
+      }
+    }
+    window.location.href = '/'
+  }
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [isDarkTheme, setIsDarkTheme] = useState(false)
   const [scheme, setScheme] = useState<SchemeMode>('light')
@@ -903,7 +921,7 @@ export default function OriginalTemplate({ themeColor, isAuthenticated, user, on
                         <Link href="/customer/orders" className="flex items-center px-4 py-2 hover:opacity-80" style={{ color: theme.textSecondary }}><ShoppingBag className="w-4 h-4 mr-3" />{t('nav.myOrders')}</Link>
                         <Link href="/customer/addresses" className="flex items-center px-4 py-2 hover:opacity-80" style={{ color: theme.textSecondary }}><MapPin className="w-4 h-4 mr-3" />{t('nav.addresses')}</Link>
                         <hr style={{ borderColor: theme.border }} className="my-2" />
-                        <button onClick={() => { useAuthStore.getState().logout(); window.location.href = '/' }} className="flex items-center w-full px-4 py-2 text-red-500 hover:bg-red-50/10"><LogOut className="w-4 h-4 mr-3" />{t('nav.logout')}</button>
+                        <button onClick={handleLogout} className="flex items-center w-full px-4 py-2 text-red-500 hover:bg-red-50/10"><LogOut className="w-4 h-4 mr-3" />{t('nav.logout')}</button>
                       </div>
                     </div>
                   </div>
@@ -1093,3 +1111,4 @@ export default function OriginalTemplate({ themeColor, isAuthenticated, user, on
     </div>
   )
 }
+
