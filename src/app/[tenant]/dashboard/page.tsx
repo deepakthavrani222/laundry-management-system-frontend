@@ -330,8 +330,8 @@ export default function TenantDashboard() {
       )}
 
       {/* Sidebar */}
-      <aside className={`fixed lg:static inset-y-0 left-0 z-50 bg-white border-r border-gray-200 transform transition-all duration-300 lg:transform-none ${sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'} ${sidebarCollapsed ? 'w-20' : 'w-72'}`}>
-        <div className="flex flex-col h-full">
+      <aside className={`fixed inset-y-0 left-0 z-50 bg-white border-r border-gray-200 transform transition-all duration-300 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'} ${sidebarCollapsed ? 'w-20' : 'w-72'}`}>
+        <div className="flex flex-col h-full overflow-hidden">
           {/* Sidebar Header */}
           <div className="p-4 border-b border-gray-100">
             <div className="flex items-center justify-between">
@@ -443,9 +443,9 @@ export default function TenantDashboard() {
       </aside>
 
       {/* Main Content */}
-      <div className="flex-1 flex flex-col min-h-screen">
-        {/* Top Header */}
-        <header className="bg-white border-b border-gray-200 sticky top-0 z-30">
+      <div className={`flex-1 flex flex-col min-h-screen transition-all duration-300 ${sidebarCollapsed ? 'lg:ml-20' : 'lg:ml-72'}`}>
+        {/* Top Header - Fixed */}
+        <header className={`bg-white border-b border-gray-200 fixed top-0 right-0 z-30 transition-all duration-300 ${sidebarCollapsed ? 'left-0 lg:left-20' : 'left-0 lg:left-72'}`}>
           <div className="flex items-center justify-between px-4 lg:px-8 py-4">
             <div className="flex items-center gap-4">
               <button className="lg:hidden p-2 hover:bg-gray-100 rounded-lg" onClick={() => setSidebarOpen(true)}>
@@ -466,8 +466,8 @@ export default function TenantDashboard() {
           </div>
         </header>
 
-        {/* Dashboard Content */}
-        <main className="flex-1 p-4 lg:p-8 space-y-6 overflow-y-auto">
+        {/* Dashboard Content - Add margin-top for fixed header */}
+        <main className="flex-1 p-4 lg:p-8 space-y-6 overflow-y-auto mt-16">
 
           {/* Stats Cards */}
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
