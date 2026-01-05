@@ -5,9 +5,9 @@ import hiMessages from '../../messages/hi.json'
 export type Language = 'en' | 'es' | 'hi'
 
 export const languages = [
-  { id: 'en', name: 'English', flag: '🇺🇸' },
-  { id: 'es', name: 'Español', flag: '🇪🇸' },
-  { id: 'hi', name: 'हिंदी', flag: '🇮🇳' },
+  { id: 'en' as Language, name: 'English', flag: '🇺🇸' },
+  { id: 'es' as Language, name: 'Español', flag: '🇪🇸' },
+  { id: 'hi' as Language, name: 'हिंदी', flag: '🇮🇳' },
 ]
 
 // Type for nested translation object

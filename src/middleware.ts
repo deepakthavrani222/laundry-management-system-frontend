@@ -1,6 +1,27 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
+// Reserved routes that should not be treated as tenant slugs
+const RESERVED_ROUTES = [
+  'admin',
+  'auth',
+  'api',
+  'branch',
+  'center-admin',
+  'customer',
+  'debug-login',
+  'help',
+  'pricing',
+  'role-switcher',
+  'services',
+  'test-auth',
+  'track',
+  '_next',
+  'favicon.ico',
+  'images',
+  'public',
+]
+
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
   
@@ -10,8 +31,16 @@ export function middleware(request: NextRequest) {
   // Check if the current path is a public route
   const isPublicRoute = publicRoutes.some(route => pathname === route)
   
-  // If it's a public route, allow access
-  if (isPublicRoute) {
+  // Get the first segment of the path
+  const firstSegment = pathname.split('/')[1]
+  
+  // Check if it's a tenant route (not reserved)
+  const isTenantRoute = firstSegment && 
+    !RESERVED_ROUTES.includes(firstSegment) && 
+    !firstSegment.startsWith('_')
+  
+  // If it's a public route or tenant route, allow access
+  if (isPublicRoute || isTenantRoute) {
     return NextResponse.next()
   }
   

@@ -373,13 +373,13 @@ export default function AdminTicketsPage() {
                         </Button>
                       </Link>
                       
-                      {ticket.status === 'open' && !ticket.assignedTo && (
+                      {ticket.status === 'open' && (
                         <Button 
                           size="sm" 
                           className="bg-blue-500 hover:bg-blue-600 text-white"
                           onClick={() => handleTakeTicket(ticket._id)}
                         >
-                          Take Ticket
+                          Take & Work
                         </Button>
                       )}
                       

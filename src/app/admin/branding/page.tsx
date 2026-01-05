@@ -1,71 +1,70 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import { useBranding, BrandingData } from '@/hooks/useBranding';
+import { useBranding, BrandingData, LandingPageTemplate } from '@/hooks/useBranding';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import { Textarea } from '@/components/ui/textarea';
 import { 
   Palette, 
   Upload, 
   Trash2, 
-  Eye, 
   Save,
   Image as ImageIcon,
-  Type,
-  Sparkles
+  Layout,
+  Check,
+  ExternalLink
 } from 'lucide-react';
 
-const fontOptions = [
-  { value: 'Inter', label: 'Inter (Modern)' },
-  { value: 'Roboto', label: 'Roboto (Clean)' },
-  { value: 'Open Sans', label: 'Open Sans (Friendly)' },
-  { value: 'Poppins', label: 'Poppins (Geometric)' },
-  { value: 'Lato', label: 'Lato (Professional)' },
-  { value: 'Montserrat', label: 'Montserrat (Elegant)' },
+type ThemeColorOption = 'teal' | 'blue' | 'purple' | 'orange';
+
+const themeColors: { value: ThemeColorOption; label: string; colors: { primary: string; secondary: string } }[] = [
+  { value: 'teal', label: 'Teal', colors: { primary: 'bg-teal-500', secondary: 'bg-cyan-400' } },
+  { value: 'blue', label: 'Blue', colors: { primary: 'bg-blue-500', secondary: 'bg-indigo-500' } },
+  { value: 'purple', label: 'Purple', colors: { primary: 'bg-purple-500', secondary: 'bg-pink-500' } },
+  { value: 'orange', label: 'Orange', colors: { primary: 'bg-orange-500', secondary: 'bg-red-400' } },
 ];
 
-const colorPresets = [
-  { name: 'Ocean Blue', primary: '#3B82F6', secondary: '#1E40AF', accent: '#60A5FA' },
-  { name: 'Forest Green', primary: '#22C55E', secondary: '#166534', accent: '#86EFAC' },
-  { name: 'Royal Purple', primary: '#8B5CF6', secondary: '#5B21B6', accent: '#C4B5FD' },
-  { name: 'Sunset Orange', primary: '#F97316', secondary: '#C2410C', accent: '#FDBA74' },
-  { name: 'Rose Pink', primary: '#EC4899', secondary: '#BE185D', accent: '#F9A8D4' },
-  { name: 'Slate Gray', primary: '#64748B', secondary: '#334155', accent: '#94A3B8' },
+const landingTemplates: { value: LandingPageTemplate; label: string; description: string }[] = [
+  { value: 'original', label: 'Original', description: 'Classic professional design' },
+  { value: 'minimal', label: 'Minimal', description: 'Clean and simple layout' },
+  { value: 'freshspin', label: 'Fresh Spin', description: 'Vibrant and energetic' },
+  { value: 'starter', label: 'Laundry Master', description: 'Feature-rich premium' },
 ];
 
 export default function BrandingPage() {
   const { branding, loading, saving, updateBranding, uploadLogo, removeLogo } = useBranding();
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const [showPreview, setShowPreview] = useState(false);
   
   const [formData, setFormData] = useState<BrandingData>({
-    primaryColor: '#3B82F6',
-    secondaryColor: '#1E40AF',
-    accentColor: '#60A5FA',
+    primaryColor: '#14b8a6',
+    secondaryColor: '#0d9488',
+    accentColor: '#2dd4bf',
     fontFamily: 'Inter',
+    landingPageTemplate: 'original',
     customCss: '',
   });
 
+  const [selectedThemeColor, setSelectedThemeColor] = useState<ThemeColorOption>('teal');
+
   // Update form when branding loads
   useEffect(() => {
-    if (branding?.branding?.theme) {
+    if (branding?.branding) {
       setFormData({
-        primaryColor: branding.branding.theme.primaryColor || '#3B82F6',
-        secondaryColor: branding.branding.theme.secondaryColor || '#1E40AF',
-        accentColor: branding.branding.theme.accentColor || '#60A5FA',
-        fontFamily: branding.branding.theme.fontFamily || 'Inter',
+        primaryColor: branding.branding.theme?.primaryColor || '#14b8a6',
+        secondaryColor: branding.branding.theme?.secondaryColor || '#0d9488',
+        accentColor: branding.branding.theme?.accentColor || '#2dd4bf',
+        fontFamily: branding.branding.theme?.fontFamily || 'Inter',
+        landingPageTemplate: branding.branding.landingPageTemplate || 'original',
         customCss: branding.branding.customCss || '',
       });
+      
+      // Detect current theme color
+      const primaryColor = branding.branding.theme?.primaryColor;
+      if (primaryColor === '#14b8a6') setSelectedThemeColor('teal');
+      else if (primaryColor === '#3b82f6') setSelectedThemeColor('blue');
+      else if (primaryColor === '#8b5cf6') setSelectedThemeColor('purple');
+      else if (primaryColor === '#f97316') setSelectedThemeColor('orange');
     }
   }, [branding]);
 
@@ -84,17 +83,31 @@ export default function BrandingPage() {
     }
   };
 
-  const handleSave = async () => {
-    await updateBranding(formData);
+  const handleThemeColorChange = (color: ThemeColorOption) => {
+    setSelectedThemeColor(color);
+    
+    const colorMap = {
+      teal: { primary: '#14b8a6', secondary: '#0d9488', accent: '#2dd4bf' },
+      blue: { primary: '#3b82f6', secondary: '#2563eb', accent: '#60a5fa' },
+      purple: { primary: '#8b5cf6', secondary: '#7c3aed', accent: '#a78bfa' },
+      orange: { primary: '#f97316', secondary: '#ea580c', accent: '#fb923c' },
+    };
+    
+    const colors = colorMap[color];
+    setFormData({ 
+      ...formData, 
+      primaryColor: colors.primary, 
+      secondaryColor: colors.secondary, 
+      accentColor: colors.accent 
+    });
+    
+    // Also update localStorage for immediate effect on landing page
+    localStorage.setItem('landing_color', color);
+    window.dispatchEvent(new CustomEvent('themeColorChange', { detail: { color } }));
   };
 
-  const applyPreset = (preset: typeof colorPresets[0]) => {
-    setFormData({
-      ...formData,
-      primaryColor: preset.primary,
-      secondaryColor: preset.secondary,
-      accentColor: preset.accent,
-    });
+  const handleSave = async () => {
+    await updateBranding(formData);
   };
 
   const logoUrl = branding?.branding?.logo?.url;
@@ -109,30 +122,32 @@ export default function BrandingPage() {
 
   return (
     <div className="space-y-6">
+      {/* Header */}
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Branding</h1>
           <p className="text-gray-500">Customize your laundry portal appearance</p>
         </div>
-        <div className="flex gap-2">
-          <Button variant="outline" onClick={() => setShowPreview(!showPreview)}>
-            <Eye className="mr-2 h-4 w-4" />
-            {showPreview ? 'Hide Preview' : 'Preview'}
-          </Button>
-          <Button onClick={handleSave} disabled={saving}>
-            <Save className="mr-2 h-4 w-4" />
-            {saving ? 'Saving...' : 'Save Changes'}
-          </Button>
-        </div>
+        <Button onClick={handleSave} disabled={saving}>
+          <Save className="mr-2 h-4 w-4" />
+          {saving ? 'Saving...' : 'Save Changes'}
+        </Button>
       </div>
 
-      {branding && (
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-          <p className="text-sm text-blue-800">
-            <strong>Your Portal:</strong>{' '}
-            <code className="bg-blue-100 px-2 py-1 rounded">
-              {branding.subdomain}.laundry-platform.com
-            </code>
+      {/* Preview URL */}
+      {branding?.slug && (
+        <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+          <p className="text-sm text-green-800 flex items-center gap-2">
+            <strong>Customer Landing Page:</strong>
+            <a 
+              href={`/${branding.slug}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-green-600 hover:underline flex items-center gap-1"
+            >
+              {typeof window !== 'undefined' ? window.location.origin : ''}/{branding.slug}
+              <ExternalLink className="h-3 w-3" />
+            </a>
           </p>
         </div>
       )}
@@ -194,209 +209,101 @@ export default function BrandingPage() {
           </CardContent>
         </Card>
 
-        {/* Font Section */}
+        {/* Theme Color Section */}
         <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Type className="h-5 w-5" />
-              Typography
-            </CardTitle>
-            <CardDescription>Choose a font family for your portal</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-2">
-              <Label>Font Family</Label>
-              <Select 
-                value={formData.fontFamily} 
-                onValueChange={(value) => setFormData({ ...formData, fontFamily: value })}
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {fontOptions.map((font) => (
-                    <SelectItem key={font.value} value={font.value}>
-                      <span style={{ fontFamily: font.value }}>{font.label}</span>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Colors Section */}
-        <Card className="lg:col-span-2">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Palette className="h-5 w-5" />
-              Colors
+              Theme Color
             </CardTitle>
-            <CardDescription>Set your brand colors or choose a preset</CardDescription>
+            <CardDescription>Choose a color theme for your landing page</CardDescription>
           </CardHeader>
-          <CardContent className="space-y-6">
-            {/* Color Presets */}
-            <div>
-              <Label className="mb-3 block">Quick Presets</Label>
-              <div className="flex flex-wrap gap-2">
-                {colorPresets.map((preset) => (
-                  <button
-                    key={preset.name}
-                    onClick={() => applyPreset(preset)}
-                    className="flex items-center gap-2 px-3 py-2 border rounded-lg hover:bg-gray-50 transition-colors"
-                  >
-                    <div className="flex gap-1">
-                      <div 
-                        className="w-4 h-4 rounded-full" 
-                        style={{ backgroundColor: preset.primary }}
-                      />
-                      <div 
-                        className="w-4 h-4 rounded-full" 
-                        style={{ backgroundColor: preset.secondary }}
-                      />
-                      <div 
-                        className="w-4 h-4 rounded-full" 
-                        style={{ backgroundColor: preset.accent }}
-                      />
+          <CardContent>
+            <div className="flex gap-3 flex-wrap">
+              {themeColors.map((theme) => (
+                <button
+                  key={theme.value}
+                  onClick={() => handleThemeColorChange(theme.value)}
+                  className={`relative w-16 h-16 rounded-xl overflow-hidden border-2 transition-all hover:scale-105 ${
+                    selectedThemeColor === theme.value 
+                      ? 'border-gray-800 ring-2 ring-offset-2 ring-gray-400' 
+                      : 'border-gray-200'
+                  }`}
+                  title={theme.label}
+                >
+                  <div className="w-full h-full flex">
+                    <div className={`w-1/2 h-full ${theme.colors.primary}`} />
+                    <div className={`w-1/2 h-full ${theme.colors.secondary}`} />
+                  </div>
+                  {selectedThemeColor === theme.value && (
+                    <div className="absolute inset-0 flex items-center justify-center bg-black/20">
+                      <Check className="h-6 w-6 text-white" />
                     </div>
-                    <span className="text-sm">{preset.name}</span>
-                  </button>
-                ))}
-              </div>
+                  )}
+                </button>
+              ))}
             </div>
-
-            {/* Custom Colors */}
-            <div className="grid gap-4 sm:grid-cols-3">
-              <div className="space-y-2">
-                <Label htmlFor="primaryColor">Primary Color</Label>
-                <div className="flex gap-2">
-                  <input
-                    type="color"
-                    id="primaryColor"
-                    value={formData.primaryColor}
-                    onChange={(e) => setFormData({ ...formData, primaryColor: e.target.value })}
-                    className="w-12 h-10 rounded border cursor-pointer"
-                  />
-                  <Input
-                    value={formData.primaryColor}
-                    onChange={(e) => setFormData({ ...formData, primaryColor: e.target.value })}
-                    placeholder="#3B82F6"
-                  />
-                </div>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="secondaryColor">Secondary Color</Label>
-                <div className="flex gap-2">
-                  <input
-                    type="color"
-                    id="secondaryColor"
-                    value={formData.secondaryColor}
-                    onChange={(e) => setFormData({ ...formData, secondaryColor: e.target.value })}
-                    className="w-12 h-10 rounded border cursor-pointer"
-                  />
-                  <Input
-                    value={formData.secondaryColor}
-                    onChange={(e) => setFormData({ ...formData, secondaryColor: e.target.value })}
-                    placeholder="#1E40AF"
-                  />
-                </div>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="accentColor">Accent Color</Label>
-                <div className="flex gap-2">
-                  <input
-                    type="color"
-                    id="accentColor"
-                    value={formData.accentColor}
-                    onChange={(e) => setFormData({ ...formData, accentColor: e.target.value })}
-                    className="w-12 h-10 rounded border cursor-pointer"
-                  />
-                  <Input
-                    value={formData.accentColor}
-                    onChange={(e) => setFormData({ ...formData, accentColor: e.target.value })}
-                    placeholder="#60A5FA"
-                  />
-                </div>
-              </div>
-            </div>
+            <p className="text-sm text-gray-500 mt-3 capitalize">
+              Selected: <span className="font-medium">{selectedThemeColor}</span>
+            </p>
           </CardContent>
         </Card>
 
-        {/* Custom CSS Section */}
+        {/* Landing Page Template Section */}
         <Card className="lg:col-span-2">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <Sparkles className="h-5 w-5" />
-              Advanced Customization
+              <Layout className="h-5 w-5" />
+              Landing Page Template
             </CardTitle>
-            <CardDescription>Add custom CSS for advanced styling (optional)</CardDescription>
+            <CardDescription>Choose a landing page design for your customers</CardDescription>
           </CardHeader>
           <CardContent>
-            <Textarea
-              value={formData.customCss}
-              onChange={(e) => setFormData({ ...formData, customCss: e.target.value })}
-              placeholder={`/* Custom CSS */\n.header {\n  border-radius: 12px;\n}`}
-              className="font-mono text-sm min-h-[120px]"
-            />
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Preview Section */}
-      {showPreview && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Live Preview</CardTitle>
-            <CardDescription>See how your branding will look to customers</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div 
-              className="border rounded-lg overflow-hidden"
-              style={{ fontFamily: formData.fontFamily }}
-            >
-              {/* Mock Header */}
-              <div 
-                className="p-4 text-white flex items-center justify-between"
-                style={{ backgroundColor: formData.primaryColor }}
-              >
-                <div className="flex items-center gap-3">
-                  {logoUrl ? (
-                    <img 
-                      src={logoUrl} 
-                      alt="Logo" 
-                      className="h-8 w-8 object-contain bg-white rounded"
-                    />
-                  ) : (
-                    <div className="h-8 w-8 bg-white/20 rounded flex items-center justify-center">
-                      <Sparkles className="h-5 w-5" />
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+              {landingTemplates.map((template) => (
+                <button
+                  key={template.value}
+                  onClick={() => setFormData({ ...formData, landingPageTemplate: template.value })}
+                  className={`relative p-4 border-2 rounded-xl text-left transition-all hover:shadow-md ${
+                    formData.landingPageTemplate === template.value
+                      ? 'border-blue-500 bg-blue-50'
+                      : 'border-gray-200 hover:border-gray-300'
+                  }`}
+                >
+                  {formData.landingPageTemplate === template.value && (
+                    <div className="absolute top-2 right-2">
+                      <Check className="h-5 w-5 text-blue-500" />
                     </div>
                   )}
-                  <span className="font-bold">{branding?.name || 'Your Laundry'}</span>
-                </div>
-                <div className="flex gap-4 text-sm">
-                  <span>Services</span>
-                  <span>Track Order</span>
-                  <span>Contact</span>
-                </div>
-              </div>
-              
-              {/* Mock Content */}
-              <div className="p-6 bg-gray-50">
-                <h2 className="text-xl font-bold mb-2" style={{ color: formData.secondaryColor }}>
-                  Welcome to {branding?.name || 'Your Laundry'}
-                </h2>
-                <p className="text-gray-600 mb-4">Professional laundry services at your doorstep</p>
-                <button 
-                  className="px-4 py-2 rounded-lg text-white"
-                  style={{ backgroundColor: formData.accentColor }}
-                >
-                  Book Now
+                  <div>
+                    <div 
+                      className={`w-full h-16 rounded-lg mb-3 flex items-center justify-center ${
+                        formData.landingPageTemplate === template.value 
+                          ? 'bg-blue-100' 
+                          : 'bg-gray-100'
+                      }`}
+                    >
+                      <Layout 
+                        className={`h-8 w-8 ${
+                          formData.landingPageTemplate === template.value 
+                            ? 'text-blue-500' 
+                            : 'text-gray-400'
+                        }`}
+                      />
+                    </div>
+                    <h3 className={`font-semibold ${
+                      formData.landingPageTemplate === template.value ? 'text-blue-700' : 'text-gray-800'
+                    }`}>
+                      {template.label}
+                    </h3>
+                    <p className="text-xs text-gray-500 mt-1">{template.description}</p>
+                  </div>
                 </button>
-              </div>
+              ))}
             </div>
           </CardContent>
         </Card>
-      )}
+      </div>
     </div>
   );
 }

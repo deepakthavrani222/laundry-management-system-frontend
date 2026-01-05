@@ -32,23 +32,23 @@ import {
 import { useAuthStore } from '@/store/authStore'
 import { useState, useEffect } from 'react'
 import TemplateHeader from '@/components/layout/TemplateHeader'
-import PageThemeCustomizer from '@/components/layout/PageThemeCustomizer'
-import SettingsPanel, { ThemeColor, SchemeMode, Language, getThemeColors } from '@/components/layout/SettingsPanel'
-import { translations } from '@/lib/translations'
+import { ThemeColor, SchemeMode, Language, getThemeColors } from '@/components/layout/SettingsPanel'
+import { useLanguage } from '@/hooks/useLanguage'
 
-function FAQItem({ question, answer, isOpen, onToggle, primaryColor }: {
+function FAQItem({ question, answer, isOpen, onToggle, primaryColor, isDark }: {
   question: string
   answer: string
   isOpen: boolean
   onToggle: () => void
   primaryColor: string
+  isDark?: boolean
 }) {
   return (
-    <div className="overflow-hidden rounded-xl border border-gray-200">
+    <div className={`overflow-hidden rounded-xl border ${isDark ? 'border-gray-700' : 'border-gray-200'}`}>
       <button
         onClick={onToggle}
         className="w-full px-8 py-5 text-left flex items-center justify-between transition-colors duration-200"
-        style={{ backgroundColor: isOpen ? primaryColor : '#334155' }}
+        style={{ backgroundColor: isOpen ? primaryColor : isDark ? '#1f2937' : '#334155' }}
       >
         <h4 className="text-base font-medium text-white pr-4">{question}</h4>
         <div className="flex-shrink-0">
@@ -56,8 +56,8 @@ function FAQItem({ question, answer, isOpen, onToggle, primaryColor }: {
         </div>
       </button>
       <div className={`overflow-hidden transition-all duration-300 ${isOpen ? 'max-h-[500px] opacity-100' : 'max-h-0 opacity-0'}`}>
-        <div className="px-8 py-6 bg-white border-x border-b border-gray-200">
-          <p className="text-gray-600 text-base leading-relaxed">{answer}</p>
+        <div className={`px-8 py-6 border-x border-b ${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'}`}>
+          <p className={`text-base leading-relaxed ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>{answer}</p>
         </div>
       </div>
     </div>
@@ -70,30 +70,37 @@ export default function HelpPage() {
   const [activeCategory, setActiveCategory] = useState('general')
   const [themeColor, setThemeColor] = useState<ThemeColor>('teal')
   const [scheme, setScheme] = useState<SchemeMode>('light')
-  const [language, setLanguage] = useState<Language>('en')
+  
+  // Use language hook for reactive translations
+  const { language, t } = useLanguage()
 
   // Get computed theme colors based on scheme
   const theme = getThemeColors(themeColor, scheme)
 
-  // Translation helper
-  const t = (key: string) => translations[language]?.[key] || translations['en'][key] || key
-
-  // Load theme color, scheme and language from localStorage
+  // Load theme color and scheme from localStorage
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const savedColor = localStorage.getItem('landing_color') as ThemeColor
       const savedScheme = localStorage.getItem('landing_scheme') as SchemeMode
-      const savedLanguage = localStorage.getItem('landing_language') as Language
       if (savedColor && ['teal', 'blue', 'purple', 'orange'].includes(savedColor)) {
         setThemeColor(savedColor)
       }
       if (savedScheme && ['light', 'dark', 'auto'].includes(savedScheme)) {
         setScheme(savedScheme)
       }
-      if (savedLanguage && ['en', 'es', 'hi'].includes(savedLanguage)) {
-        setLanguage(savedLanguage)
+    }
+  }, [])
+
+  // Listen for scheme changes from TemplateHeader dark mode toggle
+  useEffect(() => {
+    const handleSchemeChangeEvent = (e: CustomEvent<{ scheme: string }>) => {
+      const newScheme = e.detail.scheme as SchemeMode
+      if (['light', 'dark', 'auto'].includes(newScheme)) {
+        setScheme(newScheme)
       }
     }
+    window.addEventListener('schemeChange', handleSchemeChangeEvent as EventListener)
+    return () => window.removeEventListener('schemeChange', handleSchemeChangeEvent as EventListener)
   }, [])
 
   // Handle color change
@@ -235,10 +242,17 @@ export default function HelpPage() {
   // Calculate top padding based on template
   const topPadding = 'pt-8'
 
+  // Dark mode classes
+  const isDark = scheme === 'dark'
+  const bgClass = isDark ? 'bg-gray-900' : 'bg-gradient-to-b from-gray-50 to-white'
+  const textClass = isDark ? 'text-gray-100' : 'text-gray-800'
+  const textMutedClass = isDark ? 'text-gray-400' : 'text-gray-600'
+  const cardBgClass = isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100'
+  const sectionBgClass = isDark ? 'bg-gray-800' : 'bg-gray-50'
+
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
+    <div className={`min-h-screen ${bgClass}`}>
       <TemplateHeader />
-      <PageThemeCustomizer />
       
       {/* Hero Section */}
       <section className={`relative ${topPadding} pb-20 overflow-hidden min-h-[400px]`}>
@@ -288,20 +302,20 @@ export default function HelpPage() {
       </section>
 
       {/* Quick Help Cards */}
-      <section className="py-16 relative z-20 bg-white">
+      <section className={`py-16 relative z-20 ${isDark ? 'bg-gray-900' : 'bg-white'}`}>
         <div className="container mx-auto px-4">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-6xl mx-auto">
             {quickHelpCards.map((card, index) => (
               <Link key={index} href={card.link}>
-                <div className="bg-white rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1 border border-gray-100 group cursor-pointer h-full flex flex-col">
+                <div className={`rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1 border group cursor-pointer h-full flex flex-col ${cardBgClass}`}>
                   <div 
                     className="w-14 h-14 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform"
                     style={{ backgroundColor: theme.primaryHex }}
                   >
                     <card.icon className="w-7 h-7 text-white" />
                   </div>
-                  <h3 className="text-lg font-semibold text-gray-800 mb-2">{card.title}</h3>
-                  <p className="text-gray-500 text-sm mb-3 flex-grow">{card.description}</p>
+                  <h3 className={`text-lg font-semibold mb-2 ${textClass}`}>{card.title}</h3>
+                  <p className={`text-sm mb-3 flex-grow ${textMutedClass}`}>{card.description}</p>
                   <div 
                     className="flex items-center text-sm font-medium group-hover:gap-2 transition-all"
                     style={{ color: theme.primaryHex }}
@@ -317,20 +331,20 @@ export default function HelpPage() {
       </section>
 
       {/* Contact Section */}
-      <section className="py-20">
+      <section className={`py-20 ${isDark ? 'bg-gray-900' : ''}`}>
         <div className="container mx-auto px-4">
           <div className="text-center mb-12">
             <div 
               className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium mb-4"
-              style={{ backgroundColor: theme.light, color: theme.primaryHex }}
+              style={{ backgroundColor: isDark ? `${theme.primaryHex}33` : theme.light, color: theme.primaryHex }}
             >
               <MessageCircle className="w-4 h-4" />
               <span>{t('help.contact.badge')}</span>
             </div>
-            <h2 className="text-3xl md:text-4xl font-bold text-gray-800 mb-4">
+            <h2 className={`text-3xl md:text-4xl font-bold mb-4 ${textClass}`}>
               {t('help.contact.title')}
             </h2>
-            <p className="text-gray-600 max-w-2xl mx-auto">
+            <p className={`max-w-2xl mx-auto ${textMutedClass}`}>
               {t('help.contact.subtitle')}
             </p>
           </div>
@@ -338,8 +352,8 @@ export default function HelpPage() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto">
             {/* Phone */}
             <div 
-              className="rounded-2xl p-8 text-center border hover:shadow-lg transition-all"
-              style={{ background: `linear-gradient(to bottom right, ${theme.light}, white)` }}
+              className={`rounded-2xl p-8 text-center border hover:shadow-lg transition-all ${isDark ? 'border-gray-700' : ''}`}
+              style={{ background: isDark ? `linear-gradient(to bottom right, ${theme.primaryHex}22, transparent)` : `linear-gradient(to bottom right, ${theme.light}, white)` }}
             >
               <div 
                 className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-6"
@@ -347,8 +361,8 @@ export default function HelpPage() {
               >
                 <Phone className="w-8 h-8 text-white" />
               </div>
-              <h3 className="text-xl font-semibold text-gray-800 mb-2">{t('help.contact.callUs')}</h3>
-              <p className="text-gray-500 mb-4">{t('help.contact.callUsDesc')}</p>
+              <h3 className={`text-xl font-semibold mb-2 ${textClass}`}>{t('help.contact.callUs')}</h3>
+              <p className={`mb-4 ${textMutedClass}`}>{t('help.contact.callUsDesc')}</p>
               <a href="tel:+911234567890" className="font-semibold text-lg hover:opacity-80" style={{ color: theme.primaryHex }}>
                 +91 123 456 7890
               </a>
@@ -356,8 +370,8 @@ export default function HelpPage() {
 
             {/* Email */}
             <div 
-              className="rounded-2xl p-8 text-center border hover:shadow-lg transition-all"
-              style={{ background: `linear-gradient(to bottom right, ${theme.light}, white)` }}
+              className={`rounded-2xl p-8 text-center border hover:shadow-lg transition-all ${isDark ? 'border-gray-700' : ''}`}
+              style={{ background: isDark ? `linear-gradient(to bottom right, ${theme.primaryHex}22, transparent)` : `linear-gradient(to bottom right, ${theme.light}, white)` }}
             >
               <div 
                 className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-6"
@@ -365,8 +379,8 @@ export default function HelpPage() {
               >
                 <Mail className="w-8 h-8 text-white" />
               </div>
-              <h3 className="text-xl font-semibold text-gray-800 mb-2">{t('help.contact.emailUs')}</h3>
-              <p className="text-gray-500 mb-4">{t('help.contact.emailUsDesc')}</p>
+              <h3 className={`text-xl font-semibold mb-2 ${textClass}`}>{t('help.contact.emailUs')}</h3>
+              <p className={`mb-4 ${textMutedClass}`}>{t('help.contact.emailUsDesc')}</p>
               <a href="mailto:support@laundrypro.com" className="font-semibold text-lg hover:opacity-80" style={{ color: theme.primaryHex }}>
                 support@laundrypro.com
               </a>
@@ -374,8 +388,8 @@ export default function HelpPage() {
 
             {/* WhatsApp */}
             <div 
-              className="rounded-2xl p-8 text-center border hover:shadow-lg transition-all"
-              style={{ background: `linear-gradient(to bottom right, ${theme.light}, white)` }}
+              className={`rounded-2xl p-8 text-center border hover:shadow-lg transition-all ${isDark ? 'border-gray-700' : ''}`}
+              style={{ background: isDark ? `linear-gradient(to bottom right, ${theme.primaryHex}22, transparent)` : `linear-gradient(to bottom right, ${theme.light}, white)` }}
             >
               <div 
                 className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-6"
@@ -383,8 +397,8 @@ export default function HelpPage() {
               >
                 <MessageCircle className="w-8 h-8 text-white" />
               </div>
-              <h3 className="text-xl font-semibold text-gray-800 mb-2">{t('help.contact.whatsapp')}</h3>
-              <p className="text-gray-500 mb-4">{t('help.contact.whatsappDesc')}</p>
+              <h3 className={`text-xl font-semibold mb-2 ${textClass}`}>{t('help.contact.whatsapp')}</h3>
+              <p className={`mb-4 ${textMutedClass}`}>{t('help.contact.whatsappDesc')}</p>
               <a href="https://wa.me/911234567890" target="_blank" rel="noopener noreferrer" className="font-semibold text-lg hover:opacity-80" style={{ color: theme.primaryHex }}>
                 {t('help.contact.chatNow')}
               </a>
@@ -394,20 +408,20 @@ export default function HelpPage() {
       </section>
 
       {/* FAQ Section */}
-      <section className="py-20 bg-gray-50">
+      <section className={`py-20 ${sectionBgClass}`}>
         <div className="container mx-auto px-4">
           <div className="text-center mb-12">
             <div 
               className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium mb-4"
-              style={{ backgroundColor: theme.light, color: theme.primaryHex }}
+              style={{ backgroundColor: isDark ? `${theme.primaryHex}33` : theme.light, color: theme.primaryHex }}
             >
               <HelpCircle className="w-4 h-4" />
               <span>{t('help.faq.badge')}</span>
             </div>
-            <h2 className="text-3xl md:text-4xl font-bold text-gray-800 mb-4">
+            <h2 className={`text-3xl md:text-4xl font-bold mb-4 ${textClass}`}>
               {t('help.faq.title')}
             </h2>
-            <p className="text-gray-600 max-w-2xl mx-auto">
+            <p className={`max-w-2xl mx-auto ${textMutedClass}`}>
               {t('help.faq.subtitle')}
             </p>
           </div>
@@ -424,7 +438,9 @@ export default function HelpPage() {
                 className={`flex items-center gap-2 px-6 py-3 rounded-xl font-medium transition-all duration-300 ${
                   activeCategory === tab.id
                     ? 'text-white shadow-lg'
-                    : 'bg-white text-gray-600 hover:bg-gray-100 border border-gray-200'
+                    : isDark 
+                      ? 'bg-gray-700 text-gray-300 hover:bg-gray-600 border border-gray-600' 
+                      : 'bg-white text-gray-600 hover:bg-gray-100 border border-gray-200'
                 }`}
                 style={activeCategory === tab.id ? { backgroundColor: theme.primaryHex } : {}}
               >
@@ -444,6 +460,7 @@ export default function HelpPage() {
                 isOpen={openFAQ === index}
                 onToggle={() => toggleFAQ(index)}
                 primaryColor={theme.primaryHex}
+                isDark={isDark}
               />
             ))}
           </div>

@@ -163,9 +163,20 @@ export const barcodeAPI = {
   // Get barcode for a specific order
   getOrderBarcode: (orderId: string) => api.get(`/barcode/order/${orderId}`),
   
+  // Get print labels for order items
+  getOrderLabels: (orderId: string) => api.get(`/barcode/order/${orderId}/labels`),
+  
   // Update order status via barcode scan
   updateStatusViaScan: (barcode: string, status: string, notes?: string) =>
     api.put(`/barcode/scan/${barcode}/status`, { status, notes }),
+  
+  // Update item processing status via tag scan
+  updateItemStatus: (tagCode: string, processingStatus: string, notes?: string) =>
+    api.put(`/barcode/scan-item/${tagCode}/status`, { processingStatus, notes }),
+  
+  // Report issue on item via tag scan
+  reportItemIssue: (tagCode: string, issueType: string, description?: string) =>
+    api.post(`/barcode/scan-item/${tagCode}/issue`, { issueType, description }),
   
   // Bulk scan multiple barcodes
   bulkScan: (barcodes: string[]) => api.post('/barcode/bulk-scan', { barcodes }),

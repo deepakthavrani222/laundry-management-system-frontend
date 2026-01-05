@@ -12,10 +12,11 @@ import { useState, useEffect, useRef } from 'react'
 import { ThemeColor } from '../ThemeCustomizer'
 import { Language, getTranslation } from '@/lib/translations'
 import { useAuthStore } from '@/store/authStore'
+import { useLanguage } from '@/hooks/useLanguage'
 
 interface LaundryMasterTemplateProps {
   themeColor: ThemeColor
-  language: Language
+  language?: Language
   isAuthenticated: boolean
   onBookNow: () => void
   onColorChange?: (color: ThemeColor) => void
@@ -634,11 +635,12 @@ function SettingsPanel({
   )
 }
 
-export default function LaundryMasterTemplate({ themeColor, language, isAuthenticated, onBookNow, onColorChange, onLanguageChange, onTemplateChange, currentTemplate }: LaundryMasterTemplateProps) {
+export default function LaundryMasterTemplate({ themeColor, isAuthenticated, onBookNow, onColorChange, onLanguageChange, onTemplateChange, currentTemplate }: LaundryMasterTemplateProps) {
+  // Use language hook for reactive translations
+  const { language, t } = useLanguage()
   const colors = colorClasses[themeColor]
   const [isScrolled, setIsScrolled] = useState(false)
   const [scheme, setScheme] = useState<SchemeMode>('light')
-  const t = (key: string) => getTranslation(language, key)
   
   // Get computed theme colors based on scheme
   const theme = getThemeColors(themeColor, scheme)
@@ -649,6 +651,18 @@ export default function LaundryMasterTemplate({ themeColor, language, isAuthenti
     if (savedScheme && ['light', 'dark', 'auto'].includes(savedScheme)) {
       setScheme(savedScheme)
     }
+  }, [])
+
+  // Listen for scheme changes from TemplateHeader dark mode toggle
+  useEffect(() => {
+    const handleSchemeChange = (e: CustomEvent<{ scheme: string }>) => {
+      const newScheme = e.detail.scheme as SchemeMode
+      if (['light', 'dark', 'auto'].includes(newScheme)) {
+        setScheme(newScheme)
+      }
+    }
+    window.addEventListener('schemeChange', handleSchemeChange as EventListener)
+    return () => window.removeEventListener('schemeChange', handleSchemeChange as EventListener)
   }, [])
 
   // Handle scheme change

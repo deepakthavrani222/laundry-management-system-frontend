@@ -13,8 +13,6 @@ import {
   Settings,
   HelpCircle,
   RefreshCw,
-  UserCheck,
-  MessageSquare,
   Package,
   ChevronLeft,
   ChevronRight,
@@ -22,6 +20,7 @@ import {
   LogOut,
   Ticket,
   Palette,
+  QrCode,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useState, useEffect, createContext, useContext } from 'react'
@@ -31,16 +30,15 @@ import { useAuthStore } from '@/store/authStore'
 const navigation = [
   { name: 'Dashboard', href: '/admin/dashboard', icon: Home, permission: null }, // Always visible
   { name: 'Orders', href: '/admin/orders', icon: ShoppingBag, permission: { module: 'orders', action: 'view' } },
+  { name: 'Barcode Scanner', href: '/admin/scanner', icon: QrCode, permission: { module: 'orders', action: 'view' } },
   { name: 'Customers', href: '/admin/customers', icon: Users, permission: { module: 'customers', action: 'view' } },
   { name: 'Inventory', href: '/admin/inventory', icon: Package, permission: { module: 'inventory', action: 'view' } },
   { name: 'Services', href: '/admin/services', icon: Sparkles, permission: { module: 'services', action: 'view' } },
   { name: 'Logistics', href: '/admin/logistics', icon: Truck, permission: { module: 'logistics', action: 'view' } },
   { name: 'Support Tickets', href: '/admin/tickets', icon: Ticket, permission: { module: 'tickets', action: 'view' } },
-  { name: 'Complaints', href: '/admin/complaints', icon: MessageSquare, permission: { module: 'customers', action: 'view' } },
   { name: 'Refunds', href: '/admin/refunds', icon: RefreshCw, permission: { module: 'orders', action: 'cancel' } },
   { name: 'Payments', href: '/admin/payments', icon: CreditCard, permission: { module: 'performance', action: 'view' } },
   { name: 'Analytics', href: '/admin/analytics', icon: BarChart3, permission: { module: 'performance', action: 'view' } },
-  { name: 'Staff', href: '/admin/staff', icon: UserCheck, permission: { module: 'staff', action: 'view' } },
   { name: 'Branding', href: '/admin/branding', icon: Palette, permission: { module: 'settings', action: 'view' } },
   { name: 'Settings', href: '/admin/settings', icon: Settings, permission: { module: 'settings', action: 'view' } },
   { name: 'Help', href: '/admin/support', icon: HelpCircle, permission: null }, // Always visible

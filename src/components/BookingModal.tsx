@@ -55,6 +55,8 @@ interface BookingModalProps {
   isOpen: boolean
   onClose: () => void
   onLoginRequired: () => void
+  tenantBranches?: Branch[]
+  tenancyId?: string
 }
 
 const STEPS = [
@@ -75,11 +77,14 @@ const SERVICE_TYPES = [
   { id: 'home_pickup_self_pickup', title: 'Pickup + Self Collect', subtitle: 'Home Pickup + Collect from Branch', icon: 'package', discount: 25, discountLabel: 'Save upto ₹25' },
 ]
 
-export default function BookingModal({ isOpen, onClose, onLoginRequired }: BookingModalProps) {
+export default function BookingModal({ isOpen, onClose, onLoginRequired, tenantBranches, tenancyId }: BookingModalProps) {
   const { isAuthenticated, user, token } = useAuthStore()
   const [step, setStep] = useState(1)
   const [loading, setLoading] = useState(false)
   const [submitting, setSubmitting] = useState(false)
+  
+  // Check if this is a tenant booking (has pre-defined branches)
+  const isTenantBooking = tenantBranches && tenantBranches.length > 0
   
   // Data states
   const [branches, setBranches] = useState<Branch[]>([])
@@ -119,16 +124,26 @@ export default function BookingModal({ isOpen, onClose, onLoginRequired }: Booki
     name: '', phone: '', addressLine1: '', landmark: '', city: '', pincode: ''
   })
 
-  // Fetch branches on mount
+  // Fetch branches on mount OR use tenant branches
   useEffect(() => {
     if (isOpen) {
-      fetchBranches()
+      if (isTenantBooking && tenantBranches) {
+        // Use tenant's branches directly
+        setBranches(tenantBranches)
+        // If only one branch, auto-select it and skip to step 2
+        if (tenantBranches.length === 1) {
+          setSelectedBranch(tenantBranches[0])
+          setStep(2) // Skip branch selection
+        }
+      } else {
+        fetchBranches()
+      }
       if (isAuthenticated) {
         fetchAddresses()
         fetchTimeSlots()
       }
     }
-  }, [isOpen, isAuthenticated])
+  }, [isOpen, isAuthenticated, isTenantBooking, tenantBranches])
 
   // Update new address with user info when authenticated
   useEffect(() => {
@@ -332,6 +347,8 @@ export default function BookingModal({ isOpen, onClose, onLoginRequired }: Booki
       // Service type for self drop-off / self pickup
       serviceType,
       selectedBranchId: selectedBranch?._id,
+      // Tenancy ID for tenant-specific orders
+      tenancyId: tenancyId,
       deliveryDetails: deliveryInfo ? {
         distance: deliveryInfo.distance,
         deliveryCharge: deliveryInfo.deliveryCharge,
@@ -411,8 +428,14 @@ export default function BookingModal({ isOpen, onClose, onLoginRequired }: Booki
   }
 
   const resetModal = () => {
-    setStep(1)
-    setSelectedBranch(null)
+    // For tenant booking with single branch, start at step 2
+    if (isTenantBooking && tenantBranches && tenantBranches.length === 1) {
+      setStep(2)
+      setSelectedBranch(tenantBranches[0])
+    } else {
+      setStep(1)
+      setSelectedBranch(null)
+    }
     setSelectedService(null)
     setItems({})
     setSelectedAddressId('')

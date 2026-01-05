@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { useAuthStore } from '@/store/authStore'
+import { cn } from '@/lib/utils'
 import {
   Bell,
   Menu,
@@ -38,9 +39,10 @@ interface Notification {
 
 interface AdminHeaderProps {
   onMenuClick?: () => void
+  sidebarCollapsed?: boolean
 }
 
-export default function AdminHeader({ onMenuClick }: AdminHeaderProps) {
+export default function AdminHeader({ onMenuClick, sidebarCollapsed = false }: AdminHeaderProps) {
   const { user, logout } = useAuthStore()
   const [unreadCount, setUnreadCount] = useState(0)
   const [notifications, setNotifications] = useState<Notification[]>([])
@@ -147,7 +149,10 @@ export default function AdminHeader({ onMenuClick }: AdminHeaderProps) {
   }
 
   return (
-    <header className="bg-white border-b border-gray-200 fixed top-0 left-0 right-0 z-40">
+    <header className={cn(
+      "bg-white border-b border-gray-200 fixed top-0 right-0 z-40 transition-all duration-300",
+      sidebarCollapsed ? "left-0 lg:left-16" : "left-0 lg:left-64"
+    )}>
       <div className="flex items-center justify-between h-16 px-4 lg:px-6">
         {/* Mobile Menu Button */}
         <button

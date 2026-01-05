@@ -254,7 +254,7 @@ export default function OrderQRCode({
           {showDownload && (
             <button
               onClick={handleDownload}
-              className="flex items-center gap-1 px-3 py-1.5 text-xs bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
+              className="flex items-center gap-1 px-3 py-1.5 text-xs bg-white/90 hover:bg-white text-gray-700 rounded-lg transition-colors shadow-sm border border-gray-200"
               title="Download QR Code"
             >
               <Download className="w-3 h-3" />
@@ -264,7 +264,7 @@ export default function OrderQRCode({
           {showPrint && (
             <button
               onClick={handlePrint}
-              className="flex items-center gap-1 px-3 py-1.5 text-xs bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
+              className="flex items-center gap-1 px-3 py-1.5 text-xs bg-white/90 hover:bg-white text-gray-700 rounded-lg transition-colors shadow-sm border border-gray-200"
               title="Print QR Code"
             >
               <Printer className="w-3 h-3" />

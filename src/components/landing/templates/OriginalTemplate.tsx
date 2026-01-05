@@ -10,10 +10,10 @@ import {
 } from 'lucide-react'
 import { useState, useEffect, useRef } from 'react'
 import { useAuthStore } from '@/store/authStore'
-import BookingModal from '@/components/BookingModal'
 import { useRouter } from 'next/navigation'
 import { ThemeColor } from '../ThemeCustomizer'
 import { Language, getTranslation } from '@/lib/translations'
+import { useLanguage } from '@/hooks/useLanguage'
 
 interface OriginalTemplateProps {
   themeColor: ThemeColor
@@ -625,7 +625,7 @@ function TestimonialsCarousel({ colors, theme }: { colors: any; theme: ThemeColo
 
 
 // Scroll Banner Section with dynamic colors
-function ScrollBannerSection({ isAuthenticated, onGalleryVisible, colors, themeColor }: { isAuthenticated: boolean; onGalleryVisible?: (visible: boolean) => void; colors: any; themeColor: ThemeColor }) {
+function ScrollBannerSection({ isAuthenticated, onGalleryVisible, colors, themeColor, onBookNow }: { isAuthenticated: boolean; onGalleryVisible?: (visible: boolean) => void; colors: any; themeColor: ThemeColor; onBookNow: () => void }) {
   const [scrollProgress, setScrollProgress] = useState(0)
   const [imageRowOffset, setImageRowOffset] = useState(0)
   const [isPinned, setIsPinned] = useState(false)
@@ -706,11 +706,13 @@ function ScrollBannerSection({ isAuthenticated, onGalleryVisible, colors, themeC
               <span className="font-extrabold text-gray-900">Get 20% off </span>
               <span className={`font-semibold ${accentTextClass}`}>your first order</span>
             </h2>
-            <Link href={isAuthenticated ? "/customer/orders/new" : "/auth/login?redirect=/customer/orders/new"}>
-              <Button className={`rounded-full font-bold ${colors.primary} ${colors.hover} text-white`} style={{ padding: `${10 + scrollProgress * 6}px ${24 + scrollProgress * 20}px`, fontSize: `${13 + scrollProgress * 3}px` }}>
-                Schedule your first pickup
-              </Button>
-            </Link>
+            <Button 
+              className={`rounded-full font-bold ${colors.primary} ${colors.hover} text-white`} 
+              style={{ padding: `${10 + scrollProgress * 6}px ${24 + scrollProgress * 20}px`, fontSize: `${13 + scrollProgress * 3}px` }}
+              onClick={onBookNow}
+            >
+              Schedule your first pickup
+            </Button>
           </div>
         </div>
       </section>
@@ -751,14 +753,14 @@ function ScrollBannerSection({ isAuthenticated, onGalleryVisible, colors, themeC
 
 
 // Main Component
-export default function OriginalTemplate({ themeColor, language = 'en', isAuthenticated, user, onBookNow, onColorChange, onLanguageChange, onTemplateChange, currentTemplate }: OriginalTemplateProps) {
+export default function OriginalTemplate({ themeColor, isAuthenticated, user, onBookNow, onColorChange, onLanguageChange, onTemplateChange, currentTemplate }: OriginalTemplateProps) {
+  // Use language hook for reactive translations
+  const { language, t } = useLanguage()
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [isDarkTheme, setIsDarkTheme] = useState(false)
-  const [showBookingModal, setShowBookingModal] = useState(false)
   const [scheme, setScheme] = useState<SchemeMode>('light')
   const router = useRouter()
   const colors = colorClasses[themeColor]
-  const t = (key: string) => getTranslation(language, key)
 
   // Get computed theme colors based on scheme
   const theme = getThemeColors(themeColor, scheme)
@@ -771,6 +773,18 @@ export default function OriginalTemplate({ themeColor, language = 'en', isAuthen
     }
   }, [])
 
+  // Listen for scheme changes from TemplateHeader dark mode toggle
+  useEffect(() => {
+    const handleSchemeChange = (e: CustomEvent<{ scheme: string }>) => {
+      const newScheme = e.detail.scheme as SchemeMode
+      if (['light', 'dark', 'auto'].includes(newScheme)) {
+        setScheme(newScheme)
+      }
+    }
+    window.addEventListener('schemeChange', handleSchemeChange as EventListener)
+    return () => window.removeEventListener('schemeChange', handleSchemeChange as EventListener)
+  }, [])
+
   // Handle scheme change
   const handleSchemeChange = (newScheme: SchemeMode) => {
     setScheme(newScheme)
@@ -778,7 +792,6 @@ export default function OriginalTemplate({ themeColor, language = 'en', isAuthen
   }
 
   const handleGalleryVisible = (visible: boolean) => setIsDarkTheme(visible)
-  const handleLoginRequired = () => { setShowBookingModal(false); router.push('/auth/login?redirect=/?openBooking=true') }
 
   const services = [
     { icon: Shirt, title: t('services.washFold'), desc: t('services.washFoldDesc') },
@@ -808,7 +821,6 @@ export default function OriginalTemplate({ themeColor, language = 'en', isAuthen
 
   return (
     <div className={`min-h-screen transition-colors duration-500`} style={{ backgroundColor: isDarkTheme ? '#111827' : theme.pageBg }}>
-      <BookingModal isOpen={showBookingModal} onClose={() => setShowBookingModal(false)} onLoginRequired={handleLoginRequired} />
       
       {/* Navigation */}
       <nav 
@@ -824,13 +836,34 @@ export default function OriginalTemplate({ themeColor, language = 'en', isAuthen
               <div className="w-10 h-10 rounded-full flex items-center justify-center" style={{ backgroundColor: theme.accent }}><Sparkles className="w-6 h-6 text-white" /></div>
               <span className="text-2xl font-bold" style={{ color: isDarkTheme ? '#ffffff' : theme.textPrimary }}>LaundryPro</span>
             </div>
-            <button 
-              className="md:hidden p-2 rounded-lg"
-              style={{ color: isDarkTheme ? '#ffffff' : theme.textPrimary }}
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            >
-              {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-            </button>
+            <div className="flex items-center space-x-2 md:hidden">
+              {/* Mobile Dark Mode Toggle */}
+              <button
+                onClick={() => {
+                  const newScheme = scheme === 'dark' ? 'light' : 'dark'
+                  handleSchemeChange(newScheme)
+                }}
+                className="p-2 rounded-full transition-colors"
+                style={{ 
+                  backgroundColor: isDarkTheme ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)',
+                  border: `1px solid ${isDarkTheme ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.1)'}`
+                }}
+                title={scheme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+              >
+                {scheme === 'dark' ? (
+                  <Sun className="w-5 h-5 text-yellow-400" />
+                ) : (
+                  <Moon className="w-5 h-5" style={{ color: theme.textSecondary }} />
+                )}
+              </button>
+              <button 
+                className="p-2 rounded-lg"
+                style={{ color: isDarkTheme ? '#ffffff' : theme.textPrimary }}
+                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              >
+                {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+              </button>
+            </div>
             <div className="hidden md:flex items-center space-x-8">
               <Link href="/" className="hover:opacity-80 transition-opacity" style={{ color: isDarkTheme ? '#d1d5db' : theme.textSecondary }}>{t('nav.home')}</Link>
               <Link href="/services" className="hover:opacity-80 transition-opacity" style={{ color: isDarkTheme ? '#d1d5db' : theme.textSecondary }}>{t('nav.services')}</Link>
@@ -838,6 +871,25 @@ export default function OriginalTemplate({ themeColor, language = 'en', isAuthen
               <Link href="/help" className="hover:opacity-80 transition-opacity" style={{ color: isDarkTheme ? '#d1d5db' : theme.textSecondary }}>{t('nav.help')}</Link>
               {isAuthenticated ? (
                 <div className="flex items-center space-x-4">
+                  {/* Dark Mode Toggle */}
+                  <button
+                    onClick={() => {
+                      const newScheme = scheme === 'dark' ? 'light' : 'dark'
+                      handleSchemeChange(newScheme)
+                    }}
+                    className="p-2 rounded-full transition-colors"
+                    style={{ 
+                      backgroundColor: isDarkTheme ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)',
+                      border: `1px solid ${isDarkTheme ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.1)'}`
+                    }}
+                    title={scheme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+                  >
+                    {scheme === 'dark' ? (
+                      <Sun className="w-5 h-5 text-yellow-400" />
+                    ) : (
+                      <Moon className="w-5 h-5" style={{ color: theme.textSecondary }} />
+                    )}
+                  </button>
                   <Link href="/customer/dashboard"><Button className="text-white" style={{ backgroundColor: theme.accent }}><User className="w-4 h-4 mr-2" />{t('nav.dashboard')}</Button></Link>
                   <div className="relative group">
                     <button className="flex items-center space-x-2 py-2" style={{ color: isDarkTheme ? '#d1d5db' : theme.textSecondary }}>
@@ -858,8 +910,27 @@ export default function OriginalTemplate({ themeColor, language = 'en', isAuthen
                 </div>
               ) : (
                 <div className="flex items-center space-x-3">
+                  {/* Dark Mode Toggle */}
+                  <button
+                    onClick={() => {
+                      const newScheme = scheme === 'dark' ? 'light' : 'dark'
+                      handleSchemeChange(newScheme)
+                    }}
+                    className="p-2 rounded-full transition-colors"
+                    style={{ 
+                      backgroundColor: isDarkTheme ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)',
+                      border: `1px solid ${isDarkTheme ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.1)'}`
+                    }}
+                    title={scheme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+                  >
+                    {scheme === 'dark' ? (
+                      <Sun className="w-5 h-5 text-yellow-400" />
+                    ) : (
+                      <Moon className="w-5 h-5" style={{ color: theme.textSecondary }} />
+                    )}
+                  </button>
                   <Link href="/auth/login"><Button variant="outline" style={{ borderColor: theme.accent, color: theme.accentText }}>{t('nav.login')}</Button></Link>
-                  <Link href="/auth/register"><Button className="text-white" style={{ backgroundColor: theme.accent }}>{t('nav.signup')}</Button></Link>
+                  <Button className="text-white" style={{ backgroundColor: theme.accent }} onClick={onBookNow}>{t('nav.bookNow')}</Button>
                 </div>
               )}
             </div>
@@ -960,7 +1031,7 @@ export default function OriginalTemplate({ themeColor, language = 'en', isAuthen
       </section>
 
       {/* Scroll Banner with Gallery */}
-      <ScrollBannerSection isAuthenticated={isAuthenticated} onGalleryVisible={handleGalleryVisible} colors={colors} themeColor={themeColor} />
+      <ScrollBannerSection isAuthenticated={isAuthenticated} onGalleryVisible={handleGalleryVisible} colors={colors} themeColor={themeColor} onBookNow={onBookNow} />
 
       {/* Testimonials */}
       <section className="py-20 transition-colors duration-300" style={{ backgroundColor: theme.sectionBgAlt }}>

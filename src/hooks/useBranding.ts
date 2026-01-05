@@ -2,6 +2,8 @@ import { useState, useEffect, useCallback } from 'react';
 import { api } from '@/lib/api';
 import toast from 'react-hot-toast';
 
+export type LandingPageTemplate = 'original' | 'minimal' | 'freshspin' | 'starter';
+
 export interface BrandingData {
   logo?: string;
   logoUrl?: string;
@@ -9,6 +11,7 @@ export interface BrandingData {
   secondaryColor: string;
   accentColor: string;
   fontFamily: string;
+  landingPageTemplate?: LandingPageTemplate;
   customCss?: string;
 }
 
@@ -23,9 +26,11 @@ export interface TenancyBranding {
       fontFamily?: string;
       layout?: string;
     };
+    landingPageTemplate?: LandingPageTemplate;
     customCss?: string;
   };
   name: string;
+  slug: string;
   subdomain: string;
   customDomain?: string;
 }
@@ -64,10 +69,13 @@ export function useBranding() {
             accentColor: data.accentColor,
             fontFamily: data.fontFamily,
           },
-          customCss: data.customCss,
+          landingPageTemplate: data.landingPageTemplate || 'original',
+          customCss: data.customCss || '',
         }
       };
+      console.log('Sending branding update:', payload);
       const response = await api.put('/admin/tenancy/branding', payload);
+      console.log('Branding update response:', response.data);
       await fetchBranding(); // Refresh to get updated data
       toast.success('Branding updated successfully');
       return true;

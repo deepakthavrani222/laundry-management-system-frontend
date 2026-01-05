@@ -3,13 +3,13 @@
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import TemplateHeader from '@/components/layout/TemplateHeader'
-import SettingsPanel, { ThemeColor, SchemeMode, Language, getThemeColors } from '@/components/layout/SettingsPanel'
+import { ThemeColor, SchemeMode, Language, getThemeColors } from '@/components/layout/SettingsPanel'
 import { Shirt, Sparkles, Award, Package, Clock, Truck, Phone, CheckCircle, Star, ChevronDown } from 'lucide-react'
 import { useAuthStore } from '@/store/authStore'
 import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import BookingModal from '@/components/BookingModal'
-import { translations } from '@/lib/translations'
+import { useLanguage } from '@/hooks/useLanguage'
 
 const services = [
   { id: 'wash-fold', name: 'Wash & Fold', icon: Shirt, description: 'Regular washing and folding service for everyday clothes', price: 'Starting ₹25/item', features: ['Same day pickup', 'Eco-friendly detergents', 'Neatly folded'] },
@@ -177,31 +177,38 @@ export default function ServicesPage() {
   const [showBookingModal, setShowBookingModal] = useState(false)
   const [themeColor, setThemeColor] = useState<ThemeColor>('teal')
   const [scheme, setScheme] = useState<SchemeMode>('light')
-  const [language, setLanguage] = useState<Language>('en')
   const router = useRouter()
+  
+  // Use language hook for reactive translations
+  const { language, t } = useLanguage()
 
   // Get computed theme colors based on scheme
   const theme = getThemeColors(themeColor, scheme)
 
-  // Translation helper
-  const t = (key: string) => translations[language]?.[key] || translations['en'][key] || key
-
-  // Load theme color, scheme and language from localStorage
+  // Load theme color and scheme from localStorage
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const savedColor = localStorage.getItem('landing_color') as ThemeColor
       const savedScheme = localStorage.getItem('landing_scheme') as SchemeMode
-      const savedLanguage = localStorage.getItem('landing_language') as Language
       if (savedColor && ['teal', 'blue', 'purple', 'orange'].includes(savedColor)) {
         setThemeColor(savedColor)
       }
       if (savedScheme && ['light', 'dark', 'auto'].includes(savedScheme)) {
         setScheme(savedScheme)
       }
-      if (savedLanguage && ['en', 'es', 'hi'].includes(savedLanguage)) {
-        setLanguage(savedLanguage)
+    }
+  }, [])
+
+  // Listen for scheme changes from TemplateHeader dark mode toggle
+  useEffect(() => {
+    const handleSchemeChangeEvent = (e: CustomEvent<{ scheme: string }>) => {
+      const newScheme = e.detail.scheme as SchemeMode
+      if (['light', 'dark', 'auto'].includes(newScheme)) {
+        setScheme(newScheme)
       }
     }
+    window.addEventListener('schemeChange', handleSchemeChangeEvent as EventListener)
+    return () => window.removeEventListener('schemeChange', handleSchemeChangeEvent as EventListener)
   }, [])
 
   // Handle color change
@@ -256,14 +263,6 @@ export default function ServicesPage() {
   return (
     <div className="min-h-screen transition-colors duration-300" style={{ backgroundColor: theme.pageBg }}>
       <TemplateHeader />
-      <SettingsPanel
-        themeColor={themeColor}
-        currentLanguage={language}
-        currentScheme={scheme}
-        onColorChange={handleColorChange}
-        onLanguageChange={handleLanguageChange}
-        onSchemeChange={handleSchemeChange}
-      />
       
       {/* Booking Modal */}
       <BookingModal 

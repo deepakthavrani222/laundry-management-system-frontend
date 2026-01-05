@@ -10,6 +10,7 @@ import { ThemeColor } from '../ThemeCustomizer'
 import { Language, getTranslation } from '@/lib/translations'
 import { useAuthStore } from '@/store/authStore'
 import TemplateHeader from '@/components/layout/TemplateHeader'
+import { useLanguage } from '@/hooks/useLanguage'
 
 interface MinimalTemplateProps {
   themeColor: ThemeColor
@@ -457,8 +458,9 @@ function SettingsPanel({
   )
 }
 
-export default function MinimalTemplate({ themeColor, language = 'en', isAuthenticated, onBookNow, onColorChange, onLanguageChange, onTemplateChange, currentTemplate }: MinimalTemplateProps) {
-  const t = (key: string) => getTranslation(language, key)
+export default function MinimalTemplate({ themeColor, isAuthenticated, onBookNow, onColorChange, onLanguageChange, onTemplateChange, currentTemplate }: MinimalTemplateProps) {
+  // Use language hook for reactive translations
+  const { language, t } = useLanguage()
   const [isScrolled, setIsScrolled] = useState(false)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [activeFeature, setActiveFeature] = useState(0)
@@ -476,6 +478,18 @@ export default function MinimalTemplate({ themeColor, language = 'en', isAuthent
     if (savedScheme && ['light', 'dark', 'auto'].includes(savedScheme)) {
       setScheme(savedScheme)
     }
+  }, [])
+
+  // Listen for scheme changes from TemplateHeader dark mode toggle
+  useEffect(() => {
+    const handleSchemeChange = (e: CustomEvent<{ scheme: string }>) => {
+      const newScheme = e.detail.scheme as SchemeMode
+      if (['light', 'dark', 'auto'].includes(newScheme)) {
+        setScheme(newScheme)
+      }
+    }
+    window.addEventListener('schemeChange', handleSchemeChange as EventListener)
+    return () => window.removeEventListener('schemeChange', handleSchemeChange as EventListener)
   }, [])
 
   // Handle scheme change

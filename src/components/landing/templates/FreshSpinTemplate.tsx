@@ -5,13 +5,14 @@ import Link from 'next/link'
 import { 
   Phone, Mail, Clock, Truck, Sparkles, CheckCircle, Shield, Award, Zap, Star,
   Instagram, Facebook, Twitter, Linkedin, MapPin, ChevronLeft, ChevronRight, Package, Shirt, Waves,
-  User, LogOut, ShoppingBag, ChevronDown, Settings, Sun, Moon, Monitor, RotateCcw, X
+  User, LogOut, ShoppingBag, ChevronDown, Settings, Sun, Moon, X
 } from 'lucide-react'
 import { useState, useEffect } from 'react'
 import { ThemeColor } from '../ThemeCustomizer'
 import { Language, getTranslation } from '@/lib/translations'
 import { useAuthStore } from '@/store/authStore'
 import TemplateHeader from '@/components/layout/TemplateHeader'
+import { useLanguage } from '@/hooks/useLanguage'
 
 interface FreshSpinTemplateProps {
   themeColor: ThemeColor
@@ -22,6 +23,7 @@ interface FreshSpinTemplateProps {
   onLanguageChange?: (language: Language) => void
   onTemplateChange?: (template: string) => void
   currentTemplate?: string
+  isTenantPage?: boolean
 }
 
 type SchemeMode = 'light' | 'dark' | 'auto'
@@ -500,25 +502,13 @@ function TestimonialsSection({ theme, onBookNow, t }: { theme: ThemeColors; onBo
   )
 }
 
-// Settings Panel Component for FreshSpin
+// Settings Panel Component for FreshSpin - Only Language selector
 function SettingsPanel({ 
-  themeColor,
   currentLanguage,
-  currentScheme,
-  currentTemplate,
-  onColorChange,
   onLanguageChange,
-  onSchemeChange,
-  onTemplateChange
 }: { 
-  themeColor: ThemeColor
   currentLanguage: Language
-  currentScheme: SchemeMode
-  currentTemplate?: string
-  onColorChange?: (color: ThemeColor) => void
   onLanguageChange?: (language: Language) => void
-  onSchemeChange?: (scheme: SchemeMode) => void
-  onTemplateChange?: (template: string) => void
 }) {
   const [isOpen, setIsOpen] = useState(false)
 
@@ -527,18 +517,6 @@ function SettingsPanel({
     { id: 'es', name: 'Español', flag: '🇪🇸' },
     { id: 'hi', name: 'हिंदी', flag: '🇮🇳' },
   ]
-
-  const templates = [
-    { id: 'original', name: 'Landing Page 1' },
-    { id: 'minimal', name: 'Landing Page 2' },
-    { id: 'freshspin', name: 'Landing Page 3' },
-    { id: 'starter', name: 'Landing Page 4' },
-  ]
-
-  const resetColors = () => {
-    onColorChange?.('teal')
-    onSchemeChange?.('light')
-  }
 
   return (
     <>
@@ -576,122 +554,6 @@ function SettingsPanel({
 
         {/* Content */}
         <div className="p-4 space-y-6 overflow-y-auto h-[calc(100%-60px)] scrollbar-hide" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
-          {/* Scheme Section */}
-          <div>
-            <h3 className="text-sm font-semibold text-gray-700 mb-3">Scheme</h3>
-            <div className="flex gap-2">
-              <button
-                onClick={() => onSchemeChange?.('auto')}
-                className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-3 rounded-lg border-2 transition-all ${
-                  currentScheme === 'auto' 
-                    ? 'border-blue-500 bg-blue-50 text-blue-600' 
-                    : 'border-gray-200 hover:border-gray-300 text-gray-600'
-                }`}
-              >
-                <Monitor className="w-4 h-4" />
-                <span className="text-sm font-medium">Auto</span>
-              </button>
-              <button
-                onClick={() => onSchemeChange?.('dark')}
-                className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-3 rounded-lg border-2 transition-all ${
-                  currentScheme === 'dark' 
-                    ? 'border-blue-500 bg-blue-50 text-blue-600' 
-                    : 'border-gray-200 hover:border-gray-300 text-gray-600'
-                }`}
-              >
-                <Moon className="w-4 h-4" />
-                <span className="text-sm font-medium">Dark</span>
-              </button>
-              <button
-                onClick={() => onSchemeChange?.('light')}
-                className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-3 rounded-lg border-2 transition-all ${
-                  currentScheme === 'light' 
-                    ? 'border-blue-500 bg-blue-50 text-blue-600' 
-                    : 'border-gray-200 hover:border-gray-300 text-gray-600'
-                }`}
-              >
-                <Sun className="w-4 h-4" />
-                <span className="text-sm font-medium">Light</span>
-              </button>
-            </div>
-          </div>
-
-          {/* Color Customizer Section */}
-          <div>
-            <div className="flex items-center justify-between mb-3">
-              <h3 className="text-sm font-semibold text-gray-700">Color Customizer</h3>
-              <button 
-                onClick={resetColors}
-                className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors"
-                title="Reset to default"
-              >
-                <RotateCcw className="w-4 h-4 text-blue-500" />
-              </button>
-            </div>
-            <div className="flex gap-3 flex-wrap">
-              {/* Teal */}
-              <button
-                onClick={() => onColorChange?.('teal')}
-                className={`w-12 h-12 rounded-xl overflow-hidden border-2 transition-all hover:scale-110 ${
-                  themeColor === 'teal' ? 'border-gray-800 ring-2 ring-offset-2 ring-teal-400' : 'border-gray-200'
-                }`}
-                title="Teal Theme"
-              >
-                <div className="w-full h-full flex">
-                  <div className="w-1/2 h-full bg-teal-500" />
-                  <div className="w-1/2 h-full bg-cyan-400" />
-                </div>
-              </button>
-              
-              {/* Blue */}
-              <button
-                onClick={() => onColorChange?.('blue')}
-                className={`w-12 h-12 rounded-xl overflow-hidden border-2 transition-all hover:scale-110 ${
-                  themeColor === 'blue' ? 'border-gray-800 ring-2 ring-offset-2 ring-blue-400' : 'border-gray-200'
-                }`}
-                title="Blue Theme"
-              >
-                <div className="w-full h-full flex">
-                  <div className="w-1/2 h-full bg-blue-500" />
-                  <div className="w-1/2 h-full bg-indigo-500" />
-                </div>
-              </button>
-              
-              {/* Purple */}
-              <button
-                onClick={() => onColorChange?.('purple')}
-                className={`w-12 h-12 rounded-xl overflow-hidden border-2 transition-all hover:scale-110 ${
-                  themeColor === 'purple' ? 'border-gray-800 ring-2 ring-offset-2 ring-purple-400' : 'border-gray-200'
-                }`}
-                title="Purple Theme"
-              >
-                <div className="w-full h-full flex">
-                  <div className="w-1/2 h-full bg-purple-500" />
-                  <div className="w-1/2 h-full bg-pink-500" />
-                </div>
-              </button>
-              
-              {/* Orange */}
-              <button
-                onClick={() => onColorChange?.('orange')}
-                className={`w-12 h-12 rounded-xl overflow-hidden border-2 transition-all hover:scale-110 ${
-                  themeColor === 'orange' ? 'border-gray-800 ring-2 ring-offset-2 ring-orange-400' : 'border-gray-200'
-                }`}
-                title="Orange Theme"
-              >
-                <div className="w-full h-full flex">
-                  <div className="w-1/2 h-full bg-orange-500" />
-                  <div className="w-1/2 h-full bg-red-400" />
-                </div>
-              </button>
-            </div>
-            
-            {/* Current Color Label */}
-            <p className="text-xs text-gray-500 mt-2 capitalize">
-              Current: {themeColor}
-            </p>
-          </div>
-
           {/* Language Section */}
           <div>
             <h3 className="text-sm font-semibold text-gray-700 mb-3">Language</h3>
@@ -717,40 +579,15 @@ function SettingsPanel({
               ))}
             </div>
           </div>
-
-          {/* Landing Page Selector */}
-          <div>
-            <h3 className="text-sm font-semibold text-gray-700 mb-3">Landing Page</h3>
-            <div className="space-y-2">
-              {templates.map((template) => (
-                <button
-                  key={template.id}
-                  onClick={() => onTemplateChange?.(template.id)}
-                  className={`w-full flex items-center gap-3 p-3 rounded-xl border-2 transition-all ${
-                    currentTemplate === template.id 
-                      ? 'border-blue-500 bg-blue-50' 
-                      : 'border-gray-200 hover:border-gray-300'
-                  }`}
-                >
-                  <span className={`font-medium ${currentTemplate === template.id ? 'text-blue-600' : 'text-gray-700'}`}>
-                    {template.name}
-                  </span>
-                  {currentTemplate === template.id && (
-                    <CheckCircle className="w-5 h-5 text-blue-500 ml-auto" />
-                  )}
-                </button>
-              ))}
-            </div>
-          </div>
-
         </div>
       </div>
     </>
   )
 }
 
-export default function FreshSpinTemplate({ themeColor, language = 'en', isAuthenticated, onBookNow, onColorChange, onLanguageChange, onTemplateChange, currentTemplate }: FreshSpinTemplateProps) {
-  const t = (key: string) => getTranslation(language, key)
+export default function FreshSpinTemplate({ themeColor, isAuthenticated, onBookNow, onColorChange, onLanguageChange, onTemplateChange, currentTemplate, isTenantPage = false }: FreshSpinTemplateProps) {
+  // Use language hook for reactive translations
+  const { language, t } = useLanguage()
   const [scheme, setScheme] = useState<SchemeMode>('light')
 
   // Get computed theme colors based on scheme
@@ -765,6 +602,18 @@ export default function FreshSpinTemplate({ themeColor, language = 'en', isAuthe
     if (savedScheme && ['light', 'dark', 'auto'].includes(savedScheme)) {
       setScheme(savedScheme)
     }
+  }, [])
+
+  // Listen for scheme changes from TemplateHeader dark mode toggle
+  useEffect(() => {
+    const handleSchemeChange = (e: CustomEvent<{ scheme: string }>) => {
+      const newScheme = e.detail.scheme as SchemeMode
+      if (['light', 'dark', 'auto'].includes(newScheme)) {
+        setScheme(newScheme)
+      }
+    }
+    window.addEventListener('schemeChange', handleSchemeChange as EventListener)
+    return () => window.removeEventListener('schemeChange', handleSchemeChange as EventListener)
   }, [])
 
   // Handle scheme change
@@ -1251,17 +1100,13 @@ export default function FreshSpinTemplate({ themeColor, language = 'en', isAuthe
         </div>
       </footer>
 
-      {/* Settings Panel */}
+      {/* Settings Panel - Hide on tenant pages */}
+      {!isTenantPage && (
       <SettingsPanel 
-        themeColor={themeColor}
         currentLanguage={language}
-        currentScheme={scheme}
-        currentTemplate={currentTemplate}
-        onColorChange={onColorChange}
         onLanguageChange={onLanguageChange}
-        onSchemeChange={handleSchemeChange}
-        onTemplateChange={onTemplateChange}
       />
+      )}
     </div>
   )
 }

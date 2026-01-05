@@ -83,9 +83,14 @@ export function useAdminTickets(filters?: {
       }
       
       const response = await api.get(`/admin/support/tickets?${params}`)
-      setTickets(response.data.data?.tickets || response.data.tickets || response.data.data || [])
       
-      const backendPagination = response.data.pagination || {}
+      // Backend returns { success, data: { data: [...], pagination: {...} }, message }
+      const responseData = response.data.data || response.data
+      const ticketsArray = responseData.data || responseData.tickets || responseData || []
+      
+      setTickets(Array.isArray(ticketsArray) ? ticketsArray : [])
+      
+      const backendPagination = responseData.pagination || response.data.pagination || {}
       setPagination({
         current: backendPagination.currentPage || 1,
         pages: backendPagination.totalPages || 1,
@@ -177,7 +182,9 @@ export function useAdminTicketDetail(ticketId: string | null) {
       setLoading(true)
       setError(null)
       const response = await api.get(`/admin/support/tickets/${ticketId}`)
-      setTicket(response.data.ticket)
+      // Backend returns { success, data: { ticket }, message }
+      const ticketData = response.data.data?.ticket || response.data.ticket
+      setTicket(ticketData)
     } catch (err: any) {
       setError(err.response?.data?.message || err.message || 'Failed to fetch ticket')
     } finally {

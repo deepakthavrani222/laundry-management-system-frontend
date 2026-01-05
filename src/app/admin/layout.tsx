@@ -27,10 +27,10 @@ function AdminLayoutContent({ children }: { children: React.ReactNode }) {
         )}
       >
         {/* Header - Fixed */}
-        <AdminHeader onMenuClick={() => setMobileOpen(true)} />
+        <AdminHeader onMenuClick={() => setMobileOpen(true)} sidebarCollapsed={isCollapsed} />
 
-        {/* Page Content - Add padding for fixed header */}
-        <main className="p-4 lg:p-6 pt-20">
+        {/* Page Content - Add padding for fixed header (h-16 = 64px) */}
+        <main className="p-4 lg:p-6 mt-16">
           <div className="max-w-full">{children}</div>
         </main>
       </div>

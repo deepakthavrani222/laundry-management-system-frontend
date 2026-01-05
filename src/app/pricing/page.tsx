@@ -14,8 +14,8 @@ import {
 import { useAuthStore } from '@/store/authStore'
 import { useState, useEffect } from 'react'
 import TemplateHeader from '@/components/layout/TemplateHeader'
-import SettingsPanel, { ThemeColor, SchemeMode, Language, getThemeColors } from '@/components/layout/SettingsPanel'
-import { translations } from '@/lib/translations'
+import { ThemeColor, SchemeMode, Language, getThemeColors } from '@/components/layout/SettingsPanel'
+import { useLanguage } from '@/hooks/useLanguage'
 
 interface ServiceItem {
   id: string
@@ -241,30 +241,37 @@ export default function PricingPage() {
   const [openFAQ, setOpenFAQ] = useState<number | null>(null)
   const [themeColor, setThemeColor] = useState<ThemeColor>('teal')
   const [scheme, setScheme] = useState<SchemeMode>('light')
-  const [language, setLanguage] = useState<Language>('en')
+  
+  // Use language hook for reactive translations
+  const { language, t } = useLanguage()
 
   // Get computed theme colors based on scheme
   const theme = getThemeColors(themeColor, scheme)
 
-  // Translation helper
-  const t = (key: string) => translations[language]?.[key] || translations['en'][key] || key
-
-  // Load theme color, scheme and language from localStorage
+  // Load theme color and scheme from localStorage
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const savedColor = localStorage.getItem('landing_color') as ThemeColor
       const savedScheme = localStorage.getItem('landing_scheme') as SchemeMode
-      const savedLanguage = localStorage.getItem('landing_language') as Language
       if (savedColor && ['teal', 'blue', 'purple', 'orange'].includes(savedColor)) {
         setThemeColor(savedColor)
       }
       if (savedScheme && ['light', 'dark', 'auto'].includes(savedScheme)) {
         setScheme(savedScheme)
       }
-      if (savedLanguage && ['en', 'es', 'hi'].includes(savedLanguage)) {
-        setLanguage(savedLanguage)
+    }
+  }, [])
+
+  // Listen for scheme changes from TemplateHeader dark mode toggle
+  useEffect(() => {
+    const handleSchemeChangeEvent = (e: CustomEvent<{ scheme: string }>) => {
+      const newScheme = e.detail.scheme as SchemeMode
+      if (['light', 'dark', 'auto'].includes(newScheme)) {
+        setScheme(newScheme)
       }
     }
+    window.addEventListener('schemeChange', handleSchemeChangeEvent as EventListener)
+    return () => window.removeEventListener('schemeChange', handleSchemeChangeEvent as EventListener)
   }, [])
 
   // Handle color change
@@ -320,14 +327,6 @@ export default function PricingPage() {
   return (
     <div className="min-h-screen transition-colors duration-300" style={{ backgroundColor: theme.pageBg }}>
       <TemplateHeader />
-      <SettingsPanel
-        themeColor={themeColor}
-        currentLanguage={language}
-        currentScheme={scheme}
-        onColorChange={handleColorChange}
-        onLanguageChange={handleLanguageChange}
-        onSchemeChange={handleSchemeChange}
-      />
 
       {/* Hero Section */}
       <section className={`relative py-16 overflow-hidden ${topPadding}`}>
