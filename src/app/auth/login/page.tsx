@@ -50,6 +50,9 @@ export default function LoginPage() {
         superadmin: '/superadmin/dashboard',
       }
 
+      console.log('🔥 Login successful - User role:', user.role)
+      console.log('🔥 Redirect path:', roleRoutes[user.role as keyof typeof roleRoutes] || '/')
+      
       const redirectPath = roleRoutes[user.role as keyof typeof roleRoutes] || '/'
       setTimeout(() => {
         router.push(redirectPath)
