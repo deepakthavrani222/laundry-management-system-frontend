@@ -76,7 +76,7 @@ const SERVICE_TYPES = [
   { id: 'home_pickup_self_pickup', title: 'Pickup + Self Collect', subtitle: 'Home Pickup + Collect from Branch', icon: 'package', discount: 25, discountLabel: 'Save upto ₹25' },
 ]
 
-export default function BookingModal({ isOpen, onClose, onLoginRequired, tenancyId }: BookingModalProps) {
+export default function BookingModal({ isOpen, onClose, onLoginRequired, tenantBranches, tenancyId }: BookingModalProps) {
   const { isAuthenticated, user, token } = useAuthStore()
   const [step, setStep] = useState(1)
   const [loading, setLoading] = useState(false)
@@ -87,6 +87,8 @@ export default function BookingModal({ isOpen, onClose, onLoginRequired, tenancy
   const [serviceItems, setServiceItems] = useState<Record<string, ServiceItem[]>>({})
   const [addresses, setAddresses] = useState<Address[]>([])
   const [timeSlots, setTimeSlots] = useState<string[]>([])
+  const [branches, setBranches] = useState<Branch[]>([])
+  const [selectedBranch, setSelectedBranch] = useState<Branch | null>(null)
   
   // Selection states
   const [selectedService, setSelectedService] = useState<Service | null>(null)
@@ -96,6 +98,9 @@ export default function BookingModal({ isOpen, onClose, onLoginRequired, tenancy
   const [selectedTimeSlot, setSelectedTimeSlot] = useState('')
   const [paymentMethod, setPaymentMethod] = useState<'online' | 'cod'>('cod')
   const [specialInstructions, setSpecialInstructions] = useState('')
+  
+  // Tenant booking logic
+  const isTenantBooking = !!tenantBranches && tenantBranches.length > 0
   
   // Service type state (self drop-off / self pickup)
   const [serviceType, setServiceType] = useState<'full_service' | 'self_drop_self_pickup' | 'self_drop_home_delivery' | 'home_pickup_self_pickup'>('full_service')

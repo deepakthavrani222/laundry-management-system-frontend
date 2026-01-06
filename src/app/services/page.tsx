@@ -180,7 +180,7 @@ export default function ServicesPage() {
   const router = useRouter()
   
   // Use language hook for reactive translations
-  const { language, t } = useLanguage()
+  const { language, setLanguage, t } = useLanguage()
 
   // Get computed theme colors based on scheme
   const theme = getThemeColors(themeColor, scheme)
@@ -227,8 +227,6 @@ export default function ServicesPage() {
   // Handle language change
   const handleLanguageChange = (lang: Language) => {
     setLanguage(lang)
-    localStorage.setItem('landing_language', lang)
-    window.dispatchEvent(new CustomEvent('languageChange', { detail: { language: lang } }))
   }
 
   const handleBookNow = () => {
