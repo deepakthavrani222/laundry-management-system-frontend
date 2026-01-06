@@ -60,13 +60,12 @@ interface BookingModalProps {
 }
 
 const STEPS = [
-  { id: 1, title: 'Branch', icon: Building2 },
-  { id: 2, title: 'Service Type', icon: Truck },
-  { id: 3, title: 'Service', icon: Sparkles },
-  { id: 4, title: 'Items', icon: Package },
-  { id: 5, title: 'Address', icon: MapPin },
-  { id: 6, title: 'Schedule', icon: Calendar },
-  { id: 7, title: 'Payment', icon: CreditCard },
+  { id: 1, title: 'Service Type', icon: Truck },
+  { id: 2, title: 'Service', icon: Sparkles },
+  { id: 3, title: 'Items', icon: Package },
+  { id: 4, title: 'Address', icon: MapPin },
+  { id: 5, title: 'Schedule', icon: Calendar },
+  { id: 6, title: 'Payment', icon: CreditCard },
 ]
 
 // Service type options for self drop-off / self pickup
@@ -77,24 +76,19 @@ const SERVICE_TYPES = [
   { id: 'home_pickup_self_pickup', title: 'Pickup + Self Collect', subtitle: 'Home Pickup + Collect from Branch', icon: 'package', discount: 25, discountLabel: 'Save upto ₹25' },
 ]
 
-export default function BookingModal({ isOpen, onClose, onLoginRequired, tenantBranches, tenancyId }: BookingModalProps) {
+export default function BookingModal({ isOpen, onClose, onLoginRequired, tenancyId }: BookingModalProps) {
   const { isAuthenticated, user, token } = useAuthStore()
   const [step, setStep] = useState(1)
   const [loading, setLoading] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   
-  // Check if this is a tenant booking (has pre-defined branches)
-  const isTenantBooking = tenantBranches && tenantBranches.length > 0
-  
   // Data states
-  const [branches, setBranches] = useState<Branch[]>([])
   const [services, setServices] = useState<Service[]>([])
   const [serviceItems, setServiceItems] = useState<Record<string, ServiceItem[]>>({})
   const [addresses, setAddresses] = useState<Address[]>([])
   const [timeSlots, setTimeSlots] = useState<string[]>([])
   
   // Selection states
-  const [selectedBranch, setSelectedBranch] = useState<Branch | null>(null)
   const [selectedService, setSelectedService] = useState<Service | null>(null)
   const [items, setItems] = useState<Record<string, number>>({})
   const [selectedAddressId, setSelectedAddressId] = useState('')

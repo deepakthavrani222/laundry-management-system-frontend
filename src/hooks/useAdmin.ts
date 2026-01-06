@@ -7,6 +7,7 @@ export interface DashboardMetrics {
   totalOrders: number
   todayOrders: number
   pendingOrders: number
+  completedTodayOrders: number
   expressOrders: number
   totalCustomers: number
   activeCustomers: number

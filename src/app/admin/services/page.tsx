@@ -129,14 +129,12 @@ const iconOptions = [
 export default function AdminServicesPage() {
   const { canCreate, canUpdate, canDelete } = usePermissions('services')
   const [services, setServices] = useState<Service[]>([])
-  const [branches, setBranches] = useState<Branch[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [search, setSearch] = useState('')
   const [categoryFilter, setCategoryFilter] = useState('')
   const [currentPage, setCurrentPage] = useState(1)
   const [showModal, setShowModal] = useState(false)
-  const [showBranchModal, setShowBranchModal] = useState(false)
   const [showDeleteModal, setShowDeleteModal] = useState(false)
   const [deleteServiceId, setDeleteServiceId] = useState<string | null>(null)
   const [deleteServiceName, setDeleteServiceName] = useState<string>('')
@@ -186,7 +184,6 @@ export default function AdminServicesPage() {
 
   useEffect(() => {
     fetchServices()
-    fetchBranches()
   }, [])
 
   const getAuthToken = () => {
@@ -221,25 +218,6 @@ export default function AdminServicesPage() {
       setError('Failed to connect to server')
     } finally {
       setLoading(false)
-    }
-  }
-
-  const fetchBranches = async () => {
-    try {
-      const token = getAuthToken()
-      const response = await fetch(`${API_URL}/admin/branches`, {
-        headers: {
-          'Content-Type': 'application/json',
-          ...(token && { Authorization: `Bearer ${token}` })
-        }
-      })
-
-      if (response.ok) {
-        const data = await response.json()
-        setBranches(data.data?.branches || data.branches || [])
-      }
-    } catch (err) {
-      console.error('Failed to fetch branches')
     }
   }
 
@@ -346,42 +324,6 @@ export default function AdminServicesPage() {
       }
     } catch (err) {
       showToast('Failed to update service status', 'error')
-    }
-  }
-
-  const handleAssignBranch = async (serviceId: string, branchId: string, isActive: boolean) => {
-    const branch = branches.find(b => b._id === branchId)
-    try {
-      const token = getAuthToken()
-      const response = await fetch(`${API_URL}/admin/services/${serviceId}/branches`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          ...(token && { Authorization: `Bearer ${token}` })
-        },
-        body: JSON.stringify({ branchId, isActive })
-      })
-
-      if (response.ok) {
-        const data = await response.json()
-        // Update selectedService with new data
-        if (data.data?.service) {
-          setSelectedService(data.data.service)
-          // Also update in services list locally
-          setServices(prev => prev.map(s => 
-            s._id === serviceId ? data.data.service : s
-          ))
-        }
-        showToast(isActive 
-          ? `Service enabled for ${branch?.name || 'branch'}!` 
-          : `Service disabled for ${branch?.name || 'branch'}!`
-        )
-      } else {
-        const errorData = await response.json()
-        showToast(errorData.message || 'Failed to assign service to branch', 'error')
-      }
-    } catch (err) {
-      showToast('Failed to assign service to branch', 'error')
     }
   }
 
@@ -591,7 +533,7 @@ export default function AdminServicesPage() {
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           <h1 className="text-3xl font-bold text-gray-800">Services Management</h1>
-          <p className="text-gray-600">Manage laundry services and branch assignments</p>
+          <p className="text-gray-600">Manage laundry services and service items</p>
         </div>
         {canCreate && (
           <Button onClick={() => { resetForm(); setShowModal(true) }} className="bg-teal-500 hover:bg-teal-600">
@@ -602,7 +544,7 @@ export default function AdminServicesPage() {
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div className="relative overflow-hidden bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl p-6 text-white shadow-xl shadow-blue-500/25 hover:shadow-blue-500/40 hover:scale-[1.02] transition-all duration-300">
           <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/2"></div>
           <div className="relative z-10">
@@ -631,16 +573,6 @@ export default function AdminServicesPage() {
             </div>
             <p className="text-sm text-amber-100">Express Available</p>
             <p className="text-3xl font-bold">{services.filter(s => s.isExpressAvailable).length}</p>
-          </div>
-        </div>
-        <div className="relative overflow-hidden bg-gradient-to-br from-purple-500 to-pink-600 rounded-2xl p-6 text-white shadow-xl shadow-purple-500/25 hover:shadow-purple-500/40 hover:scale-[1.02] transition-all duration-300">
-          <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/2"></div>
-          <div className="relative z-10">
-            <div className="w-12 h-12 bg-white/20 backdrop-blur rounded-xl flex items-center justify-center mb-4">
-              <Building2 className="w-6 h-6 text-white" />
-            </div>
-            <p className="text-sm text-purple-100">Total Branches</p>
-            <p className="text-3xl font-bold">{branches.length}</p>
           </div>
         </div>
       </div>
@@ -729,10 +661,6 @@ export default function AdminServicesPage() {
                           <Clock className="w-4 h-4 mr-1" />
                           {service.turnaroundTime.standard}h standard / {service.turnaroundTime.express}h express
                         </span>
-                        <span>
-                          <Building2 className="w-4 h-4 inline mr-1" />
-                          {service.branches?.length || 0} branches assigned
-                        </span>
                       </div>
                     </div>
                   </div>
@@ -747,16 +675,6 @@ export default function AdminServicesPage() {
                       >
                         <Package className="w-4 h-4 mr-1" />
                         Items
-                      </Button>
-                    )}
-                    {canUpdate && (
-                      <Button 
-                        variant="outline" 
-                        size="sm"
-                        onClick={() => { setSelectedService(service); setShowBranchModal(true) }}
-                      >
-                        <Building2 className="w-4 h-4 mr-1" />
-                        Branches
                       </Button>
                     )}
                     {canUpdate && (
@@ -952,74 +870,6 @@ export default function AdminServicesPage() {
                 </Button>
               </div>
             </form>
-          </div>
-        </div>
-      )}
-
-      {/* Branch Assignment Modal */}
-      {showBranchModal && selectedService && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-xl w-full max-w-xl max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between p-6 border-b border-gray-200">
-              <div>
-                <h2 className="text-xl font-bold text-gray-800">Branch Assignments</h2>
-                <p className="text-sm text-gray-600">{selectedService.displayName}</p>
-              </div>
-              <button onClick={() => setShowBranchModal(false)} className="p-2 hover:bg-gray-100 rounded-lg">
-                <X className="w-5 h-5 text-gray-500" />
-              </button>
-            </div>
-
-            <div className="p-6">
-              <p className="text-sm text-gray-600 mb-4">
-                Enable or disable this service for specific branches. Enabled branches will offer this service to customers.
-              </p>
-
-              <div className="space-y-3">
-                {branches.map((branch) => {
-                  const branchConfig = selectedService.branches?.find(
-                    b => b.branch?._id === branch._id || (b.branch as unknown as string) === branch._id
-                  )
-                  const isAssigned = !!branchConfig
-                  const isActive = branchConfig?.isActive ?? false
-
-                  return (
-                    <div key={branch._id} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-                      <div>
-                        <p className="font-medium text-gray-800">{branch.name}</p>
-                        <p className="text-sm text-gray-500">Code: {branch.code}</p>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <span className={`text-xs px-2 py-1 rounded ${isActive ? 'bg-green-100 text-green-800' : 'bg-gray-200 text-gray-600'}`}>
-                          {isActive ? 'Active' : 'Inactive'}
-                        </span>
-                        <Button
-                          size="sm"
-                          variant={isActive ? 'outline' : 'default'}
-                          className={isActive ? 'text-red-600 hover:bg-red-50' : 'bg-teal-500 hover:bg-teal-600'}
-                          onClick={() => handleAssignBranch(selectedService._id, branch._id, !isActive)}
-                        >
-                          {isActive ? 'Disable' : 'Enable'}
-                        </Button>
-                      </div>
-                    </div>
-                  )
-                })}
-
-                {branches.length === 0 && (
-                  <div className="text-center py-8 text-gray-500">
-                    <Building2 className="w-12 h-12 mx-auto mb-2 text-gray-400" />
-                    <p>No branches available</p>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            <div className="flex justify-end p-6 border-t border-gray-200">
-              <Button variant="outline" onClick={() => setShowBranchModal(false)}>
-                Close
-              </Button>
-            </div>
           </div>
         </div>
       )}

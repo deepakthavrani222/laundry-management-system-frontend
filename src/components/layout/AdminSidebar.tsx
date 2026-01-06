@@ -26,6 +26,7 @@ import {
 import { cn } from '@/lib/utils'
 import { useState, useEffect, createContext, useContext } from 'react'
 import { useAuthStore } from '@/store/authStore'
+import { useAdminDashboard } from '@/hooks/useAdmin'
 
 // Navigation items with permission requirements
 const navigation = [
@@ -115,6 +116,7 @@ export function AdminSidebar() {
   const pathname = usePathname()
   const { isCollapsed, setIsCollapsed } = useAdminSidebar()
   const { user, logout } = useAuthStore()
+  const { metrics, loading: metricsLoading } = useAdminDashboard()
 
   const toggleCollapse = () => {
     setIsCollapsed(!isCollapsed)
@@ -219,20 +221,43 @@ export function AdminSidebar() {
             <h3 className="text-sm font-medium text-gray-800 mb-2">
               Today&apos;s Overview
             </h3>
-            <div className="space-y-2 text-xs text-gray-600">
-              <div className="flex justify-between">
-                <span>New Orders</span>
-                <span className="font-medium text-blue-600">24</span>
+            {metricsLoading ? (
+              <div className="space-y-2 text-xs text-gray-400">
+                <div className="flex justify-between">
+                  <span>Loading...</span>
+                  <div className="w-6 h-3 bg-gray-200 rounded animate-pulse"></div>
+                </div>
+                <div className="flex justify-between">
+                  <span>Loading...</span>
+                  <div className="w-6 h-3 bg-gray-200 rounded animate-pulse"></div>
+                </div>
+                <div className="flex justify-between">
+                  <span>Loading...</span>
+                  <div className="w-6 h-3 bg-gray-200 rounded animate-pulse"></div>
+                </div>
               </div>
-              <div className="flex justify-between">
-                <span>Pending</span>
-                <span className="font-medium text-orange-600">8</span>
+            ) : (
+              <div className="space-y-2 text-xs text-gray-600">
+                <div className="flex justify-between">
+                  <span>New Orders</span>
+                  <span className="font-medium text-blue-600">
+                    {metrics?.todayOrders || 0}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span>Pending</span>
+                  <span className="font-medium text-orange-600">
+                    {metrics?.pendingOrders || 0}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span>Completed</span>
+                  <span className="font-medium text-green-600">
+                    {metrics?.completedTodayOrders || 0}
+                  </span>
+                </div>
               </div>
-              <div className="flex justify-between">
-                <span>Completed</span>
-                <span className="font-medium text-green-600">16</span>
-              </div>
-            </div>
+            )}
           </div>
         </div>
       )}
