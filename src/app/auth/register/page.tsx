@@ -1,14 +1,104 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { authAPI } from '@/lib/api'
 import toast from 'react-hot-toast'
 import { Eye, EyeOff, Mail, Lock, User, Phone, Sparkles, ArrowLeft, CheckCircle, Shield, Truck, Clock, Star } from 'lucide-react'
+import MinimalRegisterForm from '@/components/auth/templates/MinimalRegisterForm'
+import FreshSpinRegisterForm from '@/components/auth/templates/FreshSpinRegisterForm'
+import LaundryMasterRegisterForm from '@/components/auth/templates/LaundryMasterRegisterForm'
+import { getCurrentTemplate } from '@/utils/templateUtils'
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api'
 
 export default function RegisterPage() {
+  const [template, setTemplate] = useState<string>('original')
+  const [isLoadingTemplate, setIsLoadingTemplate] = useState(true)
+
+  useEffect(() => {
+    const detectTemplate = async () => {
+      // Check if we're on a tenant subdomain
+      const hostname = window.location.hostname
+      const isLocalhost = hostname === 'localhost' || hostname === '127.0.0.1'
+      
+      // Extract subdomain (e.g., "dgsfg" from "dgsfg.example.com")
+      let subdomain: string | null = null
+      if (!isLocalhost) {
+        const parts = hostname.split('.')
+        // If we have more than 2 parts (subdomain.domain.tld), first part is subdomain
+        if (parts.length > 2) {
+          subdomain = parts[0]
+        }
+      }
+      
+      // Also check URL params for tenant (used when redirecting from tenant pages)
+      const urlParams = new URLSearchParams(window.location.search)
+      const tenantParam = urlParams.get('tenant')
+      
+      // Also check sessionStorage for last visited tenant (set by tenant pages)
+      const lastTenant = sessionStorage.getItem('lastVisitedTenant')
+      
+      // Determine which tenant to use
+      const tenantSlug = subdomain || tenantParam || lastTenant
+      
+      // If we have a tenant, fetch tenant branding
+      if (tenantSlug && tenantSlug !== 'www') {
+        try {
+          const response = await fetch(`${API_URL}/public/tenancy/branding/${tenantSlug}`)
+          const data = await response.json()
+          
+          if (data.success && data.data) {
+            // Get template from tenant branding
+            const tenantTemplate = data.data.branding?.landingPageTemplate || 
+                                   data.data.landingPageTemplate || 
+                                   'original'
+            setTemplate(tenantTemplate)
+            setIsLoadingTemplate(false)
+            return
+          }
+        } catch (error) {
+          console.error('Error fetching tenant branding:', error)
+        }
+      }
+      
+      // Fallback to localStorage for non-tenant pages
+      setTemplate(getCurrentTemplate())
+      setIsLoadingTemplate(false)
+    }
+    
+    detectTemplate()
+  }, [])
+
+  // Show loading state while determining template
+  if (isLoadingTemplate) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-teal-600"></div>
+      </div>
+    )
+  }
+
+  // Use template-specific register forms for templates 2, 3, and 4
+  if (template === 'minimal') {
+    return <MinimalRegisterForm />
+  }
+
+  if (template === 'freshspin') {
+    return <FreshSpinRegisterForm />
+  }
+
+  if (template === 'starter') {
+    return <LaundryMasterRegisterForm />
+  }
+
+  // Original template (template 1) - keep existing design
+  return <OriginalRegisterForm />
+}
+
+function OriginalRegisterForm() {
   const [formData, setFormData] = useState({
     name: '',
     email: '',

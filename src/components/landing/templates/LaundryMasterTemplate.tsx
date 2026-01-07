@@ -837,15 +837,15 @@ export default function LaundryMasterTemplate({ themeColor, isAuthenticated, onB
         </div>
       </header>
 
-      {/* Hero Section - Image should not be cut */}
-      <section className="relative flex items-center overflow-hidden pt-24">
-        {/* Background Image - Contain to show full image */}
-        <div className="w-full">
-          <div className="relative">
+      {/* Hero Section - Balanced Height */}
+      <section className="relative flex items-center overflow-hidden pt-16">
+        {/* Background Image - Full width, increased height */}
+        <div className="w-full h-[70vh] min-h-[500px] max-h-[700px]">
+          <div className="relative h-full">
             <img 
               src="/images/image.png" 
               alt="Laundry Service"
-              className="w-full h-auto object-contain"
+              className="w-full h-full object-cover object-center"
             />
             {/* Overlay */}
             <div className="absolute inset-0 bg-black/40"></div>
@@ -853,41 +853,41 @@ export default function LaundryMasterTemplate({ themeColor, isAuthenticated, onB
             {/* Content positioned over image */}
             <div className="absolute inset-0 flex items-center">
               <div className="container mx-auto px-4">
-                <div className="max-w-3xl">
+                <div className="max-w-2xl">
                   <div 
-                    className="inline-flex items-center gap-2 text-white px-4 py-2 rounded-full text-sm font-medium mb-6"
+                    className="inline-flex items-center gap-2 text-white px-3 py-1.5 rounded-full text-xs font-medium mb-4"
                     style={{ backgroundColor: theme.accent }}
                   >
-                    <Sparkles className="w-4 h-4" />
+                    <Sparkles className="w-3 h-3" />
                     {t('hero.badge')}
                   </div>
                   
-                  <h1 className="text-4xl md:text-6xl font-bold text-white mb-6 leading-tight italic" style={{ fontFamily: 'Georgia, serif' }}>
+                  <h1 className="text-3xl md:text-5xl font-bold text-white mb-4 leading-tight italic" style={{ fontFamily: 'Georgia, serif' }}>
                     {t('hero.title')}
                   </h1>
                   
-                  <p className="text-lg text-white/90 mb-8 max-w-xl">
+                  <p className="text-base md:text-lg text-white/90 mb-6 max-w-xl">
                     {t('hero.subtitle')}
                   </p>
 
-                  <div className="flex flex-wrap gap-4">
+                  <div className="flex flex-wrap gap-3">
                     <Button 
                       size="lg" 
-                      className="text-white px-8 py-5 text-lg rounded-full font-semibold transition-all hover:opacity-90"
+                      className="text-white px-6 py-3 text-base rounded-full font-semibold transition-all hover:opacity-90"
                       style={{ backgroundColor: theme.accent }}
                       onClick={onBookNow}
                     >
-                      <Truck className="w-5 h-5 mr-2" />
+                      <Truck className="w-4 h-4 mr-2" />
                       {t('hero.schedulePickup')}
                     </Button>
                     <Link href="/services">
                       <Button 
                         size="lg" 
                         variant="outline"
-                        className="border-2 border-white text-white hover:bg-white hover:text-gray-900 px-8 py-5 text-lg rounded-full font-semibold bg-transparent"
+                        className="border-2 border-white text-white hover:bg-white hover:text-gray-900 px-6 py-3 text-base rounded-full font-semibold bg-transparent"
                       >
                         {t('hero.exploreServices')}
-                        <ArrowRight className="w-5 h-5 ml-2" />
+                        <ArrowRight className="w-4 h-4 ml-2" />
                       </Button>
                     </Link>
                   </div>

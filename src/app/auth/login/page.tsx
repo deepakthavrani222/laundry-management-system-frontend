@@ -1,305 +1,311 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { useRouter, useSearchParams } from 'next/navigation'
-import Link from 'next/link'
-import { Button } from '@/components/ui/button'
-import { authAPI } from '@/lib/api'
-import { useAuthStore } from '@/store/authStore'
-import toast from 'react-hot-toast'
-import { Eye, EyeOff, Mail, Lock, Sparkles, ArrowLeft, Shield, Truck, Clock, CheckCircle } from 'lucide-react'
+import { useEffect, useState } from 'react'
+import BaseLoginForm from '@/components/auth/BaseLoginForm'
+import MinimalLoginForm from '@/components/auth/templates/MinimalLoginForm'
+import FreshSpinLoginForm from '@/components/auth/templates/FreshSpinLoginForm'
+import LaundryMasterLoginForm from '@/components/auth/templates/LaundryMasterLoginForm'
+import { getCurrentTemplate, getTemplateTheme, getTemplateContent, LandingPageTemplate } from '@/utils/templateUtils'
+import { Sparkles, Truck, Clock, Shield, CheckCircle } from 'lucide-react'
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api'
 
 export default function LoginPage() {
-  const [formData, setFormData] = useState({
-    email: '',
-    password: '',
-  })
-  const [isLoading, setIsLoading] = useState(false)
-  const [showPassword, setShowPassword] = useState(false)
-  const router = useRouter()
-  const searchParams = useSearchParams()
-  const setAuth = useAuthStore((state) => state.setAuth)
-  
-  const redirectUrl = searchParams.get('redirect')
+  const [template, setTemplate] = useState<string>('original')
+  const [isLoading, setIsLoading] = useState(true)
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setIsLoading(true)
-
-    try {
-      const response = await authAPI.login(formData)
-      const { token, user } = response.data.data
-
-      setAuth(user, token)
-      toast.success('Login successful!')
-
-      // Handle redirect URL for all users (decode if needed)
-      if (redirectUrl) {
-        const decodedUrl = decodeURIComponent(redirectUrl)
-        console.log('Redirecting to:', decodedUrl)
-        setTimeout(() => {
-          router.push(decodedUrl)
-        }, 100)
-        return
-      }
-
-      const roleRoutes = {
-        customer: '/',
-        admin: '/admin/dashboard',
-        center_admin: '/center-admin/dashboard',
-        superadmin: '/superadmin/dashboard',
-      }
-
-      const redirectPath = roleRoutes[user.role as keyof typeof roleRoutes] || '/'
-      setTimeout(() => {
-        router.push(redirectPath)
-      }, 100)
-    } catch (error: any) {
-      const errorMessage = error.response?.data?.message || 'Login failed'
+  useEffect(() => {
+    const detectTemplate = async () => {
+      // Check if we're on a tenant subdomain
+      const hostname = window.location.hostname
+      const isLocalhost = hostname === 'localhost' || hostname === '127.0.0.1'
       
-      if (error.response?.data?.requiresEmailVerification) {
-        toast.error('Please verify your email address before logging in')
-        router.push(`/auth/verify-email?email=${encodeURIComponent(formData.email)}`)
-        return
+      // Extract subdomain (e.g., "dgsfg" from "dgsfg.example.com")
+      let subdomain: string | null = null
+      if (!isLocalhost) {
+        const parts = hostname.split('.')
+        // If we have more than 2 parts (subdomain.domain.tld), first part is subdomain
+        if (parts.length > 2) {
+          subdomain = parts[0]
+        }
       }
       
-      toast.error(errorMessage)
-    } finally {
+      // Also check URL params for tenant (used when redirecting from tenant pages)
+      const urlParams = new URLSearchParams(window.location.search)
+      const tenantParam = urlParams.get('tenant')
+      
+      // Also check sessionStorage for last visited tenant (set by tenant pages)
+      const lastTenant = sessionStorage.getItem('lastVisitedTenant')
+      
+      // Determine which tenant to use
+      const tenantSlug = subdomain || tenantParam || lastTenant
+      
+      console.log('🔍 Login Page - Hostname:', hostname)
+      console.log('🔍 Login Page - Subdomain detected:', subdomain)
+      console.log('🔍 Login Page - Tenant param:', tenantParam)
+      console.log('🔍 Login Page - Last visited tenant:', lastTenant)
+      console.log('🔍 Login Page - Using tenant:', tenantSlug)
+      
+      // If we have a tenant, fetch tenant branding
+      if (tenantSlug && tenantSlug !== 'www') {
+        try {
+          console.log('🔍 Login Page - Fetching tenant branding for:', tenantSlug)
+          const response = await fetch(`${API_URL}/public/tenancy/branding/${tenantSlug}`)
+          const data = await response.json()
+          
+          console.log('🔍 Login Page - Tenant branding response:', data)
+          
+          if (data.success && data.data) {
+            // Get template from tenant branding
+            const tenantTemplate = data.data.branding?.landingPageTemplate || 
+                                   data.data.landingPageTemplate || 
+                                   'original'
+            console.log('🔍 Login Page - Using tenant template:', tenantTemplate)
+            setTemplate(tenantTemplate)
+            setIsLoading(false)
+            return
+          }
+        } catch (error) {
+          console.error('🔍 Login Page - Error fetching tenant branding:', error)
+        }
+      }
+      
+      // Fallback to localStorage for non-tenant pages
+      const detectedTemplate = getCurrentTemplate()
+      console.log('🔍 Login Page - Detected template from localStorage:', detectedTemplate)
+      console.log('🔍 Login Page - localStorage landing_template:', localStorage.getItem('landing_template'))
+      setTemplate(detectedTemplate)
       setIsLoading(false)
     }
+    
+    detectTemplate()
+  }, [])
+
+  // Show loading state while determining template
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-teal-600"></div>
+      </div>
+    )
   }
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFormData(prev => ({
-      ...prev,
-      [e.target.name]: e.target.value
-    }))
+  // Use template-specific login forms for templates 2, 3, and 4
+  if (template === 'minimal') {
+    return <MinimalLoginForm />
   }
 
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-teal-50 via-cyan-50 to-blue-50">
-      {/* Back Button - Fixed Top Left */}
-      <div className="absolute top-6 left-6 z-20">
-        <Link 
-          href="/" 
-          className="inline-flex items-center px-4 py-2 bg-white/80 backdrop-blur-sm rounded-lg shadow-sm text-teal-600 hover:text-teal-700 hover:bg-white transition-all duration-200"
-        >
-          <ArrowLeft className="w-4 h-4 mr-2" />
-          Back to Home
-        </Link>
+  if (template === 'freshspin') {
+    return <FreshSpinLoginForm />
+  }
+
+  if (template === 'starter') {
+    return <LaundryMasterLoginForm />
+  }
+
+  // Original template (template 1) - keep existing design
+  const theme = getTemplateTheme(template)
+  const content = getTemplateContent(template)
+
+  // Original template content (keep as is)
+  const originalLeftContent = (
+    <>
+      {/* Logo & Brand */}
+      <div className="mb-12">
+        <div className="flex items-center space-x-3 mb-6">
+          <div className={`w-14 h-14 bg-gradient-to-r ${theme.cardGradient} rounded-xl flex items-center justify-center shadow-lg`}>
+            <Sparkles className="w-8 h-8 text-white" />
+          </div>
+          <span className="text-4xl font-bold text-gray-800" style={{ fontFamily: 'Poppins, sans-serif' }}>
+            {content.brandName}
+          </span>
+        </div>
+        <h1 className="text-4xl xl:text-5xl font-bold text-gray-800 mb-4" style={{ fontFamily: 'Poppins, sans-serif' }}>
+          {content.loginTitle}
+        </h1>
+        <p className="text-xl text-gray-600" style={{ fontSize: '15px' }}>
+          {content.tagline}
+        </p>
       </div>
 
-      {/* Main Content - Two Column Layout */}
-      <div className="min-h-screen flex items-center justify-center">
-        {/* Left Side - Branding & Features */}
-        <div className="hidden lg:flex lg:w-[45%] flex-col justify-center px-12 xl:px-16">
-          {/* Logo & Brand */}
-          <div className="mb-12">
-            <div className="flex items-center space-x-3 mb-6">
-              <div className="w-14 h-14 bg-gradient-to-r from-teal-500 to-cyan-600 rounded-xl flex items-center justify-center shadow-lg">
-                <Sparkles className="w-8 h-8 text-white" />
-              </div>
-              <span className="text-4xl font-bold text-gray-800" style={{ fontFamily: 'Poppins, sans-serif' }}>LaundryPro</span>
-            </div>
-            <h1 className="text-4xl xl:text-5xl font-bold text-gray-800 mb-4" style={{ fontFamily: 'Poppins, sans-serif' }}>
-              Welcome Back!
-            </h1>
-            <p className="text-xl text-gray-600" style={{ fontSize: '15px' }}>
-              Premium laundry service at your doorstep. Sign in to manage your orders and enjoy hassle-free laundry.
-            </p>
+      {/* Features */}
+      <div className="space-y-6">
+        <div className="flex items-start space-x-4">
+          <div className={`w-12 h-12 bg-${theme.primary}-100 rounded-lg flex items-center justify-center flex-shrink-0`}>
+            <Truck className={`w-6 h-6 text-${theme.primary}-600`} />
           </div>
-
-          {/* Features */}
-          <div className="space-y-6">
-            <div className="flex items-start space-x-4">
-              <div className="w-12 h-12 bg-teal-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                <Truck className="w-6 h-6 text-teal-600" />
-              </div>
-              <div>
-                <h3 className="font-semibold text-gray-800 mb-1" style={{ fontFamily: 'Poppins, sans-serif' }}>Free Pickup & Delivery</h3>
-                <p className="text-gray-600 text-sm">We pick up and deliver your clothes right at your doorstep</p>
-              </div>
-            </div>
-
-            <div className="flex items-start space-x-4">
-              <div className="w-12 h-12 bg-cyan-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                <Clock className="w-6 h-6 text-cyan-600" />
-              </div>
-              <div>
-                <h3 className="font-semibold text-gray-800 mb-1" style={{ fontFamily: 'Poppins, sans-serif' }}>24-48 Hour Turnaround</h3>
-                <p className="text-gray-600 text-sm">Quick service with express options available</p>
-              </div>
-            </div>
-
-            <div className="flex items-start space-x-4">
-              <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                <Shield className="w-6 h-6 text-blue-600" />
-              </div>
-              <div>
-                <h3 className="font-semibold text-gray-800 mb-1" style={{ fontFamily: 'Poppins, sans-serif' }}>Quality Guaranteed</h3>
-                <p className="text-gray-600 text-sm">Professional care for all types of fabrics</p>
-              </div>
-            </div>
-
-            <div className="flex items-start space-x-4">
-              <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                <CheckCircle className="w-6 h-6 text-green-600" />
-              </div>
-              <div>
-                <h3 className="font-semibold text-gray-800 mb-1" style={{ fontFamily: 'Poppins, sans-serif' }}>Real-time Tracking</h3>
-                <p className="text-gray-600 text-sm">Track your order status from pickup to delivery</p>
-              </div>
-            </div>
+          <div>
+            <h3 className="font-semibold text-gray-800 mb-1" style={{ fontFamily: 'Poppins, sans-serif' }}>Free Pickup & Delivery</h3>
+            <p className="text-gray-600 text-sm">We pick up and deliver your clothes right at your doorstep</p>
           </div>
         </div>
 
-        {/* Right Side - Login Form */}
-        <div className="w-full lg:w-[45%] flex items-center justify-center px-6 py-12 lg:px-12">
-          <div className="w-full max-w-md">
-            {/* Mobile Logo */}
-            <div className="lg:hidden text-center mb-8">
-              <div className="flex items-center justify-center space-x-2 mb-4">
-                <div className="w-12 h-12 bg-gradient-to-r from-teal-500 to-cyan-600 rounded-xl flex items-center justify-center">
-                  <Sparkles className="w-7 h-7 text-white" />
-                </div>
-                <span className="text-3xl font-bold text-gray-800">LaundryPro</span>
-              </div>
-              <h2 className="text-2xl font-bold text-gray-800">Welcome Back!</h2>
-            </div>
-
-            {/* Login Form Card */}
-            <div className="bg-white rounded-2xl shadow-xl p-8 border border-gray-100">
-              <div className="hidden lg:block mb-6">
-                <h2 className="text-2xl font-bold text-gray-800" style={{ fontFamily: 'Poppins, sans-serif' }}>Sign In</h2>
-                <p className="text-gray-600 mt-1" style={{ fontSize: '15px' }}>Access your dashboard</p>
-              </div>
-
-              <form className="space-y-5" onSubmit={handleSubmit}>
-                <div>
-                  <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
-                    Email Address
-                  </label>
-                  <div className="relative">
-                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                      <Mail className="h-5 w-5 text-gray-400" />
-                    </div>
-                    <input
-                      id="email"
-                      name="email"
-                      type="email"
-                      autoComplete="email"
-                      required
-                      className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all duration-200 bg-gray-50"
-                      placeholder="Enter your email"
-                      value={formData.email}
-                      onChange={handleChange}
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
-                    Password
-                  </label>
-                  <div className="relative">
-                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                      <Lock className="h-5 w-5 text-gray-400" />
-                    </div>
-                    <input
-                      id="password"
-                      name="password"
-                      type={showPassword ? 'text' : 'password'}
-                      autoComplete="current-password"
-                      required
-                      className="block w-full pl-10 pr-12 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all duration-200 bg-gray-50"
-                      placeholder="Enter your password"
-                      value={formData.password}
-                      onChange={handleChange}
-                    />
-                    <button
-                      type="button"
-                      className="absolute inset-y-0 right-0 pr-3 flex items-center"
-                      onClick={() => setShowPassword(!showPassword)}
-                    >
-                      {showPassword ? (
-                        <EyeOff className="h-5 w-5 text-gray-400 hover:text-gray-600" />
-                      ) : (
-                        <Eye className="h-5 w-5 text-gray-400 hover:text-gray-600" />
-                      )}
-                    </button>
-                  </div>
-                </div>
-
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center">
-                    <input
-                      id="remember-me"
-                      name="remember-me"
-                      type="checkbox"
-                      className="h-4 w-4 text-teal-600 focus:ring-teal-500 border-gray-300 rounded"
-                    />
-                    <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-700">
-                      Remember me
-                    </label>
-                  </div>
-                  <Link href="/auth/forgot-password" className="text-sm text-teal-600 hover:text-teal-500 font-medium">
-                    Forgot password?
-                  </Link>
-                </div>
-
-                <Button
-                  type="submit"
-                  disabled={isLoading}
-                  className="w-full bg-gradient-to-r from-teal-500 to-cyan-600 hover:from-teal-600 hover:to-cyan-700 text-white py-3 px-4 rounded-lg font-medium shadow-lg hover:shadow-xl transform hover:scale-[1.02] transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {isLoading ? (
-                    <div className="flex items-center justify-center">
-                      <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
-                      Signing in...
-                    </div>
-                  ) : (
-                    'Sign In'
-                  )}
-                </Button>
-              </form>
-
-              <div className="mt-6 text-center">
-                <p className="text-gray-600" style={{ fontSize: '15px' }}>
-                  Don't have an account?{' '}
-                  <Link href="/auth/register" className="font-medium text-teal-600 hover:text-teal-500 transition-colors">
-                    Create one now
-                  </Link>
-                </p>
-              </div>
-            </div>
-
-            {/* Demo Accounts */}
-            <div className="mt-6 bg-gray-50 rounded-xl p-4 border border-gray-200">
-              <h3 className="text-sm font-medium text-gray-700 mb-3">Quick Demo Login:</h3>
-              <div className="grid grid-cols-2 gap-2">
-                <label className="flex items-center space-x-2 cursor-pointer p-2 rounded-lg hover:bg-gray-100 transition-colors">
-                  <input
-                    type="radio"
-                    name="demoAccount"
-                    className="w-4 h-4 text-teal-600 focus:ring-teal-500"
-                    onChange={() => setFormData({ email: 'testcustomer@demo.com', password: 'password123' })}
-                  />
-                  <span className="text-sm text-gray-600">Customer</span>
-                </label>
-                <label className="flex items-center space-x-2 cursor-pointer p-2 rounded-lg hover:bg-gray-100 transition-colors">
-                  <input
-                    type="radio"
-                    name="demoAccount"
-                    className="w-4 h-4 text-teal-600 focus:ring-teal-500"
-                    onChange={() => setFormData({ email: 'deepakthavrani72@gmail.com', password: 'password123' })}
-                  />
-                  <span className="text-sm text-gray-600">Admin</span>
-                </label>
-              </div>
-            </div>
+        <div className="flex items-start space-x-4">
+          <div className={`w-12 h-12 bg-${theme.secondary}-100 rounded-lg flex items-center justify-center flex-shrink-0`}>
+            <Clock className={`w-6 h-6 text-${theme.secondary}-600`} />
           </div>
+          <div>
+            <h3 className="font-semibold text-gray-800 mb-1" style={{ fontFamily: 'Poppins, sans-serif' }}>24-48 Hour Turnaround</h3>
+            <p className="text-gray-600 text-sm">Quick service with express options available</p>
+          </div>
+        </div>
+
+        <div className="flex items-start space-x-4">
+          <div className={`w-12 h-12 bg-${theme.accent}-100 rounded-lg flex items-center justify-center flex-shrink-0`}>
+            <Shield className={`w-6 h-6 text-${theme.accent}-600`} />
+          </div>
+          <div>
+            <h3 className="font-semibold text-gray-800 mb-1" style={{ fontFamily: 'Poppins, sans-serif' }}>Quality Guaranteed</h3>
+            <p className="text-gray-600 text-sm">Professional care for all types of fabrics</p>
+          </div>
+        </div>
+
+        <div className="flex items-start space-x-4">
+          <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center flex-shrink-0">
+            <CheckCircle className="w-6 h-6 text-green-600" />
+          </div>
+          <div>
+            <h3 className="font-semibold text-gray-800 mb-1" style={{ fontFamily: 'Poppins, sans-serif' }}>Real-time Tracking</h3>
+            <p className="text-gray-600 text-sm">Track your order status from pickup to delivery</p>
+          </div>
+        </div>
+      </div>
+    </>
+  )
+
+  // Minimal template content
+  const minimalLeftContent = (
+    <div className="text-center">
+      <div className="mb-8">
+        <div className={`w-20 h-20 bg-gradient-to-r ${theme.cardGradient} rounded-full flex items-center justify-center mx-auto mb-6 shadow-lg`}>
+          <Sparkles className="w-10 h-10 text-white" />
+        </div>
+        <h1 className="text-5xl font-light text-gray-800 mb-4" style={{ fontFamily: 'Inter, sans-serif' }}>
+          {content.brandName}
+        </h1>
+        <p className="text-lg text-gray-500 font-light">
+          {content.tagline}
+        </p>
+      </div>
+      <div className="space-y-4 text-left max-w-sm mx-auto">
+        <div className="flex items-center space-x-3">
+          <div className="w-2 h-2 bg-indigo-500 rounded-full"></div>
+          <span className="text-gray-600">Effortless booking</span>
+        </div>
+        <div className="flex items-center space-x-3">
+          <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
+          <span className="text-gray-600">Transparent pricing</span>
+        </div>
+        <div className="flex items-center space-x-3">
+          <div className="w-2 h-2 bg-pink-500 rounded-full"></div>
+          <span className="text-gray-600">Reliable service</span>
         </div>
       </div>
     </div>
+  )
+
+  // FreshSpin template content
+  const freshspinLeftContent = (
+    <>
+      <div className="mb-12">
+        <div className="flex items-center space-x-3 mb-6">
+          <div className={`w-16 h-16 bg-gradient-to-r ${theme.cardGradient} rounded-2xl flex items-center justify-center shadow-xl transform rotate-12`}>
+            <Sparkles className="w-9 h-9 text-white" />
+          </div>
+          <span className="text-4xl font-bold text-gray-800" style={{ fontFamily: 'Poppins, sans-serif' }}>
+            {content.brandName}
+          </span>
+        </div>
+        <h1 className="text-5xl font-bold text-gray-800 mb-4" style={{ fontFamily: 'Poppins, sans-serif' }}>
+          {content.loginTitle}
+        </h1>
+        <p className="text-xl text-gray-600 font-medium">
+          {content.loginSubtitle}
+        </p>
+      </div>
+
+      <div className="grid grid-cols-2 gap-4">
+        <div className="bg-emerald-100 rounded-xl p-4 text-center">
+          <div className="text-2xl mb-2">🌿</div>
+          <div className="text-sm font-medium text-emerald-800">Eco-Friendly</div>
+        </div>
+        <div className="bg-green-100 rounded-xl p-4 text-center">
+          <div className="text-2xl mb-2">⚡</div>
+          <div className="text-sm font-medium text-green-800">Super Fast</div>
+        </div>
+        <div className="bg-lime-100 rounded-xl p-4 text-center">
+          <div className="text-2xl mb-2">✨</div>
+          <div className="text-sm font-medium text-lime-800">Fresh Clean</div>
+        </div>
+        <div className="bg-teal-100 rounded-xl p-4 text-center">
+          <div className="text-2xl mb-2">💚</div>
+          <div className="text-sm font-medium text-teal-800">Love Care</div>
+        </div>
+      </div>
+    </>
+  )
+
+  // LaundryMaster template content
+  const starterLeftContent = (
+    <>
+      <div className="mb-12">
+        <div className="flex items-center space-x-3 mb-6">
+          <div className={`w-16 h-16 bg-gradient-to-r ${theme.cardGradient} rounded-xl flex items-center justify-center shadow-xl border-2 border-purple-200`}>
+            <Sparkles className="w-9 h-9 text-white" />
+          </div>
+          <span className="text-4xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent" style={{ fontFamily: 'Poppins, sans-serif' }}>
+            {content.brandName}
+          </span>
+        </div>
+        <h1 className="text-5xl font-bold text-gray-800 mb-4" style={{ fontFamily: 'Poppins, sans-serif' }}>
+          {content.loginTitle}
+        </h1>
+        <p className="text-xl text-gray-600">
+          {content.loginSubtitle}
+        </p>
+      </div>
+
+      <div className="space-y-6">
+        <div className="bg-gradient-to-r from-purple-100 to-pink-100 rounded-xl p-6">
+          <h3 className="font-bold text-purple-800 mb-2">Premium Features</h3>
+          <ul className="space-y-2 text-sm text-purple-700">
+            <li>• AI-powered fabric care</li>
+            <li>• 24/7 concierge service</li>
+            <li>• Premium packaging</li>
+            <li>• Express delivery</li>
+          </ul>
+        </div>
+        
+        <div className="bg-gradient-to-r from-violet-100 to-purple-100 rounded-xl p-6">
+          <h3 className="font-bold text-violet-800 mb-2">Master Benefits</h3>
+          <ul className="space-y-2 text-sm text-violet-700">
+            <li>• Priority booking</li>
+            <li>• Loyalty rewards</li>
+            <li>• Quality guarantee</li>
+            <li>• Expert consultation</li>
+          </ul>
+        </div>
+      </div>
+    </>
+  )
+
+  const getLeftContent = () => {
+    switch (template) {
+      case 'minimal':
+        return minimalLeftContent
+      case 'freshspin':
+        return freshspinLeftContent
+      case 'starter':
+        return starterLeftContent
+      default:
+        return originalLeftContent
+    }
+  }
+
+  return (
+    <BaseLoginForm 
+      template={template}
+      leftSideContent={getLeftContent()}
+    />
   )
 }

@@ -52,8 +52,10 @@ export default function LandingPageSelector() {
 
   // Save preferences to localStorage
   const handleTemplateChange = (template: TemplateType) => {
+    console.log('🎨 LandingPageSelector - Template changing to:', template)
     setCurrentTemplate(template)
     localStorage.setItem(STORAGE_KEY_TEMPLATE, template)
+    console.log('🎨 LandingPageSelector - Saved to localStorage:', localStorage.getItem(STORAGE_KEY_TEMPLATE))
   }
 
   const handleColorChange = (color: ThemeColor) => {

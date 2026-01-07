@@ -107,6 +107,11 @@ export default function TenantLandingPage() {
         }
         
         setTenantData(data.data)
+        
+        // Save tenant slug to sessionStorage for auth pages to use
+        console.log('🏪 Tenant Page - Saving tenant to sessionStorage:', tenant)
+        sessionStorage.setItem('lastVisitedTenant', tenant as string)
+        console.log('🏪 Tenant Page - Saved! Verify:', sessionStorage.getItem('lastVisitedTenant'))
       } catch (err) {
         console.error('Error fetching tenant branding:', err)
         setError('Failed to load')

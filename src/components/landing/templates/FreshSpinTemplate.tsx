@@ -335,13 +335,13 @@ function HeroCarousel({ onBookNow, t, theme }: { onBookNow: () => void; t: (key:
       {/* Navigation Arrows */}
       <button 
         onClick={goToPrev}
-        className="absolute left-4 top-1/2 -translate-y-1/2 z-20 w-12 h-12 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center hover:bg-white/40 transition-all"
+        className="absolute left-4 top-1/2 -translate-y-1/2 z-20 w-12 h-12 rounded-lg bg-white/20 backdrop-blur-sm flex items-center justify-center hover:bg-white/40 transition-all"
       >
         <ChevronLeft className="w-6 h-6 text-white" />
       </button>
       <button 
         onClick={goToNext}
-        className="absolute right-4 top-1/2 -translate-y-1/2 z-20 w-12 h-12 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center hover:bg-white/40 transition-all"
+        className="absolute right-4 top-1/2 -translate-y-1/2 z-20 w-12 h-12 rounded-lg bg-white/20 backdrop-blur-sm flex items-center justify-center hover:bg-white/40 transition-all"
       >
         <ChevronRight className="w-6 h-6 text-white" />
       </button>

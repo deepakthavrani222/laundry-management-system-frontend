@@ -851,6 +851,20 @@ export default function OriginalTemplate({ themeColor, isAuthenticated, user, on
   return (
     <div className={`min-h-screen transition-colors duration-500`} style={{ backgroundColor: isDarkTheme ? '#111827' : theme.pageBg }}>
       
+      {/* Settings Panel - Only show on main site, not tenant pages */}
+      {!isTenantPage && (
+        <SettingsPanel
+          themeColor={themeColor}
+          currentLanguage={language}
+          currentTemplate={currentTemplate || 'original'}
+          scheme={scheme}
+          onColorChange={onColorChange}
+          onLanguageChange={onLanguageChange}
+          onSchemeChange={handleSchemeChange}
+          onTemplateChange={onTemplateChange}
+        />
+      )}
+      
       {/* Navigation */}
       <nav 
         className="shadow-sm border-b fixed top-0 left-0 right-0 z-50 transition-colors duration-500"

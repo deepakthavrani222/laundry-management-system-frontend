@@ -646,8 +646,8 @@ export default function MinimalTemplate({ themeColor, isAuthenticated, onBookNow
       {/* Shared Header Component */}
       <TemplateHeader />
 
-      {/* Hero Section - Compact Height */}
-      <section className="relative h-[60vh] min-h-[400px] max-h-[550px] flex items-center overflow-hidden pt-16">
+      {/* Hero Section - Increased Height for Full Video */}
+      <section className="relative h-[75vh] min-h-[500px] max-h-[700px] flex items-center overflow-hidden pt-16">
         {/* Video Background - Full Width */}
         <div className="absolute inset-0 z-0">
           <video 

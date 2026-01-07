@@ -191,34 +191,6 @@ export default function TemplateHeader() {
   if (activeTemplate === 'freshspin') {
     return (
       <div className="fixed top-0 left-0 right-0 z-50">
-        {/* Top Bar - Contact Info */}
-        <div className={`${headerBg} py-2 border-b ${headerBorder}`}>
-          <div className="container mx-auto px-4">
-            <div className="flex flex-wrap justify-between items-center text-sm">
-              <div className="flex flex-wrap items-center gap-6">
-                <div className={`flex items-center gap-2 ${textMuted}`}>
-                  <div className={`w-5 h-5 rounded-full flex items-center justify-center`} style={{ backgroundColor: colors.accent }}>
-                    <Phone className="w-2.5 h-2.5 text-white" />
-                  </div>
-                  <span className="text-xs">+91 98765 43210</span>
-                </div>
-                <div className={`flex items-center gap-2 ${textMuted}`}>
-                  <div className={`w-5 h-5 rounded-full flex items-center justify-center`} style={{ backgroundColor: colors.accent }}>
-                    <Mail className="w-2.5 h-2.5 text-white" />
-                  </div>
-                  <span className="text-xs">support@laundrypro.com</span>
-                </div>
-                <div className={`hidden md:flex items-center gap-2 ${textMuted}`}>
-                  <div className={`w-5 h-5 rounded-full flex items-center justify-center`} style={{ backgroundColor: colors.accent }}>
-                    <Clock className="w-2.5 h-2.5 text-white" />
-                  </div>
-                  <span className="text-xs">{t('about.feature2')}</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-        
         {/* Main Header */}
         <header className={`${headerBg} py-3 shadow-sm`}>
           <div className="container mx-auto px-4">
