@@ -7,6 +7,7 @@ import { X, MapPin, Sparkles, Package, Calendar, Clock, ChevronRight, ChevronLef
 import { Button } from '@/components/ui/button'
 import { useAuthStore } from '@/store/authStore'
 import toast from 'react-hot-toast'
+import { formatOrderNumber } from '@/utils/orderUtils'
 import QRCodeDisplay from '@/components/QRCodeDisplay'
 
 interface Branch {
@@ -66,6 +67,7 @@ const STEPS = [
   { id: 4, title: 'Address', icon: MapPin },
   { id: 5, title: 'Schedule', icon: Calendar },
   { id: 6, title: 'Payment', icon: CreditCard },
+  { id: 7, title: 'Confirm', icon: Check },
 ]
 
 // Service type options for self drop-off / self pickup
@@ -201,7 +203,7 @@ export default function BookingModal({ isOpen, onClose, onLoginRequired, tenantB
   const fetchServices = async (branchId: string) => {
     try {
       setLoading(true)
-      const response = await fetch(`${API_URL}/services/branch/${branchId}`)
+      const response = await fetch(`${API_URL}/branches/${branchId}/services/enabled`)
       const data = await response.json()
       if (data.success) setServices(data.data.services || [])
     } catch (error) {
@@ -519,6 +521,7 @@ export default function BookingModal({ isOpen, onClose, onLoginRequired, tenantB
   // Success Screen
   if (orderSuccess) {
     const orderNumber = createdOrder?.orderNumber || createdOrder?._id || ''
+    const displayOrderNumber = formatOrderNumber(orderNumber)
     const qrData = `${typeof window !== 'undefined' ? window.location.origin : ''}/customer/orders/${createdOrder?._id}`
     
     return (
@@ -567,7 +570,7 @@ export default function BookingModal({ isOpen, onClose, onLoginRequired, tenantB
             {createdOrder && (
               <div className="text-center">
                 <p className="text-sm text-gray-500">Order ID</p>
-                <p className="font-mono font-bold text-teal-600">{orderNumber}</p>
+                <p className="font-mono font-bold text-teal-600">{displayOrderNumber}</p>
               </div>
             )}
             

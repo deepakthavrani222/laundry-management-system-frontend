@@ -5,6 +5,7 @@ import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Pagination } from '@/components/ui/Pagination'
+import { formatOrderNumber } from '@/utils/orderUtils'
 import { 
   Package, 
   Plus, 
@@ -187,7 +188,7 @@ export default function OrdersPage() {
                       </div>
                       <div>
                         <div className="flex items-center gap-2 mb-1">
-                          <h3 className="font-semibold text-gray-800">{order.orderNumber}</h3>
+                          <h3 className="font-semibold text-gray-800">{formatOrderNumber(order.orderNumber)}</h3>
                           <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${getStatusColor(order.status)}`}>
                             <StatusIcon className="w-3 h-3 mr-1" />
                             {getStatusText(order.status)}

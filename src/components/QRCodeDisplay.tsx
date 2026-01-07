@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { Download, Printer, Loader2 } from 'lucide-react';
 import QRCode from 'qrcode';
+import { formatOrderNumber } from '@/utils/orderUtils';
 
 interface QRCodeDisplayProps {
   data: string;
@@ -22,6 +23,8 @@ export default function QRCodeDisplay({
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  
+  const displayOrderNumber = formatOrderNumber(orderNumber);
 
   useEffect(() => {
     if (canvasRef.current && data) {
@@ -62,7 +65,7 @@ export default function QRCodeDisplay({
       });
       
       const link = document.createElement('a');
-      link.download = `qr-order-${orderNumber}.png`;
+      link.download = `qr-order-${displayOrderNumber}.png`;
       link.href = dataUrl;
       link.click();
     } catch (err) {
@@ -85,7 +88,7 @@ export default function QRCodeDisplay({
         <!DOCTYPE html>
         <html>
           <head>
-            <title>QR Code - ${orderNumber}</title>
+            <title>QR Code - ${displayOrderNumber}</title>
             <style>
               body { 
                 display: flex; 
@@ -133,7 +136,7 @@ export default function QRCodeDisplay({
           <body>
             <div class="container">
               <div class="title">LaundryPro Order</div>
-              <div class="order">#${orderNumber}</div>
+              <div class="order">#${displayOrderNumber}</div>
               <img src="${dataUrl}" alt="QR Code" />
               <div class="scan-text">Scan to view order details</div>
             </div>

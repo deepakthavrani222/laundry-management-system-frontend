@@ -23,7 +23,9 @@ import {
   AlertCircle,
   Check,
   Package,
-  Loader2
+  Loader2,
+  ToggleLeft,
+  ToggleRight
 } from 'lucide-react'
 
 const ITEMS_PER_PAGE = 8
@@ -155,6 +157,13 @@ export default function AdminServicesPage() {
     basePrice: 0,
     description: ''
   })
+
+  // Branches management state
+  const [showBranchesModal, setShowBranchesModal] = useState(false)
+  const [branches, setBranches] = useState<any[]>([])
+  const [branchServices, setBranchServices] = useState<any[]>([])
+  const [branchesLoading, setBranchesLoading] = useState(false)
+  const [selectedServiceForBranches, setSelectedServiceForBranches] = useState<Service | null>(null)
 
   const showToast = (message: string, type: 'success' | 'error' = 'success') => {
     const id = Date.now()
@@ -492,6 +501,98 @@ export default function AdminServicesPage() {
     }
   }
 
+  // Branches management functions
+  const handleOpenBranchesModal = async (service: Service) => {
+    setSelectedServiceForBranches(service)
+    setShowBranchesModal(true)
+    setBranchesLoading(true)
+    
+    try {
+      const token = getAuthToken()
+      
+      // Fetch all branches for this tenancy
+      const branchesResponse = await fetch(`${API_URL}/admin/branches-management`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      })
+      
+      if (branchesResponse.ok) {
+        const branchesData = await branchesResponse.json()
+        setBranches(branchesData.data.branches || [])
+        
+        // Fetch branch-service configurations for each branch
+        const branchServicePromises = branchesData.data.branches.map(async (branch: any) => {
+          const response = await fetch(`${API_URL}/admin/branches/${branch._id}/services`, {
+            headers: {
+              'Authorization': `Bearer ${token}`
+            }
+          })
+          
+          if (response.ok) {
+            const data = await response.json()
+            const serviceConfig = data.data.services.find((s: any) => s._id === service._id)
+            return {
+              branchId: branch._id,
+              branchName: branch.name,
+              branchCode: branch.code,
+              isEnabled: serviceConfig?.branchConfig?.isEnabled || false,
+              priceMultiplier: serviceConfig?.branchConfig?.priceMultiplier || 1.0,
+              notes: serviceConfig?.branchConfig?.notes || ''
+            }
+          }
+          
+          return {
+            branchId: branch._id,
+            branchName: branch.name,
+            branchCode: branch.code,
+            isEnabled: false,
+            priceMultiplier: 1.0,
+            notes: ''
+          }
+        })
+        
+        const branchServiceConfigs = await Promise.all(branchServicePromises)
+        setBranchServices(branchServiceConfigs)
+      }
+    } catch (error) {
+      console.error('Error fetching branch services:', error)
+      showToast('Failed to load branch configurations', 'error')
+    } finally {
+      setBranchesLoading(false)
+    }
+  }
+
+  const toggleBranchService = async (branchId: string, currentStatus: boolean) => {
+    if (!selectedServiceForBranches) return
+    
+    try {
+      const token = getAuthToken()
+      const response = await fetch(`${API_URL}/admin/branches/${branchId}/services/${selectedServiceForBranches._id}/toggle`, {
+        method: 'PATCH',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      })
+      
+      if (response.ok) {
+        setBranchServices(prev => prev.map(bs => 
+          bs.branchId === branchId 
+            ? { ...bs, isEnabled: !currentStatus }
+            : bs
+        ))
+        
+        const branchName = branchServices.find(bs => bs.branchId === branchId)?.branchName
+        showToast(`Service ${!currentStatus ? 'enabled' : 'disabled'} for ${branchName}`)
+      } else {
+        showToast('Failed to toggle service', 'error')
+      }
+    } catch (error) {
+      console.error('Error toggling branch service:', error)
+      showToast('Failed to toggle service', 'error')
+    }
+  }
+
   if (loading) {
     return (
       <div className="space-y-6 mt-16">
@@ -675,6 +776,17 @@ export default function AdminServicesPage() {
                       >
                         <Package className="w-4 h-4 mr-1" />
                         Items
+                      </Button>
+                    )}
+                    {canUpdate && (
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={() => handleOpenBranchesModal(service)}
+                        className="text-purple-600 hover:bg-purple-50"
+                      >
+                        <Building2 className="w-4 h-4 mr-1" />
+                        Branches
                       </Button>
                     )}
                     {canUpdate && (
@@ -1043,6 +1155,132 @@ export default function AdminServicesPage() {
               <p className="text-xs text-gray-500">
                 💡 Items added here will be available for customers when they select this service.
               </p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Branches Management Modal */}
+      {showBranchesModal && selectedServiceForBranches && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl w-full max-w-2xl max-h-[80vh] flex flex-col">
+            <div className="flex items-center justify-between p-6 border-b border-gray-200">
+              <div>
+                <h2 className="text-xl font-bold text-gray-800">Branch Service Management</h2>
+                <p className="text-sm text-gray-600">
+                  Configure "{selectedServiceForBranches.displayName}" for each branch
+                </p>
+              </div>
+              <button 
+                onClick={() => setShowBranchesModal(false)} 
+                className="p-2 hover:bg-gray-100 rounded-lg"
+              >
+                <X className="w-5 h-5 text-gray-500" />
+              </button>
+            </div>
+
+            <div className="flex-1 overflow-y-auto p-6">
+              {branchesLoading ? (
+                <div className="flex items-center justify-center py-8">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600"></div>
+                </div>
+              ) : branchServices.length === 0 ? (
+                <div className="text-center py-8">
+                  <Building2 className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                  <h3 className="text-lg font-medium text-gray-900 mb-2">No branches found</h3>
+                  <p className="text-gray-600">Create branches first to manage service availability</p>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {branchServices.map((branchService) => (
+                    <div 
+                      key={branchService.branchId} 
+                      className={`p-4 border rounded-lg transition-all ${
+                        branchService.isEnabled 
+                          ? 'border-green-200 bg-green-50' 
+                          : 'border-gray-200 bg-gray-50'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
+                            <Building2 className="w-5 h-5 text-purple-600" />
+                          </div>
+                          <div>
+                            <h3 className="font-medium text-gray-900">
+                              {branchService.branchName}
+                            </h3>
+                            <p className="text-sm text-gray-600">
+                              Code: {branchService.branchCode}
+                            </p>
+                          </div>
+                        </div>
+                        
+                        <div className="flex items-center gap-3">
+                          <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                            branchService.isEnabled 
+                              ? 'bg-green-100 text-green-800' 
+                              : 'bg-gray-100 text-gray-800'
+                          }`}>
+                            {branchService.isEnabled ? 'Enabled' : 'Disabled'}
+                          </span>
+                          
+                          {/* Modern Toggle Switch */}
+                          <button
+                            onClick={() => toggleBranchService(branchService.branchId, branchService.isEnabled)}
+                            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-offset-2 ${
+                              branchService.isEnabled 
+                                ? 'bg-teal-500 hover:bg-teal-600' 
+                                : 'bg-gray-300 hover:bg-gray-400'
+                            }`}
+                          >
+                            <span className="sr-only">
+                              {branchService.isEnabled ? 'Disable' : 'Enable'} service for {branchService.branchName}
+                            </span>
+                            <span
+                              className={`inline-block h-4 w-4 transform rounded-full bg-white shadow-lg transition-transform duration-200 ease-in-out ${
+                                branchService.isEnabled ? 'translate-x-6' : 'translate-x-1'
+                              }`}
+                            />
+                          </button>
+                        </div>
+                      </div>
+                      
+                      {branchService.isEnabled && (
+                        <div className="mt-3 pt-3 border-t border-green-200">
+                          <div className="grid grid-cols-2 gap-4 text-sm">
+                            <div>
+                              <span className="text-gray-600">Price Multiplier:</span>
+                              <span className="ml-2 font-medium">{branchService.priceMultiplier}x</span>
+                            </div>
+                            <div>
+                              <span className="text-gray-600">Status:</span>
+                              <span className="ml-2 font-medium text-green-600">Active</span>
+                            </div>
+                          </div>
+                          {branchService.notes && (
+                            <div className="mt-2">
+                              <span className="text-gray-600 text-sm">Notes:</span>
+                              <p className="text-sm text-gray-800 mt-1">{branchService.notes}</p>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <div className="p-4 border-t bg-gray-50 rounded-b-xl">
+              <div className="flex items-center justify-between">
+                <p className="text-xs text-gray-500">
+                  💡 Toggle services on/off for each branch. Disabled services won't be available to customers at that branch.
+                </p>
+                <div className="text-xs text-gray-500">
+                  {branchServices.filter(bs => bs.isEnabled).length} of {branchServices.length} branches enabled
+                </div>
+              </div>
             </div>
           </div>
         </div>

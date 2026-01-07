@@ -265,7 +265,7 @@ export default function NewOrderPage() {
       
       try {
         setBranchServicesLoading(true)
-        const response = await fetch(`${API_URL}/services/branch/${selectedBranchId}`)
+        const response = await fetch(`${API_URL}/branches/${selectedBranchId}/services/enabled`)
         const data = await response.json()
         if (data.success) {
           setBranchServices(data.data.services || [])
