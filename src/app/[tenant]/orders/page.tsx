@@ -2,16 +2,21 @@
 
 import { useState, useEffect, useMemo } from 'react'
 import Link from 'next/link'
-import { useParams, useRouter, usePathname } from 'next/navigation'
+import { useParams, useRouter, usePathname, useSearchParams } from 'next/navigation'
 import { 
   ShoppingBag, Clock, CheckCircle, Package, Calendar, ArrowRight, 
   Sparkles, User, HelpCircle, ArrowLeft, Home, LogOut, Menu, X, MapPin,
-  Filter, Search, ChevronRight, ChevronLeft, Star, Users2, Wallet, Gift
+  Filter, Search, ChevronRight, ChevronLeft, Star, Users2, Wallet, Gift,
+  Truck, AlertCircle, Eye, RotateCcw, Plus, Loader2
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { Pagination } from '@/components/ui/Pagination'
 import { useAuthStore } from '@/store/authStore'
+import { formatOrderNumber } from '@/utils/orderUtils'
+import OrderQRCode from '@/components/OrderQRCode'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api'
+const ITEMS_PER_PAGE = 8
 
 interface TenantInfo {
   name: string
@@ -21,6 +26,19 @@ interface TenantInfo {
     logo?: { url?: string }
     theme?: { primaryColor?: string }
   }
+}
+
+const statusConfig: Record<string, { color: string; icon: any; text: string }> = {
+  placed: { color: 'text-blue-600 bg-blue-50', icon: Package, text: 'Placed' },
+  assigned_to_branch: { color: 'text-indigo-600 bg-indigo-50', icon: Package, text: 'Assigned' },
+  assigned_to_logistics_pickup: { color: 'text-cyan-600 bg-cyan-50', icon: Truck, text: 'Pickup Scheduled' },
+  picked: { color: 'text-yellow-600 bg-yellow-50', icon: Truck, text: 'Picked Up' },
+  in_process: { color: 'text-orange-600 bg-orange-50', icon: Clock, text: 'In Progress' },
+  ready: { color: 'text-purple-600 bg-purple-50', icon: CheckCircle, text: 'Ready' },
+  assigned_to_logistics_delivery: { color: 'text-teal-600 bg-teal-50', icon: Truck, text: 'Out for Delivery' },
+  out_for_delivery: { color: 'text-teal-600 bg-teal-50', icon: Truck, text: 'Out for Delivery' },
+  delivered: { color: 'text-green-600 bg-green-50', icon: CheckCircle, text: 'Delivered' },
+  cancelled: { color: 'text-red-600 bg-red-50', icon: AlertCircle, text: 'Cancelled' },
 }
 
 const getSidebarNavigation = (tenantSlug: string, currentPath: string) => [
@@ -39,6 +57,7 @@ export default function TenantOrders() {
   const params = useParams()
   const router = useRouter()
   const pathname = usePathname()
+  const searchParams = useSearchParams()
   const tenant = params.tenant as string
   const { user, token, isAuthenticated, logout } = useAuthStore()
   
@@ -49,11 +68,18 @@ export default function TenantOrders() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
   const [statusFilter, setStatusFilter] = useState('all')
   const [searchQuery, setSearchQuery] = useState('')
+  const [currentPage, setCurrentPage] = useState(1)
 
-  // Generate navigation with current path highlighting
   const sidebarNavigation = useMemo(() => getSidebarNavigation(tenant, pathname), [tenant, pathname])
 
-  // Load sidebar collapsed state from localStorage
+  // Read search query from URL on mount
+  useEffect(() => {
+    const searchFromUrl = searchParams.get('search')
+    if (searchFromUrl) {
+      setSearchQuery(searchFromUrl)
+    }
+  }, [searchParams])
+
   useEffect(() => {
     const saved = localStorage.getItem('tenant-sidebar-collapsed')
     if (saved) {
@@ -104,7 +130,6 @@ export default function TenantOrders() {
         })
         const data = await response.json()
         if (data.success) {
-          // API returns data.data.data (array) not data.data.orders
           setOrders(data.data.data || data.data.orders || [])
         }
       } catch (error) {
@@ -119,18 +144,19 @@ export default function TenantOrders() {
     }
   }, [token, tenantInfo?.tenancyId])
 
+  const getStatusIcon = (status: string) => {
+    const config = statusConfig[status]
+    return config ? config.icon : Package
+  }
 
-  const getStatusColor = (s: string) => {
-    const colors: Record<string, string> = { 
-      delivered: 'bg-emerald-100 text-emerald-700', 
-      placed: 'bg-amber-100 text-amber-700', 
-      picked: 'bg-blue-100 text-blue-700', 
-      in_process: 'bg-blue-100 text-blue-700', 
-      ready: 'bg-purple-100 text-purple-700', 
-      out_for_delivery: 'bg-purple-100 text-purple-700', 
-      cancelled: 'bg-red-100 text-red-700' 
-    }
-    return colors[s] || 'bg-gray-100 text-gray-700'
+  const getStatusColor = (status: string) => {
+    const config = statusConfig[status]
+    return config ? config.color : 'text-gray-600 bg-gray-50'
+  }
+
+  const getStatusText = (status: string) => {
+    const config = statusConfig[status]
+    return config ? config.text : status
   }
 
   const handleBookNow = () => {
@@ -145,16 +171,37 @@ export default function TenantOrders() {
   const filteredOrders = orders.filter(order => {
     const matchesStatus = statusFilter === 'all' || order.status === statusFilter
     const matchesSearch = searchQuery === '' || 
-      order.orderNumber?.toLowerCase().includes(searchQuery.toLowerCase())
+      order.orderNumber?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      order._id?.toLowerCase().includes(searchQuery.toLowerCase())
     return matchesStatus && matchesSearch
   })
+
+  // Pagination logic
+  const totalPages = Math.ceil(filteredOrders.length / ITEMS_PER_PAGE)
+  const paginatedOrders = filteredOrders.slice(
+    (currentPage - 1) * ITEMS_PER_PAGE,
+    currentPage * ITEMS_PER_PAGE
+  )
+
+  // Reset to page 1 when filters change
+  useEffect(() => {
+    setCurrentPage(1)
+  }, [searchQuery, statusFilter])
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page)
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  }
 
   if (!isAuthenticated) return null
 
   if (loading && !tenantInfo) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="w-16 h-16 border-4 border-teal-500 border-t-transparent rounded-full animate-spin" />
+        <div className="text-center">
+          <Loader2 className="w-12 h-12 animate-spin text-teal-500 mx-auto mb-4" />
+          <p className="text-gray-600">Loading...</p>
+        </div>
       </div>
     )
   }
@@ -281,44 +328,43 @@ export default function TenantOrders() {
               </button>
               <div>
                 <h1 className="text-xl lg:text-2xl font-bold text-gray-800">My Orders</h1>
-                <p className="text-sm text-gray-500">Orders at {tenantInfo?.name}</p>
+                <p className="text-sm text-gray-500">Track and manage your laundry orders</p>
               </div>
             </div>
             <Button 
-              className="bg-gradient-to-r from-teal-500 to-cyan-500 hover:from-teal-600 hover:to-cyan-600 text-white shadow-lg shadow-teal-500/30"
+              className="bg-teal-500 hover:bg-teal-600 text-white"
               onClick={handleBookNow}
             >
-              <Sparkles className="w-4 h-4 mr-2" />
+              <Plus className="w-4 h-4 mr-2" />
               <span className="hidden sm:inline">New Order</span>
             </Button>
           </div>
         </header>
 
-        <main className="flex-1 p-4 lg:p-8 space-y-6 overflow-y-auto mt-16">
-          {/* Filters */}
-          <div className="bg-white rounded-2xl p-4 shadow-lg border border-gray-100">
-            <div className="flex flex-col sm:flex-row gap-4">
-              <div className="flex-1 relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-                <input
-                  type="text"
-                  placeholder="Search by order number..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
-                />
-              </div>
-              <div className="flex items-center gap-2">
-                <Filter className="w-5 h-5 text-gray-400" />
+        <main className="flex-1 p-4 lg:p-8 overflow-y-auto mt-16">
+          <div className="max-w-4xl mx-auto space-y-6">
+            {/* Search and Filters */}
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
+              <div className="flex flex-col sm:flex-row gap-4">
+                <div className="flex-1 relative">
+                  <Search className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
+                  <input
+                    type="text"
+                    placeholder="Search by order number..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
+                  />
+                </div>
                 <select
                   value={statusFilter}
                   onChange={(e) => setStatusFilter(e.target.value)}
-                  className="px-4 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent bg-white"
+                  className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
                 >
                   <option value="all">All Status</option>
                   <option value="placed">Placed</option>
-                  <option value="picked">Picked</option>
-                  <option value="in_process">In Process</option>
+                  <option value="picked">Picked Up</option>
+                  <option value="in_process">In Progress</option>
                   <option value="ready">Ready</option>
                   <option value="out_for_delivery">Out for Delivery</option>
                   <option value="delivered">Delivered</option>
@@ -326,93 +372,141 @@ export default function TenantOrders() {
                 </select>
               </div>
             </div>
-          </div>
 
-          {/* Orders List */}
-          <div className="bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden">
+            {/* Orders List */}
             {loading ? (
-              <div className="flex items-center justify-center py-16">
-                <div className="w-12 h-12 border-4 border-teal-500 border-t-transparent rounded-full animate-spin" />
+              <div className="flex items-center justify-center py-12">
+                <Loader2 className="w-8 h-8 animate-spin text-teal-500" />
               </div>
             ) : filteredOrders.length === 0 ? (
-              <div className="text-center py-16 px-6">
-                <div className="w-20 h-20 mx-auto mb-4 bg-gradient-to-br from-teal-100 to-cyan-100 rounded-full flex items-center justify-center">
-                  <ShoppingBag className="w-10 h-10 text-teal-500" />
-                </div>
-                <h3 className="text-xl font-bold text-gray-800 mb-2">
-                  {orders.length === 0 ? 'No orders yet' : 'No matching orders'}
-                </h3>
-                <p className="text-gray-500 mb-6">
-                  {orders.length === 0 
-                    ? `Start your laundry journey with ${tenantInfo?.name}!`
-                    : 'Try adjusting your filters'}
+              <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-12 text-center">
+                <Package className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+                <h3 className="text-xl font-semibold text-gray-800 mb-2">No orders found</h3>
+                <p className="text-gray-600 mb-6">
+                  {searchQuery || statusFilter !== 'all' 
+                    ? 'Try adjusting your search or filters' 
+                    : `Start your laundry journey with ${tenantInfo?.name}!`
+                  }
                 </p>
                 {orders.length === 0 && (
                   <Button 
-                    className="bg-gradient-to-r from-teal-500 to-cyan-500"
+                    className="bg-teal-500 hover:bg-teal-600 text-white"
                     onClick={handleBookNow}
                   >
-                    <Sparkles className="w-4 h-4 mr-2" />Book First Order
+                    <Plus className="w-5 h-5 mr-2" />
+                    Create Order
                   </Button>
                 )}
               </div>
             ) : (
-              <div className="divide-y divide-gray-100">
-                {filteredOrders.map((order) => (
-                  <Link key={order._id} href={`/${tenant}/orders/${order._id}`}>
-                    <div className="group p-5 hover:bg-gradient-to-r hover:from-teal-50/50 hover:to-cyan-50/30 cursor-pointer transition-all">
-                      <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 bg-gradient-to-br from-teal-100 to-cyan-100 rounded-xl flex items-center justify-center group-hover:scale-105 transition-transform">
-                          <Package className="w-6 h-6 text-teal-600" />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2 mb-1">
-                            <span className="font-bold text-gray-800">#{order.orderNumber}</span>
-                            <span className={`px-2 py-0.5 text-xs font-semibold rounded-full ${getStatusColor(order.status)}`}>
-                              {order.status.replace(/_/g, ' ')}
-                            </span>
+              <div className="space-y-4">
+                {paginatedOrders.map((order) => {
+                  const StatusIcon = getStatusIcon(order.status)
+                  return (
+                    <div key={order._id} className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 hover:shadow-md transition-shadow">
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                        <div className="flex items-start space-x-4">
+                          <div className="w-10 h-10 bg-teal-500 rounded-lg flex items-center justify-center flex-shrink-0">
+                            <Package className="w-5 h-5 text-white" />
                           </div>
-                          <div className="flex items-center gap-3 text-sm text-gray-500">
-                            <span className="flex items-center gap-1">
-                              <Calendar className="w-3.5 h-3.5" />
-                              {new Date(order.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
-                            </span>
-                            <span>{order.items?.length || 0} items</span>
+                          <div>
+                            <div className="flex items-center gap-3 mb-1 flex-wrap">
+                              {/* Barcode */}
+                              <OrderQRCode 
+                                orderNumber={order.orderNumber}
+                                orderId={order._id}
+                                barcode={order.orderNumber}
+                                size="small"
+                                mode="barcode-only"
+                              />
+                              
+                              <h3 className="font-semibold text-gray-800">{formatOrderNumber(order.orderNumber)}</h3>
+                              <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${getStatusColor(order.status)}`}>
+                                <StatusIcon className="w-3 h-3 mr-1" />
+                                {getStatusText(order.status)}
+                              </span>
+                            </div>
+                            <div className="text-sm text-gray-600 space-y-1">
+                              <div className="flex items-center">
+                                <Calendar className="w-4 h-4 mr-1" />
+                                {new Date(order.createdAt).toLocaleDateString('en-IN', {
+                                  day: 'numeric',
+                                  month: 'short',
+                                  year: 'numeric'
+                                })}
+                              </div>
+                              <div className="flex items-center">
+                                <Package className="w-4 h-4 mr-1" />
+                                {order.items?.length || 0} items
+                              </div>
+                            </div>
                           </div>
                         </div>
-                        <p className="text-lg font-bold text-gray-800">₹{order.totalAmount || order.pricing?.total || 0}</p>
-                        <ChevronRight className="w-5 h-5 text-gray-300 group-hover:text-teal-500 group-hover:translate-x-1 transition-all" />
+
+                        <div className="flex items-center gap-4">
+                          <span className="text-lg font-bold text-gray-800">
+                            ₹{order.totalAmount || order.pricing?.total || 0}
+                          </span>
+                          <div className="flex gap-2">
+                            <Link href={`/${tenant}/orders/${order._id}`}>
+                              <Button variant="outline" size="sm">
+                                <Eye className="w-4 h-4 mr-1" />
+                                View
+                              </Button>
+                            </Link>
+                            {order.status === 'delivered' && !order.rating?.score && (
+                              <Button size="sm" className="bg-yellow-500 hover:bg-yellow-600 text-white">
+                                <Star className="w-4 h-4 mr-1" />
+                                Rate
+                              </Button>
+                            )}
+                          </div>
+                        </div>
                       </div>
                     </div>
-                  </Link>
+                  )
+                })}
+                
+                {/* Pagination */}
+                {filteredOrders.length > ITEMS_PER_PAGE && (
+                  <div className="bg-white rounded-xl shadow-sm border border-gray-200">
+                    <Pagination
+                      current={currentPage}
+                      pages={totalPages}
+                      total={filteredOrders.length}
+                      limit={ITEMS_PER_PAGE}
+                      onPageChange={handlePageChange}
+                      itemName="orders"
+                    />
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Stats Summary */}
+            {orders.length > 0 && (
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                {[
+                  { label: 'Total Orders', value: orders.length, icon: ShoppingBag, color: 'text-blue-600 bg-blue-100' },
+                  { label: 'Active', value: orders.filter(o => ['placed', 'picked', 'in_process', 'ready', 'out_for_delivery'].includes(o.status)).length, icon: Clock, color: 'text-amber-600 bg-amber-100' },
+                  { label: 'Completed', value: orders.filter(o => o.status === 'delivered').length, icon: CheckCircle, color: 'text-emerald-600 bg-emerald-100' },
+                  { label: 'Total Spent', value: `₹${orders.reduce((s, o) => s + (o.totalAmount || o.pricing?.total || 0), 0).toLocaleString()}`, icon: Package, color: 'text-purple-600 bg-purple-100' },
+                ].map((stat, i) => (
+                  <div key={i} className="bg-white rounded-xl p-4 shadow-sm border border-gray-200">
+                    <div className="flex items-center gap-3">
+                      <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${stat.color}`}>
+                        <stat.icon className="w-5 h-5" />
+                      </div>
+                      <div>
+                        <p className="text-2xl font-bold text-gray-800">{stat.value}</p>
+                        <p className="text-sm text-gray-500">{stat.label}</p>
+                      </div>
+                    </div>
+                  </div>
                 ))}
               </div>
             )}
           </div>
-
-          {/* Stats Summary */}
-          {orders.length > 0 && (
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-              {[
-                { label: 'Total', value: orders.length, icon: ShoppingBag, color: 'text-blue-600 bg-blue-100' },
-                { label: 'Active', value: orders.filter(o => ['placed', 'picked', 'in_process', 'ready', 'out_for_delivery'].includes(o.status)).length, icon: Clock, color: 'text-amber-600 bg-amber-100' },
-                { label: 'Completed', value: orders.filter(o => o.status === 'delivered').length, icon: CheckCircle, color: 'text-emerald-600 bg-emerald-100' },
-                { label: 'Total Spent', value: `₹${orders.reduce((s, o) => s + (o.totalAmount || o.pricing?.total || 0), 0).toLocaleString()}`, icon: Package, color: 'text-purple-600 bg-purple-100' },
-              ].map((stat, i) => (
-                <div key={i} className="bg-white rounded-xl p-4 shadow-lg border border-gray-100">
-                  <div className="flex items-center gap-3">
-                    <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${stat.color}`}>
-                      <stat.icon className="w-5 h-5" />
-                    </div>
-                    <div>
-                      <p className="text-2xl font-bold text-gray-800">{stat.value}</p>
-                      <p className="text-sm text-gray-500">{stat.label}</p>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
         </main>
       </div>
     </div>

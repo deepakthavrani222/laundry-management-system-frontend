@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { useAdminTicketDetail } from '@/hooks/useAdminTickets'
@@ -20,9 +20,19 @@ import {
   RefreshCw,
   Clock,
   MessageCircle,
-  Headphones
+  Headphones,
+  Loader2
 } from 'lucide-react'
 import Link from 'next/link'
+
+interface Message {
+  _id?: string
+  message: string
+  sender?: { role: string; name?: string }
+  isInternal?: boolean
+  timestamp: string
+  isPending?: boolean
+}
 
 export default function TicketDetailPage() {
   const params = useParams()
@@ -30,6 +40,7 @@ export default function TicketDetailPage() {
   const ticketId = params.id as string
   const { user } = useAuthStore()
   const messagesEndRef = useRef<HTMLDivElement>(null)
+  const messagesContainerRef = useRef<HTMLDivElement>(null)
   
   const { ticket, loading, error, addMessage, resolve, refetch } = useAdminTicketDetail(ticketId)
   
@@ -40,9 +51,27 @@ export default function TicketDetailPage() {
   const [sending, setSending] = useState(false)
   const [taking, setTaking] = useState(false)
   const [closing, setClosing] = useState(false)
+  const [optimisticMessages, setOptimisticMessages] = useState<Message[]>([])
+
+  // Smooth scroll to bottom
+  const scrollToBottom = useCallback(() => {
+    if (messagesContainerRef.current) {
+      messagesContainerRef.current.scrollTo({
+        top: messagesContainerRef.current.scrollHeight,
+        behavior: 'smooth'
+      })
+    }
+  }, [])
 
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+    scrollToBottom()
+  }, [ticket?.messages, optimisticMessages, scrollToBottom])
+
+  // Clear optimistic messages when real messages update
+  useEffect(() => {
+    if (ticket?.messages) {
+      setOptimisticMessages([])
+    }
   }, [ticket?.messages])
 
   const handleTakeTicket = async () => {
@@ -54,11 +83,11 @@ export default function TicketDetailPage() {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${localStorage.getItem('token')}`
         },
+        credentials: 'include',
         body: JSON.stringify({ status: 'in_progress' })
       })
       if (!response.ok) throw new Error('Failed to take ticket')
       await refetch()
-      alert('Ticket assigned to you!')
     } catch (err: any) {
       alert(`Failed: ${err.message}`)
     } finally {
@@ -76,11 +105,11 @@ export default function TicketDetailPage() {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${localStorage.getItem('token')}`
         },
+        credentials: 'include',
         body: JSON.stringify({ status: 'closed' })
       })
       if (!response.ok) throw new Error('Failed to close ticket')
       await refetch()
-      alert('Ticket closed!')
     } catch (err: any) {
       alert(`Failed: ${err.message}`)
     } finally {
@@ -89,14 +118,33 @@ export default function TicketDetailPage() {
   }
 
   const handleSendMessage = async () => {
-    if (!newMessage.trim()) return
+    if (!newMessage.trim() || sending) return
     
+    const messageText = newMessage.trim()
+    const messageIsInternal = isInternal
+    
+    // Add optimistic message immediately
+    const optimisticMsg: Message = {
+      _id: `temp-${Date.now()}`,
+      message: messageText,
+      sender: { role: 'admin', name: user?.name || 'Support' },
+      isInternal: messageIsInternal,
+      timestamp: new Date().toISOString(),
+      isPending: true
+    }
+    
+    setOptimisticMessages(prev => [...prev, optimisticMsg])
+    setNewMessage('')
     setSending(true)
+    
     try {
-      await addMessage(newMessage, isInternal)
-      setNewMessage('')
+      await addMessage(messageText, messageIsInternal)
+      // Optimistic message will be cleared when ticket.messages updates
     } catch (err: any) {
-      alert(`Failed: ${err.message}`)
+      // Remove optimistic message on error
+      setOptimisticMessages(prev => prev.filter(m => m._id !== optimisticMsg._id))
+      setNewMessage(messageText) // Restore message
+      alert(`Failed to send: ${err.message}`)
     } finally {
       setSending(false)
     }
@@ -112,7 +160,6 @@ export default function TicketDetailPage() {
       await resolve(resolution)
       setShowResolveForm(false)
       setResolution('')
-      alert('Ticket resolved!')
     } catch (err: any) {
       alert(`Failed: ${err.message}`)
     }
@@ -162,11 +209,14 @@ export default function TicketDetailPage() {
     }
   }
 
+  // Combine real messages with optimistic messages
+  const allMessages = [...(ticket?.messages || []), ...optimisticMessages]
+
   if (loading) {
     return (
       <div className="min-h-[60vh] flex items-center justify-center mt-16">
         <div className="text-center">
-          <div className="w-10 h-10 border-2 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <Loader2 className="w-10 h-10 text-blue-500 animate-spin mx-auto mb-4" />
           <p className="text-gray-500">Loading ticket...</p>
         </div>
       </div>
@@ -269,7 +319,7 @@ export default function TicketDetailPage() {
           </div>
 
           {/* Messages */}
-          <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-gray-50">
+          <div ref={messagesContainerRef} className="flex-1 overflow-y-auto p-4 space-y-4 bg-gray-50">
             {/* Initial Description */}
             <div className="flex justify-start">
               <div className="max-w-[80%] rounded-2xl px-4 py-3 bg-white border border-gray-200 shadow-sm">
@@ -285,17 +335,21 @@ export default function TicketDetailPage() {
             </div>
 
             {/* Messages */}
-            {ticket.messages?.map((msg, index) => {
+            {allMessages.map((msg, index) => {
               const isAdmin = msg.sender?.role !== 'customer'
+              const isPending = (msg as Message).isPending
               return (
-                <div key={msg._id || index} className={`flex ${isAdmin ? 'justify-end' : 'justify-start'}`}>
-                  <div className={`max-w-[80%] rounded-2xl px-4 py-3 ${
+                <div 
+                  key={msg._id || index} 
+                  className={`flex ${isAdmin ? 'justify-end' : 'justify-start'} ${isPending ? 'animate-pulse' : ''}`}
+                >
+                  <div className={`max-w-[80%] rounded-2xl px-4 py-3 transition-all duration-200 ${
                     msg.isInternal 
                       ? 'bg-yellow-50 border-2 border-yellow-300 border-dashed'
                       : isAdmin
-                        ? 'bg-gradient-to-r from-blue-500 to-indigo-600 text-white'
+                        ? 'bg-gradient-to-r from-blue-500 to-indigo-600 text-white shadow-md'
                         : 'bg-white border border-gray-200 shadow-sm'
-                  }`}>
+                  } ${isPending ? 'opacity-70' : ''}`}>
                     {!isAdmin && (
                       <div className="flex items-center gap-2 mb-1">
                         <User className="w-3 h-3 text-gray-500" />
@@ -305,20 +359,26 @@ export default function TicketDetailPage() {
                     {isAdmin && !msg.isInternal && (
                       <div className="flex items-center gap-2 mb-1">
                         <Headphones className="w-3 h-3 text-blue-200" />
-                        <span className="text-xs font-medium text-blue-200">Support</span>
+                        <span className="text-xs font-medium text-blue-200">
+                          {isPending ? 'Sending...' : 'Support'}
+                        </span>
+                        {isPending && <Loader2 className="w-3 h-3 text-blue-200 animate-spin" />}
                       </div>
                     )}
                     {msg.isInternal && (
                       <div className="flex items-center gap-2 mb-1">
                         <AlertTriangle className="w-3 h-3 text-yellow-600" />
-                        <span className="text-xs font-medium text-yellow-700">Internal Note</span>
+                        <span className="text-xs font-medium text-yellow-700">
+                          {isPending ? 'Saving note...' : 'Internal Note'}
+                        </span>
+                        {isPending && <Loader2 className="w-3 h-3 text-yellow-600 animate-spin" />}
                       </div>
                     )}
                     <p className={`text-sm ${msg.isInternal ? 'text-yellow-800' : ''}`}>{msg.message}</p>
                     <p className={`text-xs mt-1 ${
                       msg.isInternal ? 'text-yellow-600' : isAdmin ? 'text-blue-200' : 'text-gray-400'
                     }`}>
-                      {formatTime(msg.timestamp)}
+                      {isPending ? 'Sending...' : formatTime(msg.timestamp)}
                     </p>
                   </div>
                 </div>
@@ -357,29 +417,32 @@ export default function TicketDetailPage() {
                     onKeyPress={(e) => e.key === 'Enter' && !e.shiftKey && handleSendMessage()}
                     placeholder={isInternal ? "Type internal note..." : "Type your reply..."}
                     disabled={sending}
-                    className={`flex-1 px-4 py-2.5 border rounded-xl text-sm focus:outline-none focus:ring-2 ${
+                    className={`flex-1 px-4 py-2.5 border rounded-xl text-sm focus:outline-none focus:ring-2 transition-colors ${
                       isInternal 
                         ? 'border-yellow-300 bg-yellow-50 focus:ring-yellow-500' 
                         : 'border-gray-200 focus:ring-blue-500'
-                    }`}
+                    } ${sending ? 'opacity-50' : ''}`}
                   />
                   <Button
                     onClick={handleSendMessage}
                     disabled={!newMessage.trim() || sending}
-                    className="bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white px-4"
+                    className={`bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white px-4 transition-all ${
+                      sending ? 'opacity-70' : ''
+                    }`}
                   >
                     {sending ? (
-                      <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                      <Loader2 className="w-5 h-5 animate-spin" />
                     ) : (
                       <Send className="w-5 h-5" />
                     )}
                   </Button>
                 </div>
-                <label className="flex items-center gap-2 text-sm text-gray-600">
+                <label className="flex items-center gap-2 text-sm text-gray-600 cursor-pointer">
                   <input
                     type="checkbox"
                     checked={isInternal}
                     onChange={(e) => setIsInternal(e.target.checked)}
+                    disabled={sending}
                     className="rounded border-gray-300 text-yellow-500 focus:ring-yellow-500"
                   />
                   <span className={isInternal ? 'text-yellow-700 font-medium' : ''}>

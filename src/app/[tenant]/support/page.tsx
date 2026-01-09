@@ -229,6 +229,27 @@ export default function TenantSupportPage() {
         </header>
 
         <main className="flex-1 p-4 lg:p-8 space-y-6 overflow-y-auto">
+          {/* Hero Banner */}
+          <div className="bg-gradient-to-r from-teal-500 to-cyan-500 rounded-2xl p-6 lg:p-8 text-white shadow-lg">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <div className="w-14 h-14 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center">
+                  <Headphones className="w-7 h-7 text-white" />
+                </div>
+                <div>
+                  <h2 className="text-xl lg:text-2xl font-bold">How can we help you?</h2>
+                  <p className="text-white/80 text-sm lg:text-base">We're here to assist you with any questions or issues</p>
+                </div>
+              </div>
+              <Link href={`/${tenant}/support/new`} className="hidden md:block">
+                <Button className="bg-white text-teal-600 hover:bg-teal-50 shadow-lg">
+                  <Plus className="w-4 h-4 mr-2" />
+                  New Ticket
+                </Button>
+              </Link>
+            </div>
+          </div>
+
           {/* Stats */}
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
             {[
@@ -348,10 +369,10 @@ export default function TenantSupportPage() {
                 <div key={i} className="border border-gray-100 rounded-xl overflow-hidden">
                   <button onClick={() => setExpandedFaq(expandedFaq === i ? null : i)}
                     className="w-full flex items-center justify-between p-4 text-left hover:bg-gray-50 transition-colors">
-                    <span className="font-medium text-gray-800">{faq.question}</span>
-                    <ChevronDown className={`w-5 h-5 text-gray-400 transition-transform ${expandedFaq === i ? 'rotate-180' : ''}`} />
+                    <span className="font-medium text-gray-900">{faq.question}</span>
+                    <ChevronDown className={`w-5 h-5 text-gray-500 transition-transform ${expandedFaq === i ? 'rotate-180' : ''}`} />
                   </button>
-                  {expandedFaq === i && <div className="px-4 pb-4"><p className="text-gray-600 text-sm">{faq.answer}</p></div>}
+                  {expandedFaq === i && <div className="px-4 pb-4 bg-gray-50"><p className="text-gray-700 text-sm">{faq.answer}</p></div>}
                 </div>
               ))}
             </div>

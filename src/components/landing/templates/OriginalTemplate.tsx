@@ -359,24 +359,6 @@ function SettingsPanel({
               ))}
             </div>
           </div>
-
-          <div>
-            <h3 className="text-sm font-semibold text-gray-700 mb-3">{getTranslation(currentLanguage, 'original.settings.landingPage')}</h3>
-            <div className="space-y-2">
-              {templates.map((template) => (
-                <button
-                  key={template.id}
-                  onClick={() => onTemplateChange?.(template.id)}
-                  className={`w-full flex items-center gap-3 p-3 rounded-xl border-2 transition-all ${
-                    currentTemplate === template.id ? 'border-blue-500 bg-blue-50' : 'border-gray-200 hover:border-gray-300'
-                  }`}
-                >
-                  <span className={`font-medium ${currentTemplate === template.id ? 'text-blue-600' : 'text-gray-700'}`}>{template.name}</span>
-                  {currentTemplate === template.id && <CheckCircle className="w-5 h-5 text-blue-500 ml-auto" />}
-                </button>
-              ))}
-            </div>
-          </div>
         </div>
       </div>
     </>
@@ -525,8 +507,8 @@ function HeroCarousel({ isAuthenticated, user, onBookNow, colors, t, theme }: { 
         >
           {slides.map((slide, index) => (
             <div key={index} className="w-full flex-shrink-0">
-              <div className="grid lg:grid-cols-2 gap-4 items-center">
-                <div className="px-4 lg:pl-16">
+              <div className="grid lg:grid-cols-2 gap-4 pt-8 pb-0">
+                <div className="px-4 lg:pl-16 flex flex-col justify-center">
                   <h1 className="text-4xl lg:text-5xl font-extrabold text-gray-900 mb-4 leading-tight">{slide.title}</h1>
                   <p className="text-lg font-medium text-gray-800 mb-6">{slide.description}</p>
                   <div className="space-y-3 mb-8">
@@ -548,8 +530,15 @@ function HeroCarousel({ isAuthenticated, user, onBookNow, colors, t, theme }: { 
                     </Link>
                   </div>
                 </div>
-                <div className="relative flex justify-center items-end overflow-hidden">
-                  <img src={slide.image} alt={slide.title} className="w-auto max-h-[450px] object-contain object-bottom" style={{ mixBlendMode: 'multiply' }} />
+                <div className="relative flex justify-center items-end h-full">
+                  <img 
+                    src={slide.image} 
+                    alt={slide.title} 
+                    className="w-auto max-h-[520px] object-contain" 
+                    style={{ 
+                      mixBlendMode: 'multiply'
+                    }} 
+                  />
                 </div>
               </div>
             </div>
@@ -558,7 +547,7 @@ function HeroCarousel({ isAuthenticated, user, onBookNow, colors, t, theme }: { 
       </div>
 
       {/* Slide Indicators */}
-      <div className="flex justify-center gap-2 mt-6 pb-4">
+      <div className="absolute bottom-4 left-0 right-0 flex justify-center gap-2 z-20">
         {originalSlides.map((_, index) => (
           <button
             key={index}
@@ -758,7 +747,7 @@ function ScrollBannerSection({ isAuthenticated, onGalleryVisible, colors, themeC
 // Main Component
 export default function OriginalTemplate({ themeColor, isAuthenticated, user, onBookNow, onColorChange, onLanguageChange, onTemplateChange, currentTemplate, isTenantPage, tenantName }: OriginalTemplateProps) {
   // Use language hook for reactive translations
-  const { language, t } = useLanguage()
+  const { language, setLanguage, t } = useLanguage()
   const router = useRouter()
   
   // Handle logout - redirect to tenant page if on tenant, otherwise to home
@@ -866,20 +855,6 @@ export default function OriginalTemplate({ themeColor, isAuthenticated, user, on
   return (
     <div className={`min-h-screen transition-colors duration-500`} style={{ backgroundColor: isDarkTheme ? '#111827' : theme.pageBg }}>
       
-      {/* Settings Panel - Only show on main site, not tenant pages */}
-      {!isTenantPage && (
-        <SettingsPanel
-          themeColor={themeColor}
-          currentLanguage={language}
-          currentTemplate={currentTemplate || 'original'}
-          scheme={scheme}
-          onColorChange={onColorChange}
-          onLanguageChange={onLanguageChange}
-          onSchemeChange={handleSchemeChange}
-          onTemplateChange={onTemplateChange}
-        />
-      )}
-      
       {/* Navigation */}
       <nav 
         className="shadow-sm border-b fixed top-0 left-0 right-0 z-50 transition-colors duration-500"
@@ -961,6 +936,27 @@ export default function OriginalTemplate({ themeColor, isAuthenticated, user, on
                         <Link href={getTenantUrl('/orders')} className="flex items-center px-4 py-2 hover:opacity-80" style={{ color: theme.textSecondary }}><ShoppingBag className="w-4 h-4 mr-3" />{t('nav.myOrders')}</Link>
                         <Link href={getTenantUrl('/addresses')} className="flex items-center px-4 py-2 hover:opacity-80" style={{ color: theme.textSecondary }}><MapPin className="w-4 h-4 mr-3" />{t('nav.addresses')}</Link>
                         <hr style={{ borderColor: theme.border }} className="my-2" />
+                        {/* Language Selector */}
+                        <div className="px-4 py-2">
+                          <p className="text-xs font-medium mb-2" style={{ color: theme.textSecondary }}>{t('theme.language')}</p>
+                          <div className="flex gap-1">
+                            {[
+                              { id: 'en', flag: '🇺🇸' },
+                              { id: 'es', flag: '🇪🇸' },
+                              { id: 'hi', flag: '🇮🇳' },
+                            ].map((lang) => (
+                              <button
+                                key={lang.id}
+                                onClick={() => setLanguage(lang.id as Language)}
+                                className={`flex-1 py-1.5 rounded text-lg transition-all ${language === lang.id ? 'bg-blue-100 ring-2 ring-blue-500' : 'hover:bg-gray-100'}`}
+                                title={lang.id === 'en' ? 'English' : lang.id === 'es' ? 'Español' : 'हिंदी'}
+                              >
+                                {lang.flag}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                        <hr style={{ borderColor: theme.border }} className="my-2" />
                         <button onClick={handleLogout} className="flex items-center w-full px-4 py-2 text-red-500 hover:bg-red-50/10"><LogOut className="w-4 h-4 mr-3" />{t('nav.logout')}</button>
                       </div>
                     </div>
@@ -997,7 +993,7 @@ export default function OriginalTemplate({ themeColor, isAuthenticated, user, on
       </nav>
 
       {/* Hero Section */}
-      <section className="relative pt-24 pb-0 overflow-hidden transition-colors duration-300" style={{ backgroundColor: theme.heroBg }}>
+      <section className="relative pt-20 pb-0 overflow-hidden transition-colors duration-300" style={{ backgroundColor: theme.heroBg }}>
         <div className="container mx-auto px-4 relative z-10">
           <HeroCarousel isAuthenticated={isAuthenticated} user={user} onBookNow={onBookNow} colors={colors} t={t} theme={theme} />
         </div>

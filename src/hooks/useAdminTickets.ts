@@ -176,10 +176,10 @@ export function useAdminTicketDetail(ticketId: string | null) {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  const fetchTicket = useCallback(async () => {
+  const fetchTicket = useCallback(async (showLoading = true) => {
     if (!ticketId) return
     try {
-      setLoading(true)
+      if (showLoading) setLoading(true)
       setError(null)
       const response = await api.get(`/admin/support/tickets/${ticketId}`)
       // Backend returns { success, data: { ticket }, message }
@@ -188,15 +188,26 @@ export function useAdminTicketDetail(ticketId: string | null) {
     } catch (err: any) {
       setError(err.response?.data?.message || err.message || 'Failed to fetch ticket')
     } finally {
-      setLoading(false)
+      if (showLoading) setLoading(false)
     }
   }, [ticketId])
 
   const addMessage = async (message: string, isInternal: boolean = false) => {
     if (!ticketId) return
     try {
-      await api.post(`/admin/support/tickets/${ticketId}/messages`, { message, isInternal })
-      await fetchTicket()
+      const response = await api.post(`/admin/support/tickets/${ticketId}/messages`, { message, isInternal })
+      // Backend returns { data: { messages: [...] } } - full messages array
+      const newMessages = response.data.data?.messages || response.data.messages
+      if (newMessages && Array.isArray(newMessages)) {
+        // Replace entire messages array with updated one from backend
+        setTicket(prev => prev ? {
+          ...prev,
+          messages: newMessages
+        } : prev)
+      } else {
+        // Fallback: fetch without loading state
+        await fetchTicket(false)
+      }
       return { success: true }
     } catch (err: any) {
       throw new Error(err.response?.data?.message || err.message || 'Failed to add message')
@@ -207,7 +218,7 @@ export function useAdminTicketDetail(ticketId: string | null) {
     if (!ticketId) return
     try {
       await api.put(`/admin/support/tickets/${ticketId}/resolve`, { resolution })
-      await fetchTicket()
+      await fetchTicket(false) // Don't show loading
       return { success: true }
     } catch (err: any) {
       throw new Error(err.response?.data?.message || err.message || 'Failed to resolve ticket')
@@ -215,7 +226,7 @@ export function useAdminTicketDetail(ticketId: string | null) {
   }
 
   useEffect(() => {
-    fetchTicket()
+    fetchTicket(true)
   }, [fetchTicket])
 
   return {
@@ -224,6 +235,6 @@ export function useAdminTicketDetail(ticketId: string | null) {
     error,
     addMessage,
     resolve,
-    refetch: fetchTicket
+    refetch: () => fetchTicket(true)
   }
 }

@@ -13,7 +13,8 @@ interface BannerCarouselProps {
 export default function BannerCarousel({ page, autoPlay = true, interval = 5000 }: BannerCarouselProps) {
   const [banners, setBanners] = useState<any[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
-  const { getActiveBannersByPage, loading } = useActiveBannersByPage();
+  const [isLoaded, setIsLoaded] = useState(false);
+  const { getActiveBannersByPage } = useActiveBannersByPage();
   const { recordImpression } = useRecordImpression();
   const { recordClick } = useRecordClick();
   const impressionRecorded = useRef<Set<string>>(new Set());
@@ -60,6 +61,8 @@ export default function BannerCarousel({ page, autoPlay = true, interval = 5000 
     } catch (error) {
       console.error('Failed to load banners:', error);
       setBanners([]);
+    } finally {
+      setIsLoaded(true);
     }
   };
 
@@ -98,15 +101,8 @@ export default function BannerCarousel({ page, autoPlay = true, interval = 5000 
     }
   };
 
-  if (loading) {
-    return (
-      <div className="w-full h-64 bg-gray-100 rounded-lg animate-pulse flex items-center justify-center">
-        <p className="text-gray-500">Loading banners...</p>
-      </div>
-    );
-  }
-
-  if (banners.length === 0) {
+  // Don't show anything until loaded, and return null if no banners
+  if (!isLoaded || banners.length === 0) {
     return null;
   }
 

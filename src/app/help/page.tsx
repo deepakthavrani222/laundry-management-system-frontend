@@ -47,12 +47,30 @@ function FAQItem({ question, answer, isOpen, onToggle, primaryColor, isDark }: {
     <div className={`overflow-hidden rounded-xl border ${isDark ? 'border-gray-700' : 'border-gray-200'}`}>
       <button
         onClick={onToggle}
-        className="w-full px-8 py-5 text-left flex items-center justify-between transition-colors duration-200"
-        style={{ backgroundColor: isOpen ? primaryColor : isDark ? '#1f2937' : '#334155' }}
+        className={`w-full px-8 py-5 text-left flex items-center justify-between transition-colors duration-200`}
+        style={{ 
+          backgroundColor: isOpen 
+            ? isDark ? primaryColor : '#f3f4f6'
+            : isDark 
+              ? '#1f2937' 
+              : '#f3f4f6'
+        }}
       >
-        <h4 className="text-base font-medium text-white pr-4">{question}</h4>
+        <h4 className={`text-base font-medium pr-4 ${
+          isOpen 
+            ? isDark ? 'text-white' : 'text-gray-800'
+            : isDark 
+              ? 'text-white' 
+              : 'text-gray-800'
+        }`}>{question}</h4>
         <div className="flex-shrink-0">
-          <ChevronDown className={`w-5 h-5 text-white transition-transform duration-300 ${isOpen ? 'rotate-180' : ''}`} />
+          <ChevronDown className={`w-5 h-5 transition-transform duration-300 ${
+            isOpen 
+              ? isDark ? 'text-white' : 'text-gray-600'
+              : isDark 
+                ? 'text-white' 
+                : 'text-gray-600'
+          } ${isOpen ? 'rotate-180' : ''}`} />
         </div>
       </button>
       <div className={`overflow-hidden transition-all duration-300 ${isOpen ? 'max-h-[500px] opacity-100' : 'max-h-0 opacity-0'}`}>
@@ -307,15 +325,27 @@ export default function HelpPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-6xl mx-auto">
             {quickHelpCards.map((card, index) => (
               <Link key={index} href={card.link}>
-                <div className={`rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1 border group cursor-pointer h-full flex flex-col ${cardBgClass}`}>
+                <div className={`rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1 border group cursor-pointer h-full flex flex-col ${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'}`}>
                   <div 
-                    className="w-14 h-14 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform"
-                    style={{ backgroundColor: theme.primaryHex }}
+                    className={`w-14 h-14 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform ${
+                      isDark ? 'shadow-lg' : 'shadow-md'
+                    }`}
+                    style={isDark ? { 
+                      background: `linear-gradient(135deg, ${theme.primaryHex}, ${theme.secondaryHex})`,
+                      boxShadow: `0 4px 14px ${theme.primaryHex}40`
+                    } : {
+                      backgroundColor: theme.light,
+                      border: `2px solid ${theme.primaryHex}`
+                    }}
                   >
-                    <card.icon className="w-7 h-7 text-white" />
+                    <card.icon 
+                      className={`w-7 h-7 ${isDark ? 'text-white' : ''}`}
+                      strokeWidth={2.5}
+                      style={!isDark ? { color: theme.primaryHex } : {}}
+                    />
                   </div>
-                  <h3 className={`text-lg font-semibold mb-2 ${textClass}`}>{card.title}</h3>
-                  <p className={`text-sm mb-3 flex-grow ${textMutedClass}`}>{card.description}</p>
+                  <h3 className={`text-lg font-semibold mb-2 ${isDark ? 'text-gray-100' : 'text-gray-900'}`}>{card.title}</h3>
+                  <p className={`text-sm mb-3 flex-grow ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>{card.description}</p>
                   <div 
                     className="flex items-center text-sm font-medium group-hover:gap-2 transition-all"
                     style={{ color: theme.primaryHex }}
@@ -352,14 +382,24 @@ export default function HelpPage() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto">
             {/* Phone */}
             <div 
-              className={`rounded-2xl p-8 text-center border hover:shadow-lg transition-all ${isDark ? 'border-gray-700' : ''}`}
+              className={`rounded-2xl p-8 text-center border hover:shadow-lg transition-all ${isDark ? 'border-gray-700' : 'border-gray-200'}`}
               style={{ background: isDark ? `linear-gradient(to bottom right, ${theme.primaryHex}22, transparent)` : `linear-gradient(to bottom right, ${theme.light}, white)` }}
             >
               <div 
-                className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-6"
-                style={{ backgroundColor: theme.primaryHex }}
+                className={`w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-6 ${isDark ? 'shadow-lg' : 'shadow-md'}`}
+                style={isDark ? { 
+                  background: `linear-gradient(135deg, ${theme.primaryHex}, ${theme.secondaryHex})`,
+                  boxShadow: `0 4px 14px ${theme.primaryHex}40`
+                } : {
+                  backgroundColor: theme.light,
+                  border: `2px solid ${theme.primaryHex}`
+                }}
               >
-                <Phone className="w-8 h-8 text-white" />
+                <Phone 
+                  className={`w-8 h-8 ${isDark ? 'text-white' : ''}`}
+                  strokeWidth={2}
+                  style={!isDark ? { color: theme.primaryHex } : {}}
+                />
               </div>
               <h3 className={`text-xl font-semibold mb-2 ${textClass}`}>{t('help.contact.callUs')}</h3>
               <p className={`mb-4 ${textMutedClass}`}>{t('help.contact.callUsDesc')}</p>
@@ -370,14 +410,24 @@ export default function HelpPage() {
 
             {/* Email */}
             <div 
-              className={`rounded-2xl p-8 text-center border hover:shadow-lg transition-all ${isDark ? 'border-gray-700' : ''}`}
+              className={`rounded-2xl p-8 text-center border hover:shadow-lg transition-all ${isDark ? 'border-gray-700' : 'border-gray-200'}`}
               style={{ background: isDark ? `linear-gradient(to bottom right, ${theme.primaryHex}22, transparent)` : `linear-gradient(to bottom right, ${theme.light}, white)` }}
             >
               <div 
-                className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-6"
-                style={{ backgroundColor: theme.primaryHex }}
+                className={`w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-6 ${isDark ? 'shadow-lg' : 'shadow-md'}`}
+                style={isDark ? { 
+                  background: `linear-gradient(135deg, ${theme.primaryHex}, ${theme.secondaryHex})`,
+                  boxShadow: `0 4px 14px ${theme.primaryHex}40`
+                } : {
+                  backgroundColor: theme.light,
+                  border: `2px solid ${theme.primaryHex}`
+                }}
               >
-                <Mail className="w-8 h-8 text-white" />
+                <Mail 
+                  className={`w-8 h-8 ${isDark ? 'text-white' : ''}`}
+                  strokeWidth={2}
+                  style={!isDark ? { color: theme.primaryHex } : {}}
+                />
               </div>
               <h3 className={`text-xl font-semibold mb-2 ${textClass}`}>{t('help.contact.emailUs')}</h3>
               <p className={`mb-4 ${textMutedClass}`}>{t('help.contact.emailUsDesc')}</p>
@@ -388,14 +438,24 @@ export default function HelpPage() {
 
             {/* WhatsApp */}
             <div 
-              className={`rounded-2xl p-8 text-center border hover:shadow-lg transition-all ${isDark ? 'border-gray-700' : ''}`}
+              className={`rounded-2xl p-8 text-center border hover:shadow-lg transition-all ${isDark ? 'border-gray-700' : 'border-gray-200'}`}
               style={{ background: isDark ? `linear-gradient(to bottom right, ${theme.primaryHex}22, transparent)` : `linear-gradient(to bottom right, ${theme.light}, white)` }}
             >
               <div 
-                className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-6"
-                style={{ backgroundColor: theme.primaryHex }}
+                className={`w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-6 ${isDark ? 'shadow-lg' : 'shadow-md'}`}
+                style={isDark ? { 
+                  background: `linear-gradient(135deg, ${theme.primaryHex}, ${theme.secondaryHex})`,
+                  boxShadow: `0 4px 14px ${theme.primaryHex}40`
+                } : {
+                  backgroundColor: theme.light,
+                  border: `2px solid ${theme.primaryHex}`
+                }}
               >
-                <MessageCircle className="w-8 h-8 text-white" />
+                <MessageCircle 
+                  className={`w-8 h-8 ${isDark ? 'text-white' : ''}`}
+                  strokeWidth={2}
+                  style={!isDark ? { color: theme.primaryHex } : {}}
+                />
               </div>
               <h3 className={`text-xl font-semibold mb-2 ${textClass}`}>{t('help.contact.whatsapp')}</h3>
               <p className={`mb-4 ${textMutedClass}`}>{t('help.contact.whatsappDesc')}</p>
@@ -435,14 +495,24 @@ export default function HelpPage() {
                   setActiveCategory(tab.id)
                   setOpenFAQ(null)
                 }}
-                className={`flex items-center gap-2 px-6 py-3 rounded-xl font-medium transition-all duration-300 ${
+                className={`flex items-center gap-2 px-6 py-3 rounded-xl font-medium transition-all duration-300 shadow-lg border-2 ${
                   activeCategory === tab.id
-                    ? 'text-white shadow-lg'
+                    ? isDark 
+                      ? 'text-white border-transparent'
+                      : 'border-transparent'
                     : isDark 
-                      ? 'bg-gray-700 text-gray-300 hover:bg-gray-600 border border-gray-600' 
-                      : 'bg-white text-gray-600 hover:bg-gray-100 border border-gray-200'
+                      ? 'bg-gray-700 text-gray-300 hover:bg-gray-600 border-gray-600' 
+                      : 'bg-white text-gray-600 hover:bg-gray-100 border-gray-200'
                 }`}
-                style={activeCategory === tab.id ? { backgroundColor: theme.primaryHex } : {}}
+                style={activeCategory === tab.id ? (
+                  isDark 
+                    ? { background: `linear-gradient(135deg, ${theme.primaryHex}, ${theme.secondaryHex})` }
+                    : { 
+                        backgroundColor: theme.light,
+                        borderColor: theme.primaryHex,
+                        color: theme.primaryHex
+                      }
+                ) : {}}
               >
                 <tab.icon className="w-5 h-5" />
                 <span>{tab.label}</span>

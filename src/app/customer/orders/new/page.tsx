@@ -593,8 +593,8 @@ export default function NewOrderPage() {
   }
 
   return (
-    <div className="min-h-[calc(100vh-80px)] flex items-center justify-center p-4">
-      <div className="bg-white rounded-2xl shadow-xl w-full max-w-md relative">
+    <div className="min-h-[calc(100vh-64px)] flex items-center justify-center p-6 py-12">
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md relative">
         {/* Progress Bar */}
         <div className="absolute top-0 left-0 right-0 h-1 bg-gray-200 rounded-t-2xl overflow-hidden">
           <div 

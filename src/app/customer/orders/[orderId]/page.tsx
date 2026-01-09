@@ -30,7 +30,7 @@ import {
 import { customerAPI } from '@/lib/api'
 import { useAuthStore } from '@/store/authStore'
 import toast from 'react-hot-toast'
-import QRCodeDisplay from '@/components/QRCodeDisplay'
+import BarcodeDisplay from '@/components/BarcodeDisplay'
 
 interface OrderDetails {
   _id: string
@@ -348,18 +348,19 @@ export default function OrderDetailsPage() {
                   </div>
                 </div>
                 
-                {/* QR Code in Success Banner */}
+                {/* Barcode in Success Banner */}
                 <div className="mt-4 pt-4 border-t border-green-200">
                   <div className="flex flex-col sm:flex-row items-center gap-4">
-                    <QRCodeDisplay 
-                      data={`${typeof window !== 'undefined' ? window.location.origin : ''}/track/${order.orderNumber}`}
+                    <BarcodeDisplay 
                       orderNumber={order.orderNumber}
-                      size={120}
+                      width={180}
+                      height={60}
                       showPrint={false}
+                      showOrderDetails={false}
                     />
                     <div className="text-center sm:text-left">
-                      <p className="text-sm font-medium text-green-800">Save this QR Code</p>
-                      <p className="text-xs text-green-600">Scan anytime to track your order</p>
+                      <p className="text-sm font-medium text-green-800">Save this Barcode</p>
+                      <p className="text-xs text-green-600">Order details shown below barcode</p>
                     </div>
                   </div>
                 </div>
@@ -561,107 +562,122 @@ export default function OrderDetailsPage() {
             <div className="bg-white rounded-lg shadow-sm border p-6">
               <h3 className="text-lg font-semibold text-gray-800 mb-4">Order Summary</h3>
               
-              <div className="space-y-3">
+              <div className="space-y-3 text-sm">
+                {/* Items Subtotal */}
                 <div className="flex justify-between">
-                  <span className="text-gray-600">Subtotal</span>
+                  <span className="text-gray-600">Items Subtotal</span>
                   <span className="font-medium">₹{order.pricing.subtotal}</span>
                 </div>
                 
+                {/* Express Charge */}
                 {order.isExpress && order.pricing.expressCharge > 0 && (
                   <div className="flex justify-between">
-                    <span className="text-gray-600">Express Charge</span>
-                    <span className="font-medium">₹{order.pricing.expressCharge}</span>
+                    <span className="text-gray-600">Express Service</span>
+                    <span className="font-medium">+ ₹{order.pricing.expressCharge}</span>
                   </div>
                 )}
                 
-                {order.pricing.deliveryCharge > 0 && (
-                  <div className="flex justify-between items-center">
-                    <div className="flex items-center gap-2">
-                      <span className="text-gray-600">Delivery Charge</span>
-                      {order.deliveryDetails?.distance && (
-                        <span className="text-xs bg-teal-100 text-teal-700 px-2 py-0.5 rounded-full">
-                          {order.deliveryDetails.distance} km
-                        </span>
-                      )}
-                    </div>
-                    <span className="font-medium">₹{order.pricing.deliveryCharge}</span>
+                {/* Delivery Charge */}
+                <div className="flex justify-between items-center">
+                  <span className="text-gray-600">Delivery Charge</span>
+                  {order.pricing.deliveryCharge > 0 ? (
+                    <span className="font-medium">+ ₹{order.pricing.deliveryCharge}</span>
+                  ) : (
+                    <span className="font-medium text-green-600">FREE</span>
+                  )}
+                </div>
+                
+                {/* Gross Total Line */}
+                <div className="flex justify-between pt-2 border-t border-dashed border-gray-200">
+                  <span className="text-gray-500">Gross Amount</span>
+                  <span className="text-gray-500">₹{order.pricing.subtotal + (order.pricing.expressCharge || 0) + (order.pricing.deliveryCharge || 0)}</span>
+                </div>
+                
+                {/* Discount Section */}
+                {order.pricing.discount > 0 && (
+                  <div className="flex justify-between text-green-600">
+                    <span className="flex items-center gap-1">
+                      <Tag className="w-3 h-3" />
+                      {(order as any).couponCode ? `Coupon (${(order as any).couponCode})` : 'Discount'}
+                    </span>
+                    <span className="font-medium">- ₹{order.pricing.discount}</span>
                   </div>
                 )}
                 
-                {order.pricing.deliveryCharge === 0 && order.deliveryDetails?.distance && (
-                  <div className="flex justify-between items-center">
-                    <div className="flex items-center gap-2">
-                      <span className="text-gray-600">Delivery</span>
-                      <span className="text-xs bg-teal-100 text-teal-700 px-2 py-0.5 rounded-full">
-                        {order.deliveryDetails.distance} km
+                {/* Loyalty Points Redeemed */}
+                {(order as any).loyaltyPointsRedeemed > 0 && (
+                  <div className="flex justify-between text-purple-600">
+                    <span className="flex items-center gap-1">
+                      <Star className="w-3 h-3" />
+                      Loyalty Points ({(order as any).loyaltyPointsRedeemed} pts)
+                    </span>
+                    <span className="font-medium">- ₹{(order as any).loyaltyPointsRedeemed}</span>
+                  </div>
+                )}
+                
+                {/* Wallet Used */}
+                {(order as any).walletAmountUsed > 0 && (
+                  <div className="flex justify-between text-blue-600">
+                    <span className="flex items-center gap-1">
+                      <Wallet className="w-3 h-3" />
+                      Wallet Payment
+                    </span>
+                    <span className="font-medium">- ₹{(order as any).walletAmountUsed}</span>
+                  </div>
+                )}
+                
+                {/* Taxable Amount */}
+                {order.pricing.tax > 0 && (
+                  <>
+                    <div className="flex justify-between pt-2 border-t border-dashed border-gray-200">
+                      <span className="text-gray-500">Taxable Amount</span>
+                      <span className="text-gray-500">
+                        ₹{order.pricing.subtotal + (order.pricing.expressCharge || 0) + (order.pricing.deliveryCharge || 0) - (order.pricing.discount || 0)}
                       </span>
                     </div>
-                    <span className="font-medium text-green-600">FREE</span>
-                  </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">GST (18%)</span>
+                      <span className="font-medium">+ ₹{order.pricing.tax}</span>
+                    </div>
+                  </>
                 )}
                 
-                {/* Promotional Savings Section */}
-                {(order.pricing.discount > 0 || (order as any).loyaltyPointsRedeemed || (order as any).walletAmountUsed) && (
-                  <div className="pt-2 border-t border-gray-200">
-                    <p className="text-sm font-medium text-green-700 mb-2 flex items-center gap-1">
-                      <Gift className="w-4 h-4" />
-                      Savings Applied
-                    </p>
-                    
-                    {order.pricing.discount > 0 && (
-                      <div className="flex justify-between text-green-600 text-sm">
-                        <span className="flex items-center gap-1">
-                          <Tag className="w-3 h-3" />
-                          {(order as any).couponCode ? `Coupon (${(order as any).couponCode})` : 'Discount'}
-                        </span>
-                        <span className="font-medium">-₹{order.pricing.discount}</span>
-                      </div>
-                    )}
-                    
-                    {(order as any).loyaltyPointsRedeemed > 0 && (
-                      <div className="flex justify-between text-purple-600 text-sm mt-1">
-                        <span className="flex items-center gap-1">
-                          <Star className="w-3 h-3" />
-                          Loyalty Points ({(order as any).loyaltyPointsRedeemed} pts)
-                        </span>
-                        <span className="font-medium">-₹{(order as any).loyaltyPointsRedeemed}</span>
-                      </div>
-                    )}
-                    
-                    {(order as any).walletAmountUsed > 0 && (
-                      <div className="flex justify-between text-blue-600 text-sm mt-1">
-                        <span className="flex items-center gap-1">
-                          <Wallet className="w-3 h-3" />
-                          Wallet Payment
-                        </span>
-                        <span className="font-medium">-₹{(order as any).walletAmountUsed}</span>
-                      </div>
-                    )}
-                    
-                    <div className="flex justify-between text-green-700 font-medium text-sm mt-2 pt-2 border-t border-green-100">
-                      <span>Total Savings</span>
-                      <span>₹{order.pricing.discount + ((order as any).loyaltyPointsRedeemed || 0) + ((order as any).walletAmountUsed || 0)}</span>
+                {/* Final Total */}
+                <div className="flex justify-between pt-3 mt-2 border-t-2 border-gray-200">
+                  <span className="text-base font-bold text-gray-800">Total Payable</span>
+                  <span className="text-lg font-bold text-teal-600">₹{order.pricing.total}</span>
+                </div>
+                
+                {/* Calculation Breakdown Helper */}
+                <div className="mt-3 p-3 bg-gray-50 rounded-lg text-xs text-gray-500">
+                  <p className="font-medium text-gray-600 mb-1">Calculation:</p>
+                  <p>₹{order.pricing.subtotal} (items) 
+                    {(order.pricing.expressCharge || 0) > 0 && ` + ₹${order.pricing.expressCharge} (express)`}
+                    {(order.pricing.deliveryCharge || 0) > 0 && ` + ₹${order.pricing.deliveryCharge} (delivery)`}
+                    {(order.pricing.discount || 0) > 0 && ` - ₹${order.pricing.discount} (discount)`}
+                    {(order.pricing.tax || 0) > 0 && ` + ₹${order.pricing.tax} (tax)`}
+                    {` = ₹${order.pricing.total}`}
+                  </p>
+                </div>
+                
+                {/* Total Savings Badge */}
+                {(order.pricing.discount > 0 || (order as any).loyaltyPointsRedeemed > 0 || (order as any).walletAmountUsed > 0) && (
+                  <div className="mt-2 p-2 bg-green-50 rounded-lg border border-green-200">
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-green-700 flex items-center gap-1">
+                        <Gift className="w-4 h-4" />
+                        You Saved
+                      </span>
+                      <span className="font-bold text-green-700">
+                        ₹{(order.pricing.discount || 0) + ((order as any).loyaltyPointsRedeemed || 0) + ((order as any).walletAmountUsed || 0)}
+                      </span>
                     </div>
                   </div>
                 )}
-                
-                {order.pricing.tax > 0 && (
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Tax (18%)</span>
-                    <span className="font-medium">₹{order.pricing.tax}</span>
-                  </div>
-                )}
-                
-                <hr className="my-3" />
-                
-                <div className="flex justify-between text-lg font-bold">
-                  <span>Total</span>
-                  <span className="text-teal-600">₹{order.pricing.total}</span>
-                </div>
                 
                 {/* Loyalty Points Earned */}
                 {(order as any).loyaltyPointsEarned > 0 && order.status === 'delivered' && (
-                  <div className="mt-3 p-3 bg-purple-50 rounded-lg border border-purple-200">
+                  <div className="mt-2 p-2 bg-purple-50 rounded-lg border border-purple-200">
                     <div className="flex items-center justify-between text-sm">
                       <span className="text-purple-700 flex items-center gap-1">
                         <Star className="w-4 h-4 fill-purple-600" />
@@ -719,37 +735,23 @@ export default function OrderDetailsPage() {
               </div>
             </div>
 
-            {/* QR Code for Order */}
+            {/* Barcode for Order */}
             <div className="bg-white rounded-lg shadow-sm border p-6">
-              <h3 className="text-lg font-semibold text-gray-800 mb-4 text-center">Order QR Code</h3>
+              <h3 className="text-lg font-semibold text-gray-800 mb-4 text-center">Order Barcode</h3>
               <div className="flex justify-center">
-                <QRCodeDisplay 
-                  data={`${typeof window !== 'undefined' ? window.location.origin : ''}/track/${order.orderNumber}`}
+                <BarcodeDisplay 
                   orderNumber={order.orderNumber}
-                  size={160}
+                  width={220}
+                  height={80}
+                  showOrderDetails={true}
+                  orderDetails={{
+                    orderNumber: order.orderNumber,
+                    status: order.status,
+                    items: order.items,
+                    pricing: order.pricing,
+                    estimatedDeliveryDate: order.estimatedDeliveryDate
+                  }}
                 />
-              </div>
-            </div>
-
-            {/* Support */}
-            <div className="bg-white rounded-lg shadow-sm border p-6">
-              <h3 className="text-lg font-semibold text-gray-800 mb-4">Need Help?</h3>
-              
-              <div className="space-y-3">
-                <Button variant="outline" className="w-full justify-start">
-                  <MessageCircle className="w-4 h-4 mr-2" />
-                  Chat with Support
-                </Button>
-                
-                <Button variant="outline" className="w-full justify-start">
-                  <Phone className="w-4 h-4 mr-2" />
-                  Call Support
-                </Button>
-                
-                <Button variant="outline" className="w-full justify-start">
-                  <Mail className="w-4 h-4 mr-2" />
-                  Email Support
-                </Button>
               </div>
             </div>
           </div>

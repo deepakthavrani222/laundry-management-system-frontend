@@ -182,12 +182,33 @@ export default function LoyaltyDashboard() {
                     <div className="bg-purple-50 rounded-lg p-6">
                       <h3 className="text-lg font-semibold text-gray-900 mb-4">Tier Benefits</h3>
                       <div className="space-y-3">
-                        {tierInfo?.currentTier?.benefits?.map((benefit: string, index: number) => (
-                          <div key={index} className="flex items-center gap-2">
-                            <Star size={16} className="text-purple-600" fill="currentColor" />
-                            <p className="text-sm text-gray-700">{benefit}</p>
-                          </div>
-                        ))}
+                        {tierInfo?.currentTier?.benefits && tierInfo.currentTier.benefits.length > 0 ? (
+                          tierInfo.currentTier.benefits.map((benefit: string, index: number) => (
+                            <div key={index} className="flex items-center gap-2">
+                              <Star size={16} className="text-purple-600" fill="currentColor" />
+                              <p className="text-sm text-gray-700">{benefit}</p>
+                            </div>
+                          ))
+                        ) : (
+                          <>
+                            <div className="flex items-center gap-2">
+                              <Star size={16} className="text-purple-600" fill="currentColor" />
+                              <p className="text-sm text-gray-700">Earn points on every order</p>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <Star size={16} className="text-purple-600" fill="currentColor" />
+                              <p className="text-sm text-gray-700">Redeem points for discounts</p>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <Star size={16} className="text-purple-600" fill="currentColor" />
+                              <p className="text-sm text-gray-700">Exclusive member offers</p>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <Star size={16} className="text-purple-600" fill="currentColor" />
+                              <p className="text-sm text-gray-700">Priority customer support</p>
+                            </div>
+                          </>
+                        )}
                       </div>
                     </div>
                   </div>

@@ -37,6 +37,8 @@ import {
 import { useAdminOrders, useLogisticsPartners } from '@/hooks/useAdmin'
 import toast from 'react-hot-toast'
 import OrderQRCode from '@/components/OrderQRCode'
+import BarcodeDisplay from '@/components/BarcodeDisplay'
+import { Printer } from 'lucide-react'
 
 interface Order {
   _id: string
@@ -701,16 +703,35 @@ export default function AdminOrdersPage() {
       {/* View Order Modal */}
       {showViewModal && selectedOrder && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-xl w-full max-w-3xl max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between p-6 border-b border-gray-200">
-              <div>
-                <h3 className="text-xl font-semibold text-gray-800">Order Details</h3>
-                <p className="text-sm text-gray-500">{selectedOrder.orderNumber}</p>
+          <div className="bg-white rounded-xl w-full max-w-4xl max-h-[90vh] flex flex-col">
+            {/* Header - Fixed */}
+            <div className="flex items-center justify-between p-6 border-b border-gray-200 flex-shrink-0">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 bg-gradient-to-br from-teal-500 to-teal-600 rounded-xl flex items-center justify-center flex-shrink-0">
+                  <Package className="w-6 h-6 text-white" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-semibold text-gray-800">Order Details</h3>
+                  <p className="text-sm text-gray-500 font-mono">{selectedOrder.orderNumber}</p>
+                </div>
               </div>
-              <button onClick={() => setShowViewModal(false)} className="p-2 hover:bg-gray-100 rounded-lg">
-                <X className="w-5 h-5 text-gray-500" />
-              </button>
+              
+              <div className="flex items-center gap-2 flex-shrink-0">
+                <button 
+                  onClick={() => window.print()} 
+                  className="p-2 hover:bg-gray-100 rounded-lg text-gray-600 hover:text-gray-800 transition-colors"
+                  title="Print Order"
+                >
+                  <Printer className="w-5 h-5" />
+                </button>
+                <button onClick={() => setShowViewModal(false)} className="p-2 hover:bg-gray-100 rounded-lg">
+                  <X className="w-5 h-5 text-gray-500" />
+                </button>
+              </div>
             </div>
+            
+            {/* Scrollable Content */}
+            <div className="overflow-y-auto flex-1">
 
             <div className="p-6 space-y-6">
               {/* Status & Badges */}
@@ -740,48 +761,56 @@ export default function AdminOrdersPage() {
                 )}
               </div>
 
-              {/* Status Timeline */}
+              {/* Enhanced Status Timeline */}
               {selectedOrder.status !== 'cancelled' && (
-                <div className="bg-gray-50 rounded-lg p-4">
-                  <h4 className="text-sm font-semibold text-gray-700 mb-3">Order Progress</h4>
-                  <div className="flex items-center justify-between">
-                    {[
-                      { key: 'placed', label: 'Placed', icon: Clock },
-                      { key: 'in_process', label: 'Processing', icon: RefreshCw },
-                      { key: 'ready', label: 'Ready', icon: CheckCircle },
-                      { key: 'out_for_delivery', label: 'Out for Delivery', icon: Truck },
-                      { key: 'delivered', label: 'Delivered', icon: CheckCircle }
-                    ].map((stage, index, arr) => {
-                      const stageIndex = arr.findIndex(s => s.key === selectedOrder.status)
-                      const isCompleted = index <= stageIndex
-                      const isCurrent = index === stageIndex
-                      const StageIcon = stage.icon
-                      
-                      return (
-                        <div key={stage.key} className="flex flex-col items-center flex-1">
-                          <div className="flex items-center w-full">
-                            {index > 0 && (
-                              <div className={`flex-1 h-1 ${index <= stageIndex ? 'bg-green-500' : 'bg-gray-300'}`}></div>
-                            )}
-                            <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
+                <div className="bg-gradient-to-r from-gray-50 to-white rounded-xl p-5 border border-gray-100">
+                  <h4 className="text-sm font-semibold text-gray-700 mb-4 flex items-center gap-2">
+                    <Clock className="w-4 h-4 text-teal-500" />
+                    Order Progress
+                  </h4>
+                  <div className="relative">
+                    {/* Progress Bar Background */}
+                    <div className="absolute top-4 left-0 right-0 h-1 bg-gray-200 rounded-full mx-8"></div>
+                    {/* Progress Bar Fill */}
+                    <div 
+                      className="absolute top-4 left-0 h-1 bg-gradient-to-r from-teal-500 to-green-500 rounded-full mx-8 transition-all duration-500"
+                      style={{ 
+                        width: `${Math.max(0, ((['placed', 'in_process', 'ready', 'out_for_delivery', 'delivered'].findIndex(s => s === selectedOrder.status)) / 4) * 100)}%` 
+                      }}
+                    ></div>
+                    <div className="flex items-center justify-between relative">
+                      {[
+                        { key: 'placed', label: 'Placed', icon: Clock },
+                        { key: 'in_process', label: 'Processing', icon: RefreshCw },
+                        { key: 'ready', label: 'Ready', icon: CheckCircle },
+                        { key: 'out_for_delivery', label: 'Out for Delivery', icon: Truck },
+                        { key: 'delivered', label: 'Delivered', icon: CheckCircle }
+                      ].map((stage, index, arr) => {
+                        const stageIndex = arr.findIndex(s => s.key === selectedOrder.status)
+                        const isCompleted = index <= stageIndex
+                        const isCurrent = index === stageIndex
+                        const StageIcon = stage.icon
+                        
+                        return (
+                          <div key={stage.key} className="flex flex-col items-center z-10">
+                            <div className={`w-9 h-9 rounded-full flex items-center justify-center transition-all duration-300 ${
                               isCompleted 
                                 ? isCurrent 
-                                  ? 'bg-blue-500 text-white ring-4 ring-blue-200' 
-                                  : 'bg-green-500 text-white'
-                                : 'bg-gray-300 text-gray-500'
+                                  ? 'bg-teal-500 text-white ring-4 ring-teal-100 shadow-lg scale-110' 
+                                  : 'bg-green-500 text-white shadow-md'
+                                : 'bg-white border-2 border-gray-300 text-gray-400'
                             }`}>
                               <StageIcon className="w-4 h-4" />
                             </div>
-                            {index < arr.length - 1 && (
-                              <div className={`flex-1 h-1 ${index < stageIndex ? 'bg-green-500' : 'bg-gray-300'}`}></div>
-                            )}
+                            <span className={`text-xs mt-2 text-center font-medium ${
+                              isCurrent ? 'text-teal-600' : isCompleted ? 'text-green-600' : 'text-gray-400'
+                            }`}>
+                              {stage.label}
+                            </span>
                           </div>
-                          <span className={`text-xs mt-2 text-center ${isCurrent ? 'font-semibold text-blue-600' : isCompleted ? 'text-green-600' : 'text-gray-500'}`}>
-                            {stage.label}
-                          </span>
-                        </div>
-                      )
-                    })}
+                        )
+                      })}
+                    </div>
                   </div>
                 </div>
               )}
@@ -795,13 +824,43 @@ export default function AdminOrdersPage() {
                 </div>
               )}
 
-              {/* Customer Info */}
-              <div>
-                <h4 className="text-lg font-semibold text-gray-800 mb-3">Customer Information</h4>
-                <div className="bg-gray-50 rounded-lg p-4 space-y-2">
-                  <div className="flex items-center gap-2"><User className="w-4 h-4 text-gray-400" /><span className="font-medium">{selectedOrder.customer?.name}</span></div>
-                  <div className="flex items-center gap-2"><Phone className="w-4 h-4 text-gray-400" /><span>{selectedOrder.customer?.phone}</span></div>
-                  <div className="flex items-center gap-2"><Calendar className="w-4 h-4 text-gray-400" /><span>Ordered on {new Date(selectedOrder.createdAt).toLocaleString('en-IN')}</span></div>
+              {/* Customer & Order Info Grid */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* Customer Info */}
+                <div className="bg-white rounded-xl border border-gray-200 p-4">
+                  <h4 className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
+                    <User className="w-4 h-4 text-blue-500" />
+                    Customer
+                  </h4>
+                  <div className="space-y-2">
+                    <p className="font-medium text-gray-800">{selectedOrder.customer?.name}</p>
+                    <p className="text-sm text-gray-600 flex items-center gap-2">
+                      <Phone className="w-3 h-3" />{selectedOrder.customer?.phone}
+                    </p>
+                    <p className="text-xs text-gray-500">
+                      Ordered: {new Date(selectedOrder.createdAt).toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' })}
+                    </p>
+                  </div>
+                </div>
+                
+                {/* Order Dates */}
+                <div className="bg-white rounded-xl border border-gray-200 p-4">
+                  <h4 className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
+                    <Calendar className="w-4 h-4 text-purple-500" />
+                    Schedule
+                  </h4>
+                  <div className="space-y-2 text-sm">
+                    <div className="flex justify-between">
+                      <span className="text-gray-500">Pickup Date</span>
+                      <span className="font-medium">{new Date(selectedOrder.pickupDate).toLocaleDateString('en-IN')}</span>
+                    </div>
+                    {selectedOrder.estimatedDeliveryDate && (
+                      <div className="flex justify-between">
+                        <span className="text-gray-500">Est. Delivery</span>
+                        <span className="font-medium text-teal-600">{new Date(selectedOrder.estimatedDeliveryDate).toLocaleDateString('en-IN')}</span>
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
 
@@ -837,62 +896,152 @@ export default function AdminOrdersPage() {
 
               {/* Assignment Info */}
               {(selectedOrder.branch || selectedOrder.logisticsPartner) && (
-                <div>
-                  <h4 className="text-lg font-semibold text-gray-800 mb-3">Assignment</h4>
-                  <div className="bg-gray-50 rounded-lg p-4 space-y-2">
+                <div className="bg-amber-50 rounded-xl border border-amber-200 p-4">
+                  <h4 className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
+                    <Building2 className="w-4 h-4 text-amber-500" />
+                    Assignment
+                  </h4>
+                  <div className="space-y-2 text-sm">
                     {selectedOrder.branch && (
-                      <div className="flex items-center gap-2"><Building2 className="w-4 h-4 text-gray-400" /><span>Branch: <strong>{selectedOrder.branch.name}</strong> ({selectedOrder.branch.code})</span></div>
+                      <div className="flex items-center gap-2">
+                        <Building2 className="w-4 h-4 text-gray-400" />
+                        <span>Branch: <strong>{selectedOrder.branch.name}</strong> ({selectedOrder.branch.code})</span>
+                      </div>
                     )}
                     {selectedOrder.logisticsPartner && (
-                      <div className="flex items-center gap-2"><Truck className="w-4 h-4 text-gray-400" /><span>Logistics: <strong>{selectedOrder.logisticsPartner.companyName}</strong></span></div>
+                      <div className="flex items-center gap-2">
+                        <Truck className="w-4 h-4 text-gray-400" />
+                        <span>Logistics: <strong>{selectedOrder.logisticsPartner.companyName}</strong></span>
+                      </div>
                     )}
                   </div>
                 </div>
               )}
 
-              {/* Pricing */}
-              <div>
-                <h4 className="text-lg font-semibold text-gray-800 mb-3">Order Summary</h4>
-                <div className="bg-gray-50 rounded-lg p-4">
-                  <div className="flex justify-between py-2"><span className="text-gray-600">Items</span><span>{selectedOrder.items?.length || 0} items</span></div>
-                  {selectedOrder.pricing?.subtotal && <div className="flex justify-between py-2"><span className="text-gray-600">Subtotal</span><span>₹{selectedOrder.pricing.subtotal.toLocaleString()}</span></div>}
-                  
-                  {/* Delivery Details with Distance */}
-                  {(selectedOrder.deliveryDetails?.distance || selectedOrder.pricing?.deliveryCharge) && (
-                    <div className="py-2 border-t border-gray-200 mt-2">
-                      <div className="flex justify-between items-center">
-                        <div className="flex items-center gap-2">
-                          <Truck className="w-4 h-4 text-gray-400" />
-                          <span className="text-gray-600">Delivery</span>
-                          {selectedOrder.deliveryDetails?.distance && (
-                            <span className="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full">
-                              {selectedOrder.deliveryDetails.distance} km
-                            </span>
-                          )}
+              {/* Order Items List */}
+              <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+                <div className="bg-gray-50 px-4 py-3 border-b border-gray-200">
+                  <h4 className="text-sm font-semibold text-gray-700 flex items-center gap-2">
+                    <Package className="w-4 h-4 text-teal-500" />
+                    Items ({selectedOrder.items?.length || 0})
+                  </h4>
+                </div>
+                <div className="divide-y divide-gray-100 max-h-60 overflow-y-auto">
+                  {selectedOrder.items?.map((item: any, index: number) => {
+                    // Get item name from various possible fields
+                    const itemName = item.itemName || item.itemType || item.name || item.item?.name || 'Unknown Item'
+                    const serviceName = item.serviceName || item.service || item.serviceType || ''
+                    const categoryName = item.categoryName || item.category || ''
+                    const quantity = item.quantity || 1
+                    const totalPrice = item.totalPrice || item.total || item.price || 0
+                    const unitPrice = item.unitPrice || item.pricePerUnit || (totalPrice / quantity) || 0
+                    
+                    // Clean item name - remove IDs
+                    const cleanName = itemName.split(' ').filter((word: string) => {
+                      const hasLetters = /[a-zA-Z]/.test(word)
+                      const hasNumbers = /\d/.test(word)
+                      return !(hasLetters && hasNumbers)
+                    }).join(' ') || itemName
+                    
+                    return (
+                      <div key={index} className="px-4 py-3 flex items-center justify-between hover:bg-gray-50">
+                        <div className="flex-1">
+                          <p className="font-medium text-gray-800">{cleanName || 'Item ' + (index + 1)}</p>
+                          <div className="flex items-center gap-2 text-xs text-gray-500 mt-1 flex-wrap">
+                            {serviceName && (
+                              <span className="bg-teal-50 text-teal-700 px-2 py-0.5 rounded">{serviceName.replace(/_/g, ' ')}</span>
+                            )}
+                            {categoryName && (
+                              <span className="bg-gray-100 px-2 py-0.5 rounded">{categoryName}</span>
+                            )}
+                            <span>× {quantity}</span>
+                          </div>
                         </div>
-                        <span>
-                          {(selectedOrder.deliveryDetails?.deliveryCharge || selectedOrder.pricing?.deliveryCharge) === 0 
-                            ? <span className="text-green-600 font-medium">FREE</span>
-                            : `₹${selectedOrder.deliveryDetails?.deliveryCharge || selectedOrder.pricing?.deliveryCharge}`
-                          }
-                        </span>
+                        <div className="text-right">
+                          <p className="font-semibold text-gray-800">₹{totalPrice.toLocaleString()}</p>
+                          {quantity > 1 && <p className="text-xs text-gray-500">₹{unitPrice.toLocaleString()}/pc</p>}
+                        </div>
                       </div>
-                      {selectedOrder.deliveryDetails?.isFallbackPricing && (
-                        <div className="text-xs text-amber-600 mt-1 flex items-center gap-1">
-                          <AlertCircle className="w-3 h-3" />
-                          Flat rate applied (distance unavailable)
-                        </div>
+                    )
+                  })}
+                  {(!selectedOrder.items || selectedOrder.items.length === 0) && (
+                    <div className="px-4 py-6 text-center text-gray-500">
+                      No items in this order
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Payment Summary */}
+              <div className="bg-gradient-to-br from-teal-50 to-white rounded-xl border border-teal-100 overflow-hidden">
+                <div className="bg-teal-500 px-4 py-3">
+                  <h4 className="text-sm font-semibold text-white flex items-center gap-2">
+                    <IndianRupee className="w-4 h-4" />
+                    Payment Summary
+                  </h4>
+                </div>
+                <div className="p-4 space-y-2 text-sm">
+                  {/* Items Subtotal */}
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Items Subtotal</span>
+                    <span className="font-medium">₹{selectedOrder.pricing?.subtotal?.toLocaleString() || 0}</span>
+                  </div>
+                  
+                  {/* Delivery Charge */}
+                  <div className="flex justify-between items-center">
+                    <div className="flex items-center gap-2">
+                      <span className="text-gray-600">Delivery Charge</span>
+                      {selectedOrder.deliveryDetails?.distance && selectedOrder.deliveryDetails.distance > 0 && (
+                        <span className="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full">
+                          {selectedOrder.deliveryDetails.distance} km
+                        </span>
                       )}
+                    </div>
+                    {(selectedOrder.deliveryDetails?.deliveryCharge || selectedOrder.pricing?.deliveryCharge || 0) > 0 ? (
+                      <span className="font-medium">+ ₹{selectedOrder.deliveryDetails?.deliveryCharge || selectedOrder.pricing?.deliveryCharge}</span>
+                    ) : (
+                      <span className="font-medium text-green-600">FREE</span>
+                    )}
+                  </div>
+                  
+                  {/* Gross Amount */}
+                  <div className="flex justify-between pt-2 border-t border-dashed border-gray-200">
+                    <span className="text-gray-500">Gross Amount</span>
+                    <span className="text-gray-500">₹{((selectedOrder.pricing?.subtotal || 0) + (selectedOrder.pricing?.deliveryCharge || 0)).toLocaleString()}</span>
+                  </div>
+                  
+                  {/* Discount */}
+                  {selectedOrder.pricing?.discount && selectedOrder.pricing.discount > 0 && (
+                    <div className="flex justify-between text-green-600">
+                      <span>Discount</span>
+                      <span className="font-medium">- ₹{selectedOrder.pricing.discount}</span>
                     </div>
                   )}
                   
-                  {selectedOrder.pricing?.discount && <div className="flex justify-between py-2 text-green-600"><span>Discount</span><span>-₹{selectedOrder.pricing.discount}</span></div>}
-                  <div className="flex justify-between py-2 border-t border-gray-200 font-bold text-lg"><span>Total</span><span>₹{selectedOrder.pricing?.total?.toLocaleString()}</span></div>
+                  {/* Final Total */}
+                  <div className="flex justify-between pt-3 mt-2 border-t-2 border-teal-200">
+                    <span className="text-base font-bold text-gray-800">Total Payable</span>
+                    <span className="text-lg font-bold text-teal-600">₹{selectedOrder.pricing?.total?.toLocaleString() || 0}</span>
+                  </div>
+                  
+                  {/* Barcode Section */}
+                  <div className="mt-4 pt-4 border-t border-dashed border-gray-200 flex justify-center">
+                    <BarcodeDisplay 
+                      orderNumber={selectedOrder.orderNumber}
+                      width={200}
+                      height={60}
+                      showDownload={true}
+                      showPrint={true}
+                      showOrderDetails={false}
+                    />
+                  </div>
                 </div>
               </div>
             </div>
+            </div>
 
-            <div className="flex justify-end gap-3 p-6 border-t border-gray-200">
+            {/* Footer - Fixed */}
+            <div className="flex justify-end gap-3 p-6 border-t border-gray-200 flex-shrink-0 bg-white">
               {/* Assign Logistics for Pickup - only when order uses logistics pickup */}
               {selectedOrder.status === 'placed' && canAssign && selectedOrder.pickupType !== 'self' && (
                 <Button className="bg-purple-500 hover:bg-purple-600 text-white" onClick={() => { handleAssignLogistics(selectedOrder._id, 'pickup'); setShowViewModal(false) }}>

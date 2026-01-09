@@ -372,32 +372,6 @@ export default function SettingsPanel({
               Current: {themeColor}
             </p>
           </div>
-
-          {/* Language Section */}
-          <div>
-            <h3 className="text-sm font-semibold text-gray-700 mb-3">Language</h3>
-            <div className="space-y-2">
-              {languages.map((lang) => (
-                <button
-                  key={lang.id}
-                  onClick={() => onLanguageChange?.(lang.id as Language)}
-                  className={`w-full flex items-center gap-3 p-3 rounded-xl border-2 transition-all ${
-                    currentLanguage === lang.id 
-                      ? 'border-blue-500 bg-blue-50' 
-                      : 'border-gray-200 hover:border-gray-300'
-                  }`}
-                >
-                  <span className="text-2xl">{lang.flag}</span>
-                  <span className={`font-medium ${currentLanguage === lang.id ? 'text-blue-600' : 'text-gray-700'}`}>
-                    {lang.name}
-                  </span>
-                  {currentLanguage === lang.id && (
-                    <CheckCircle className="w-5 h-5 text-blue-500 ml-auto" />
-                  )}
-                </button>
-              ))}
-            </div>
-          </div>
         </div>
       </div>
     </>
