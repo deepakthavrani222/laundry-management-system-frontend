@@ -7,7 +7,7 @@ import CreateTemplateBannerModal from '@/components/banners/CreateTemplateBanner
 import EditBannerModal from '@/components/banners/EditBannerModal';
 import BannerAnalyticsDashboard from '@/components/banners/BannerAnalyticsDashboard';
 import BannerPreview from '@/components/banners/BannerPreview';
-import Toast from '@/components/ui/Toast';
+import Toast from '@/components/ui/toast';
 import ConfirmDialog from '@/components/ui/ConfirmDialog';
 
 export default function AdminBannersPage() {
