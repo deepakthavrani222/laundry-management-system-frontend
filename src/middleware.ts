@@ -36,14 +36,24 @@ export function middleware(request: NextRequest) {
   // Check if the current path is a public route
   const isPublicRoute = publicRoutes.some(route => pathname === route)
   
-  // Get the first segment of the path
-  const firstSegment = pathname.split('/')[1]
+  // Get the first and second segments of the path
+  const segments = pathname.split('/').filter(Boolean)
+  const firstSegment = segments[0]
+  const secondSegment = segments[1]
   
   // Check if first segment is a version number (e.g., /2.0.0, /1.0.0)
   const versionRegex = /^\d+\.\d+\.\d+$/
   if (firstSegment && versionRegex.test(firstSegment)) {
-    // If it matches current version, redirect to home
+    // If version matches current version
     if (firstSegment === APP_VERSION) {
+      // If there's a second segment (tenant), redirect to tenant with version param
+      if (secondSegment) {
+        const url = request.nextUrl.clone()
+        url.pathname = `/${secondSegment}${segments.slice(2).length > 0 ? '/' + segments.slice(2).join('/') : ''}`
+        url.searchParams.set('v', firstSegment)
+        return NextResponse.redirect(url)
+      }
+      // Otherwise redirect to home with version param
       const url = request.nextUrl.clone()
       url.pathname = '/'
       url.searchParams.set('v', firstSegment)
