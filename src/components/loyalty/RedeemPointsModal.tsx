@@ -13,14 +13,19 @@ interface RedeemPointsModalProps {
 }
 
 export default function RedeemPointsModal({ isOpen, onClose, reward, currentPoints, onSuccess }: RedeemPointsModalProps) {
-  const { redeemPoints, loading } = useRedeemPoints();
+  const { redeem, redeeming } = useRedeemPoints();
   const [error, setError] = useState<string | null>(null);
 
   const handleRedeem = async () => {
     setError(null);
     try {
-      await redeemPoints(reward._id);
-      onSuccess();
+      const pointsRequired = reward.pointsRequired || reward.pointsCost || 0;
+      const result = await redeem(pointsRequired, reward.type, reward.value);
+      if (result.success) {
+        onSuccess();
+      } else {
+        setError(result.message || 'Failed to redeem reward');
+      }
     } catch (err: any) {
       setError(err.response?.data?.message || 'Failed to redeem reward');
     }
@@ -28,7 +33,8 @@ export default function RedeemPointsModal({ isOpen, onClose, reward, currentPoin
 
   if (!isOpen) return null;
 
-  const remainingPoints = currentPoints - reward.pointsCost;
+  const pointsRequired = reward.pointsRequired || reward.pointsCost || 0;
+  const remainingPoints = currentPoints - pointsRequired;
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
@@ -56,7 +62,7 @@ export default function RedeemPointsModal({ isOpen, onClose, reward, currentPoin
               <span className="text-sm text-gray-600">Points Required</span>
               <div className="flex items-center gap-1">
                 <Star size={16} className="text-purple-600" fill="currentColor" />
-                <span className="font-bold text-purple-900">{reward.pointsCost}</span>
+                <span className="font-bold text-purple-900">{pointsRequired}</span>
               </div>
             </div>
             <div className="flex items-center justify-between mb-3">
@@ -98,10 +104,10 @@ export default function RedeemPointsModal({ isOpen, onClose, reward, currentPoin
             </button>
             <button
               onClick={handleRedeem}
-              disabled={loading}
+              disabled={redeeming}
               className="flex-1 px-4 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 font-medium transition disabled:opacity-50"
             >
-              {loading ? 'Redeeming...' : 'Confirm Redeem'}
+              {redeeming ? 'Redeeming...' : 'Confirm Redeem'}
             </button>
           </div>
         </div>

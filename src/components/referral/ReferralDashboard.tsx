@@ -7,27 +7,31 @@ import ReferralStats from './ReferralStats';
 import ShareButtons from './ShareButtons';
 
 export default function ReferralDashboard() {
-  const { getReferralCode } = useReferralCode();
-  const { getStats } = useReferralStats();
-  const [referralData, setReferralData] = useState<any>(null);
-  const [stats, setStats] = useState<any>(null);
+  const { referralData, loading: codeLoading, refetch: refetchCode } = useReferralCode();
+  const { stats, recentReferrals, loading: statsLoading, refetch: refetchStats } = useReferralStats();
 
-  useEffect(() => {
-    loadData();
-  }, []);
+  const loading = codeLoading || statsLoading;
 
-  const loadData = async () => {
-    try {
-      const [codeResult, statsResult] = await Promise.all([
-        getReferralCode(),
-        getStats()
-      ]);
-      setReferralData(codeResult.data);
-      setStats(statsResult.data);
-    } catch (error) {
-      console.error('Failed to load referral data:', error);
-    }
-  };
+  if (loading) {
+    return (
+      <div className="max-w-7xl mx-auto p-6">
+        <div className="text-center py-12">
+          <p className="text-gray-600">Loading referral data...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!referralData?.hasProgram) {
+    return (
+      <div className="max-w-7xl mx-auto p-6">
+        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-6 text-center">
+          <p className="text-yellow-800 font-medium">No active referral program available</p>
+          <p className="text-yellow-600 text-sm mt-2">Check back later for referral opportunities!</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-7xl mx-auto p-6">
@@ -50,7 +54,7 @@ export default function ReferralDashboard() {
           <div className="flex items-center justify-between mb-2">
             <TrendingUp className="text-green-600" size={24} />
           </div>
-          <p className="text-3xl font-bold text-green-900">{stats?.successfulReferrals || 0}</p>
+          <p className="text-3xl font-bold text-green-900">{stats?.completedReferrals || 0}</p>
           <p className="text-sm text-green-700 mt-1">Successful</p>
         </div>
 
@@ -58,7 +62,7 @@ export default function ReferralDashboard() {
           <div className="flex items-center justify-between mb-2">
             <Gift className="text-purple-600" size={24} />
           </div>
-          <p className="text-3xl font-bold text-purple-900">₹{stats?.totalEarnings || 0}</p>
+          <p className="text-3xl font-bold text-purple-900">₹{stats?.totalRewards || 0}</p>
           <p className="text-sm text-purple-700 mt-1">Total Earnings</p>
         </div>
 
@@ -79,17 +83,17 @@ export default function ReferralDashboard() {
           <p className="text-lg mb-4">Your Referral Code</p>
           <div className="flex items-center gap-4">
             <div className="flex-1 bg-white/20 backdrop-blur rounded-lg px-6 py-4">
-              <p className="text-3xl font-bold tracking-wider">{referralData?.code}</p>
+              <p className="text-3xl font-bold tracking-wider">{referralData?.referralCode || 'Loading...'}</p>
             </div>
           </div>
           <p className="text-sm opacity-90 mt-4">
-            Share this code with friends and earn ₹{referralData?.referrerReward || 100} for each successful referral!
+            Share this code with friends and earn {referralData?.program?.referrerReward?.type === 'credit' ? '₹' : ''}{referralData?.program?.referrerReward?.value}{referralData?.program?.referrerReward?.type === 'coupon' ? '% coupon' : ''} for each successful referral!
           </p>
         </div>
 
         <ShareButtons 
-          code={referralData?.code} 
-          link={referralData?.link}
+          code={referralData?.referralCode} 
+          link={referralData?.referralLink}
         />
       </div>
 

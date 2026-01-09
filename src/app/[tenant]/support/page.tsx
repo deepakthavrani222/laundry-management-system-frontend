@@ -7,7 +7,7 @@ import {
   Headphones, Plus, Clock, CheckCircle, AlertCircle, ChevronRight, RefreshCw,
   MessageCircle, Ticket, Phone, Mail, HelpCircle, ChevronDown, Package, Truck,
   CreditCard, ShieldCheck, Sparkles, User, Home, LogOut, Menu, X, MapPin,
-  ArrowLeft, ShoppingBag
+  ArrowLeft, ShoppingBag, Star, Users2, Wallet as WalletIcon, Gift
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useAuthStore } from '@/store/authStore'
@@ -36,6 +36,10 @@ interface TicketItem {
 const sidebarNavigation = [
   { name: 'Dashboard', href: 'dashboard', icon: Home, current: false },
   { name: 'My Orders', href: 'orders', icon: ShoppingBag, current: false },
+  { name: 'Loyalty', href: 'loyalty', icon: Star, current: false },
+  { name: 'Referrals', href: 'referrals', icon: Users2, current: false },
+  { name: 'Wallet', href: 'wallet', icon: WalletIcon, current: false },
+  { name: 'Offers', href: 'offers', icon: Gift, current: false },
   { name: 'Support', href: 'support', icon: HelpCircle, current: true },
   { name: 'Addresses', href: 'addresses', icon: MapPin, current: false },
   { name: 'Profile', href: 'profile', icon: User, current: false },

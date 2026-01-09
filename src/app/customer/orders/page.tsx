@@ -23,6 +23,7 @@ import {
   ArrowLeft
 } from 'lucide-react'
 import { useOrders } from '@/hooks/useOrders'
+import OrderQRCode from '@/components/OrderQRCode'
 
 const ITEMS_PER_PAGE = 8
 
@@ -187,7 +188,16 @@ export default function OrdersPage() {
                         <Package className="w-5 h-5 text-white" />
                       </div>
                       <div>
-                        <div className="flex items-center gap-2 mb-1">
+                        <div className="flex items-center gap-3 mb-1">
+                          {/* Barcode */}
+                          <OrderQRCode 
+                            orderNumber={order.orderNumber}
+                            orderId={order._id}
+                            barcode={order.orderNumber}
+                            size="small"
+                            mode="barcode-only"
+                          />
+                          
                           <h3 className="font-semibold text-gray-800">{formatOrderNumber(order.orderNumber)}</h3>
                           <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${getStatusColor(order.status)}`}>
                             <StatusIcon className="w-3 h-3 mr-1" />

@@ -1,8 +1,8 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { Printer, Download, Tag, Package, User, QrCode, Barcode, CheckCircle, X, Loader2 } from 'lucide-react';
-import QRCode from 'qrcode';
+import { Printer, Download, Tag, Package, Barcode, CheckCircle, X, Loader2 } from 'lucide-react';
+import JsBarcode from 'jsbarcode';
 
 interface ItemLabel {
   tagCode: string;
@@ -15,7 +15,6 @@ interface ItemLabel {
   customerPhone: string;
   specialInstructions: string;
   createdAt: string;
-  qrData: string;
   itemNumber: number;
   totalItems: number;
   printDate: string;
@@ -38,23 +37,17 @@ export default function ItemTagPrinter({
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedLabels, setSelectedLabels] = useState<Set<string>>(new Set());
-  const [qrCodes, setQrCodes] = useState<Record<string, string>>({});
   const [labelSize, setLabelSize] = useState<'small' | 'medium' | 'large'>('medium');
 
   const labelSizes = {
-    small: { width: 200, height: 120, qrSize: 50, fontSize: 8 },
-    medium: { width: 280, height: 160, qrSize: 70, fontSize: 10 },
-    large: { width: 380, height: 220, qrSize: 100, fontSize: 12 }
+    small: { width: 200, height: 120, fontSize: 8, barcodeHeight: 35 },
+    medium: { width: 280, height: 160, fontSize: 10, barcodeHeight: 45 },
+    large: { width: 380, height: 220, fontSize: 12, barcodeHeight: 60 }
   };
 
   useEffect(() => {
     fetchLabels();
   }, [orderId]);
-
-  useEffect(() => {
-    // Generate QR codes for all labels
-    generateQRCodes();
-  }, [labels]);
 
   const fetchLabels = async () => {
     setIsLoading(true);
@@ -86,25 +79,6 @@ export default function ItemTagPrinter({
     }
   };
 
-  const generateQRCodes = async () => {
-    const codes: Record<string, string> = {};
-    
-    for (const label of labels) {
-      try {
-        const dataUrl = await QRCode.toDataURL(label.qrData, {
-          width: labelSizes[labelSize].qrSize,
-          margin: 1,
-          errorCorrectionLevel: 'M'
-        });
-        codes[label.tagCode] = dataUrl;
-      } catch (err) {
-        console.error('QR generation failed for', label.tagCode);
-      }
-    }
-    
-    setQrCodes(codes);
-  };
-
   const toggleLabel = (tagCode: string) => {
     const newSelected = new Set(selectedLabels);
     if (newSelected.has(tagCode)) {
@@ -124,38 +98,39 @@ export default function ItemTagPrinter({
   };
 
   const drawBarcode = (ctx: CanvasRenderingContext2D, code: string, x: number, y: number, width: number, height: number) => {
-    const barWidth = width / (code.length * 11 + 35);
+    // Create temporary canvas for barcode
+    const tempCanvas = document.createElement('canvas');
+    tempCanvas.width = width;
+    tempCanvas.height = height;
     
-    ctx.fillStyle = '#000000';
-    
-    const startPattern = [2, 1, 1, 2, 3, 2];
-    let currentX = x;
-    startPattern.forEach((w, i) => {
-      if (i % 2 === 0) ctx.fillRect(currentX, y, w * barWidth, height);
-      currentX += w * barWidth;
-    });
-
-    const patterns: Record<string, number[]> = {
-      '0': [2, 1, 2, 2, 2, 2], '1': [2, 2, 2, 1, 2, 2], '2': [2, 2, 2, 2, 2, 1],
-      '3': [1, 2, 1, 2, 2, 3], '4': [1, 2, 1, 3, 2, 2], '5': [1, 3, 1, 2, 2, 2],
-      '6': [1, 2, 2, 2, 1, 3], '7': [1, 2, 2, 3, 1, 2], '8': [1, 3, 2, 2, 1, 2],
-      '9': [2, 2, 1, 2, 1, 3], 'I': [1, 2, 2, 1, 3, 2], 'T': [2, 1, 1, 3, 2, 2],
-      'L': [1, 1, 3, 2, 2, 2], 'P': [2, 1, 1, 2, 2, 3]
-    };
-
-    for (const char of code) {
-      const pattern = patterns[char] || [2, 1, 2, 1, 2, 2];
-      pattern.forEach((w, i) => {
-        if (i % 2 === 0) ctx.fillRect(currentX, y, w * barWidth, height);
-        currentX += w * barWidth;
+    try {
+      // Generate barcode using JsBarcode
+      JsBarcode(tempCanvas, code, {
+        format: 'CODE128',
+        width: 2,
+        height: height - 15,
+        displayValue: false,
+        margin: 0,
+        background: '#ffffff',
+        lineColor: '#000000'
       });
+      
+      // Draw the barcode canvas onto main canvas
+      ctx.drawImage(tempCanvas, x, y, width, height - 15);
+      
+      // Draw text below barcode
+      ctx.fillStyle = '#000000';
+      ctx.font = `${Math.floor(height / 6)}px monospace`;
+      ctx.textAlign = 'center';
+      ctx.fillText(code, x + width / 2, y + height - 3);
+    } catch (error) {
+      console.error('Barcode generation failed:', error);
+      // Fallback: just draw the text
+      ctx.fillStyle = '#000000';
+      ctx.font = `${Math.floor(height / 4)}px monospace`;
+      ctx.textAlign = 'center';
+      ctx.fillText(code, x + width / 2, y + height / 2);
     }
-
-    const stopPattern = [2, 3, 3, 1, 1, 1, 2];
-    stopPattern.forEach((w, i) => {
-      if (i % 2 === 0) ctx.fillRect(currentX, y, w * barWidth, height);
-      currentX += w * barWidth;
-    });
   };
 
   const generateLabelCanvas = async (label: ItemLabel): Promise<HTMLCanvasElement> => {
@@ -172,79 +147,67 @@ export default function ItemTagPrinter({
     
     // Border
     ctx.strokeStyle = '#000000';
-    ctx.lineWidth = 1;
+    ctx.lineWidth = 2;
     ctx.strokeRect(2, 2, config.width - 4, config.height - 4);
     
-    const padding = 8;
-    let yPos = padding + 5;
+    const padding = 10;
+    let yPos = padding + 8;
     
-    // Header - Order Number
+    // Header - Order Number (larger, bold)
     ctx.fillStyle = '#000000';
-    ctx.font = `bold ${config.fontSize + 2}px Arial`;
+    ctx.font = `bold ${config.fontSize + 4}px Arial`;
     ctx.fillText(`Order: ${label.orderNumber}`, padding, yPos);
     
     // Item count badge
-    ctx.font = `${config.fontSize}px Arial`;
-    const itemText = `${label.itemNumber}/${label.totalItems}`;
+    ctx.font = `bold ${config.fontSize + 2}px Arial`;
+    const itemText = `Item ${label.itemNumber}/${label.totalItems}`;
     const itemTextWidth = ctx.measureText(itemText).width;
-    ctx.fillStyle = '#f0f0f0';
-    ctx.fillRect(config.width - padding - itemTextWidth - 8, yPos - config.fontSize, itemTextWidth + 8, config.fontSize + 4);
     ctx.fillStyle = '#000000';
-    ctx.fillText(itemText, config.width - padding - itemTextWidth - 4, yPos);
+    ctx.fillRect(config.width - padding - itemTextWidth - 10, yPos - config.fontSize - 2, itemTextWidth + 10, config.fontSize + 6);
+    ctx.fillStyle = '#ffffff';
+    ctx.fillText(itemText, config.width - padding - itemTextWidth - 5, yPos);
     
+    yPos += config.fontSize + 12;
+    
+    // Customer name (bold, larger)
+    ctx.fillStyle = '#000000';
+    ctx.font = `bold ${config.fontSize + 2}px Arial`;
+    ctx.fillText(label.customerName, padding, yPos);
     yPos += config.fontSize + 8;
     
-    // Customer name
-    ctx.font = `bold ${config.fontSize}px Arial`;
-    ctx.fillText(label.customerName, padding, yPos);
-    yPos += config.fontSize + 4;
-    
     // Item type and service
-    ctx.font = `${config.fontSize}px Arial`;
+    ctx.font = `${config.fontSize + 1}px Arial`;
     ctx.fillText(`${label.itemType} - ${label.service}`, padding, yPos);
-    yPos += config.fontSize + 4;
+    yPos += config.fontSize + 6;
     
     // Category
     ctx.fillStyle = '#666666';
+    ctx.font = `${config.fontSize}px Arial`;
     ctx.fillText(`Category: ${label.category}`, padding, yPos);
-    yPos += config.fontSize + 6;
+    yPos += config.fontSize + 8;
     
     // Special instructions (if any)
     if (label.specialInstructions) {
       ctx.fillStyle = '#cc6600';
-      ctx.font = `italic ${config.fontSize - 1}px Arial`;
-      const maxWidth = config.width - config.qrSize - padding * 3;
-      const truncated = label.specialInstructions.length > 30 
-        ? label.specialInstructions.substring(0, 30) + '...' 
+      ctx.font = `italic ${config.fontSize}px Arial`;
+      const maxWidth = config.width - padding * 2;
+      const truncated = label.specialInstructions.length > 35 
+        ? label.specialInstructions.substring(0, 35) + '...' 
         : label.specialInstructions;
       ctx.fillText(`📝 ${truncated}`, padding, yPos);
+      yPos += config.fontSize + 6;
     }
     
-    // QR Code (right side)
-    const qrX = config.width - config.qrSize - padding;
-    const qrY = padding + config.fontSize + 10;
-    
-    if (qrCodes[label.tagCode]) {
-      const qrImg = new Image();
-      await new Promise<void>((resolve) => {
-        qrImg.onload = () => {
-          ctx.drawImage(qrImg, qrX, qrY, config.qrSize, config.qrSize);
-          resolve();
-        };
-        qrImg.src = qrCodes[label.tagCode];
-      });
-    }
-    
-    // Barcode at bottom
-    const barcodeY = config.height - 35;
+    // Large Barcode at bottom (primary focus)
+    const barcodeY = config.height - config.barcodeHeight - 10;
     const barcodeWidth = config.width - padding * 2;
-    drawBarcode(ctx, label.tagCode, padding, barcodeY, barcodeWidth, 20);
+    drawBarcode(ctx, label.tagCode, padding, barcodeY, barcodeWidth, config.barcodeHeight - 15);
     
-    // Tag code text
+    // Tag code text below barcode (larger, bold)
     ctx.fillStyle = '#000000';
-    ctx.font = `${config.fontSize}px monospace`;
+    ctx.font = `bold ${config.fontSize + 1}px monospace`;
     ctx.textAlign = 'center';
-    ctx.fillText(label.tagCode, config.width / 2, config.height - 5);
+    ctx.fillText(label.tagCode, config.width / 2, config.height - 8);
     ctx.textAlign = 'left';
     
     return canvas;
@@ -468,25 +431,17 @@ export default function ItemTagPrinter({
               
               <div className="flex items-start gap-3">
                 <div className="flex-shrink-0">
-                  {qrCodes[label.tagCode] ? (
-                    <img 
-                      src={qrCodes[label.tagCode]} 
-                      alt="QR" 
-                      className="w-16 h-16 rounded border"
-                    />
-                  ) : (
-                    <div className="w-16 h-16 bg-gray-100 rounded flex items-center justify-center">
-                      <QrCode className="w-8 h-8 text-gray-400" />
-                    </div>
-                  )}
+                  <div className="w-16 h-16 bg-gray-100 rounded flex items-center justify-center border-2 border-gray-300">
+                    <Barcode className="w-10 h-10 text-gray-600" />
+                  </div>
                 </div>
                 
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-1">
-                    <span className="text-xs bg-gray-100 px-2 py-0.5 rounded font-mono">
+                    <span className="text-xs bg-gray-900 text-white px-2 py-1 rounded font-mono font-bold">
                       {label.tagCode}
                     </span>
-                    <span className="text-xs text-gray-500">
+                    <span className="text-xs text-gray-500 font-semibold">
                       {label.itemNumber}/{label.totalItems}
                     </span>
                   </div>

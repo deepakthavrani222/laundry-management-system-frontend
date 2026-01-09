@@ -30,7 +30,7 @@ export default function BannerPreview({ isOpen, onClose, banner }: BannerPreview
             <h3 className="text-sm font-medium text-gray-700 mb-3">Desktop View</h3>
             <div className="border border-gray-300 rounded-lg overflow-hidden">
               <img
-                src={banner.imageUrl}
+                src={`${process.env.NEXT_PUBLIC_API_URL?.replace('/api', '')}${banner.imageUrl}`}
                 alt={banner.title}
                 className="w-full h-auto"
               />
@@ -42,7 +42,7 @@ export default function BannerPreview({ isOpen, onClose, banner }: BannerPreview
             <h3 className="text-sm font-medium text-gray-700 mb-3">Mobile View</h3>
             <div className="max-w-sm mx-auto border border-gray-300 rounded-lg overflow-hidden">
               <img
-                src={banner.imageUrl}
+                src={`${process.env.NEXT_PUBLIC_API_URL?.replace('/api', '')}${banner.imageUrl}`}
                 alt={banner.title}
                 className="w-full h-auto"
               />

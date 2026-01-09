@@ -163,13 +163,30 @@ export const useToggleBannerStatus = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const toggleStatus = async (bannerId: string) => {
+  const toggleStatus = async (bannerId: string, currentState: string) => {
     setLoading(true);
     setError(null);
     try {
-      const response = await axios.patch(`${API_URL}/admin/banners/${bannerId}/toggle-status`, {}, {
-        withCredentials: true
-      });
+      // Determine new state based on current state
+      let newState = '';
+      if (currentState === 'ACTIVE') {
+        newState = 'PAUSED';
+      } else if (currentState === 'PAUSED') {
+        newState = 'ACTIVE';
+      } else if (currentState === 'DRAFT') {
+        // Submit for approval instead
+        const response = await axios.post(`${API_URL}/admin/banners/${bannerId}/submit-approval`, {}, {
+          withCredentials: true
+        });
+        return response.data;
+      } else {
+        throw new Error(`Cannot toggle status from ${currentState} state`);
+      }
+
+      const response = await axios.patch(`${API_URL}/admin/banners/${bannerId}/state`, 
+        { newState },
+        { withCredentials: true }
+      );
       return response.data;
     } catch (err: any) {
       setError(err.response?.data?.message || 'Failed to toggle banner status');

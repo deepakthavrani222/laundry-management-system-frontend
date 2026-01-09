@@ -12,6 +12,7 @@ interface OrderQRCodeProps {
   showPrint?: boolean;
   size?: 'small' | 'medium' | 'large';
   showBarcode?: boolean; // Show both QR and barcode
+  mode?: 'full' | 'barcode-only' | 'qr-only'; // Display mode
 }
 
 export default function OrderQRCode({ 
@@ -21,7 +22,8 @@ export default function OrderQRCode({
   showDownload = true, 
   showPrint = true,
   size = 'medium',
-  showBarcode = true
+  showBarcode = true,
+  mode = 'full'
 }: OrderQRCodeProps) {
   const qrCanvasRef = useRef<HTMLCanvasElement>(null);
   const barcodeCanvasRef = useRef<HTMLCanvasElement>(null);
@@ -228,28 +230,57 @@ export default function OrderQRCode({
 
   return (
     <div className="inline-flex flex-col items-center gap-3">
-      {/* QR Code */}
-      <div className="bg-white p-3 rounded-lg border border-gray-200 shadow-sm">
-        {qrDataUrl ? (
-          <img src={qrDataUrl} alt="Order QR Code" width={config.qrSize} height={config.qrSize} />
-        ) : (
-          <div 
-            className="flex items-center justify-center bg-gray-100" 
-            style={{ width: config.qrSize, height: config.qrSize }}
-          >
-            <QrCode className="w-8 h-8 text-gray-400 animate-pulse" />
-          </div>
-        )}
-        <p className="text-xs text-center text-gray-500 mt-2">Scan to track order</p>
-      </div>
+      {/* Barcode-only mode for list views */}
+      {mode === 'barcode-only' && barcode && (
+        <div className="inline-flex flex-col items-center">
+          <canvas ref={barcodeCanvasRef} className="rounded border border-gray-200" />
+        </div>
+      )}
 
-      {/* Barcode (hidden, used for download/print) */}
-      {showBarcode && barcode && (
-        <canvas ref={barcodeCanvasRef} className="hidden" />
+      {/* QR-only mode */}
+      {mode === 'qr-only' && (
+        <div className="bg-white p-3 rounded-lg border border-gray-200 shadow-sm">
+          {qrDataUrl ? (
+            <img src={qrDataUrl} alt="Order QR Code" width={config.qrSize} height={config.qrSize} />
+          ) : (
+            <div 
+              className="flex items-center justify-center bg-gray-100" 
+              style={{ width: config.qrSize, height: config.qrSize }}
+            >
+              <QrCode className="w-8 h-8 text-gray-400 animate-pulse" />
+            </div>
+          )}
+          <p className="text-xs text-center text-gray-500 mt-2">Scan to track order</p>
+        </div>
+      )}
+
+      {/* Full mode - QR Code + Barcode */}
+      {mode === 'full' && (
+        <>
+          {/* QR Code */}
+          <div className="bg-white p-3 rounded-lg border border-gray-200 shadow-sm">
+            {qrDataUrl ? (
+              <img src={qrDataUrl} alt="Order QR Code" width={config.qrSize} height={config.qrSize} />
+            ) : (
+              <div 
+                className="flex items-center justify-center bg-gray-100" 
+                style={{ width: config.qrSize, height: config.qrSize }}
+              >
+                <QrCode className="w-8 h-8 text-gray-400 animate-pulse" />
+              </div>
+            )}
+            <p className="text-xs text-center text-gray-500 mt-2">Scan to track order</p>
+          </div>
+
+          {/* Barcode (hidden, used for download/print) */}
+          {showBarcode && barcode && (
+            <canvas ref={barcodeCanvasRef} className="hidden" />
+          )}
+        </>
       )}
       
       {/* Actions */}
-      {(showDownload || showPrint) && (
+      {(showDownload || showPrint) && mode === 'full' && (
         <div className="flex gap-2">
           {showDownload && (
             <button

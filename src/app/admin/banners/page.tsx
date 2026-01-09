@@ -3,10 +3,12 @@
 import { useState, useEffect } from 'react';
 import { Plus, Search, Eye, Edit, Trash2, BarChart3, Power } from 'lucide-react';
 import { useTenantBanners, useDeleteBanner, useToggleBannerStatus } from '@/hooks/useBanners';
-import CreateBannerModal from '@/components/banners/CreateBannerModal';
+import CreateTemplateBannerModal from '@/components/banners/CreateTemplateBannerModal';
 import EditBannerModal from '@/components/banners/EditBannerModal';
 import BannerAnalyticsDashboard from '@/components/banners/BannerAnalyticsDashboard';
 import BannerPreview from '@/components/banners/BannerPreview';
+import Toast from '@/components/ui/Toast';
+import ConfirmDialog from '@/components/ui/ConfirmDialog';
 
 export default function AdminBannersPage() {
   const [searchTerm, setSearchTerm] = useState('');
@@ -21,6 +23,8 @@ export default function AdminBannersPage() {
   const [banners, setBanners] = useState<any[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' | 'warning' | 'info' } | null>(null);
+  const [confirmDialog, setConfirmDialog] = useState<{ isOpen: boolean; bannerId: string; title: string; message: string } | null>(null);
 
   const { getBanners, loading } = useTenantBanners();
   const { deleteBanner } = useDeleteBanner();
@@ -42,30 +46,45 @@ export default function AdminBannersPage() {
       if (pageFilter !== 'ALL') params.targetPage = pageFilter;
 
       const result = await getBanners(params);
-      setBanners(result.data || []);
-      setTotalPages(result.pagination?.totalPages || 1);
+      console.log('API Response:', result); // Debug log
+      setBanners(result.data?.banners || []);
+      setTotalPages(result.data?.pagination?.pages || 1);
     } catch (error) {
       console.error('Failed to load banners:', error);
+      setToast({ message: 'Failed to load banners', type: 'error' });
     }
   };
 
   const handleDelete = async (bannerId: string) => {
-    if (!confirm('Are you sure you want to delete this banner?')) return;
+    setConfirmDialog({
+      isOpen: true,
+      bannerId,
+      title: 'Delete Banner',
+      message: 'Are you sure you want to delete this banner? This action cannot be undone.'
+    });
+  };
+
+  const confirmDelete = async () => {
+    if (!confirmDialog) return;
     
     try {
-      await deleteBanner(bannerId);
+      await deleteBanner(confirmDialog.bannerId);
+      setToast({ message: 'Banner deleted successfully', type: 'success' });
       loadBanners();
-    } catch (error) {
-      console.error('Failed to delete banner:', error);
+    } catch (error: any) {
+      setToast({ message: error.response?.data?.message || 'Failed to delete banner', type: 'error' });
+    } finally {
+      setConfirmDialog(null);
     }
   };
 
-  const handleToggleStatus = async (bannerId: string) => {
+  const handleToggleStatus = async (banner: any) => {
     try {
-      await toggleStatus(bannerId);
+      const result = await toggleStatus(banner._id, banner.state);
+      setToast({ message: result.message || 'Banner status updated', type: 'success' });
       loadBanners();
-    } catch (error) {
-      console.error('Failed to toggle status:', error);
+    } catch (error: any) {
+      setToast({ message: error.response?.data?.message || 'Failed to toggle status', type: 'error' });
     }
   };
 
@@ -84,60 +103,26 @@ export default function AdminBannersPage() {
     setShowPreview(true);
   };
 
-  // Mock data for initial display - will be replaced with API data
-  const mockBanners = [
-    {
-      _id: '1',
-      title: 'Summer Sale 2026',
-      type: 'PROMOTIONAL',
-      targetPages: ['HOME', 'SERVICES'],
-      status: 'ACTIVE',
-      startDate: '2026-01-01',
-      endDate: '2026-01-31',
-      analytics: {
-        impressions: 15420,
-        clicks: 892,
-        ctr: 5.78,
-        conversions: 45
-      },
-      linkedPromotion: {
-        promotionType: 'Campaign',
-        promotionId: 'camp123'
-      }
-    },
-    {
-      _id: '2',
-      title: 'New Year Offer',
-      type: 'SEASONAL',
-      targetPages: ['HOME'],
-      status: 'SCHEDULED',
-      startDate: '2026-01-15',
-      endDate: '2026-01-31',
-      analytics: {
-        impressions: 0,
-        clicks: 0,
-        ctr: 0,
-        conversions: 0
-      }
-    }
-  ];
-
-  const displayBanners = banners.length > 0 ? banners : mockBanners;
-
-  const filteredBanners = displayBanners.filter(banner => {
-    const matchesSearch = banner.title.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesStatus = statusFilter === 'ALL' || banner.status === statusFilter;
-    const matchesType = typeFilter === 'ALL' || banner.type === typeFilter;
-    const matchesPage = pageFilter === 'ALL' || banner.targetPages.includes(pageFilter);
+  const filteredBanners = banners.filter(banner => {
+    const title = banner.content?.title || banner.title || '';
+    const matchesSearch = title.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesStatus = statusFilter === 'ALL' || banner.state === statusFilter;
+    const matchesType = typeFilter === 'ALL' || banner.templateType === typeFilter;
+    const matchesPage = pageFilter === 'ALL' || banner.position === pageFilter;
     return matchesSearch && matchesStatus && matchesType && matchesPage;
   });
 
   const getStatusBadge = (status: string) => {
     const styles = {
-      ACTIVE: 'bg-green-100 text-green-800',
+      DRAFT: 'bg-gray-100 text-gray-800',
+      PENDING_APPROVAL: 'bg-yellow-100 text-yellow-800',
+      APPROVED: 'bg-blue-100 text-blue-800',
+      REJECTED: 'bg-red-100 text-red-800',
       SCHEDULED: 'bg-blue-100 text-blue-800',
-      PAUSED: 'bg-yellow-100 text-yellow-800',
-      EXPIRED: 'bg-gray-100 text-gray-800'
+      ACTIVE: 'bg-green-100 text-green-800',
+      PAUSED: 'bg-orange-100 text-orange-800',
+      COMPLETED: 'bg-gray-100 text-gray-800',
+      ARCHIVED: 'bg-gray-100 text-gray-800'
     };
     return styles[status as keyof typeof styles] || 'bg-gray-100 text-gray-800';
   };
@@ -234,20 +219,20 @@ export default function AdminBannersPage() {
               <div className="flex items-start justify-between">
                 <div className="flex-1">
                   <div className="flex items-center gap-3 mb-2">
-                    <h3 className="text-xl font-semibold text-gray-900">{banner.title}</h3>
-                    <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusBadge(banner.status)}`}>
-                      {banner.status}
+                    <h3 className="text-xl font-semibold text-gray-900">{banner.content?.title || 'Untitled'}</h3>
+                    <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusBadge(banner.state || 'DRAFT')}`}>
+                      {banner.state || 'DRAFT'}
                     </span>
                     <span className="px-3 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
-                      {banner.type}
+                      {banner.templateType || 'UNKNOWN'}
                     </span>
                   </div>
 
                   <div className="flex items-center gap-6 text-sm text-gray-600 mb-4">
-                    <span>📅 {new Date(banner.startDate).toLocaleDateString()} - {new Date(banner.endDate).toLocaleDateString()}</span>
-                    <span>📍 {banner.targetPages.join(', ')}</span>
-                    {banner.linkedPromotion && (
-                      <span>🔗 Linked to {banner.linkedPromotion.promotionType}</span>
+                    <span>📅 {new Date(banner.schedule?.startDate).toLocaleDateString()} - {new Date(banner.schedule?.endDate).toLocaleDateString()}</span>
+                    <span>📍 {banner.position || 'No position'}</span>
+                    {banner.linkedCampaign && (
+                      <span>🔗 Linked to Campaign</span>
                     )}
                   </div>
 
@@ -255,19 +240,23 @@ export default function AdminBannersPage() {
                   <div className="grid grid-cols-4 gap-4">
                     <div className="bg-blue-50 rounded-lg p-3">
                       <p className="text-xs text-gray-600 mb-1">Impressions</p>
-                      <p className="text-lg font-bold text-blue-600">{banner.analytics.impressions.toLocaleString()}</p>
+                      <p className="text-lg font-bold text-blue-600">{(banner.analytics?.impressions || 0).toLocaleString()}</p>
                     </div>
                     <div className="bg-green-50 rounded-lg p-3">
                       <p className="text-xs text-gray-600 mb-1">Clicks</p>
-                      <p className="text-lg font-bold text-green-600">{banner.analytics.clicks.toLocaleString()}</p>
+                      <p className="text-lg font-bold text-green-600">{(banner.analytics?.clicks || 0).toLocaleString()}</p>
                     </div>
                     <div className="bg-purple-50 rounded-lg p-3">
                       <p className="text-xs text-gray-600 mb-1">CTR</p>
-                      <p className="text-lg font-bold text-purple-600">{banner.analytics.ctr.toFixed(2)}%</p>
+                      <p className="text-lg font-bold text-purple-600">
+                        {banner.analytics?.impressions > 0 
+                          ? ((banner.analytics.clicks / banner.analytics.impressions) * 100).toFixed(2)
+                          : '0.00'}%
+                      </p>
                     </div>
                     <div className="bg-orange-50 rounded-lg p-3">
                       <p className="text-xs text-gray-600 mb-1">Conversions</p>
-                      <p className="text-lg font-bold text-orange-600">{banner.analytics.conversions}</p>
+                      <p className="text-lg font-bold text-orange-600">{banner.analytics?.conversions || 0}</p>
                     </div>
                   </div>
                 </div>
@@ -296,9 +285,9 @@ export default function AdminBannersPage() {
                     <BarChart3 size={20} />
                   </button>
                   <button
-                    onClick={() => handleToggleStatus(banner._id)}
+                    onClick={() => handleToggleStatus(banner)}
                     className="p-2 text-yellow-600 hover:bg-yellow-50 rounded-lg transition"
-                    title="Toggle Status"
+                    title={banner.state === 'DRAFT' ? 'Submit for Approval' : banner.state === 'ACTIVE' ? 'Pause' : 'Resume'}
                   >
                     <Power size={20} />
                   </button>
@@ -352,10 +341,13 @@ export default function AdminBannersPage() {
       )}
 
       {/* Modals */}
-      <CreateBannerModal
+      <CreateTemplateBannerModal
         isOpen={showCreateModal}
         onClose={() => setShowCreateModal(false)}
-        onSuccess={loadBanners}
+        onSuccess={() => {
+          loadBanners();
+          setToast({ message: 'Banner created successfully', type: 'success' });
+        }}
       />
 
       {selectedBanner && (
@@ -366,7 +358,10 @@ export default function AdminBannersPage() {
               setShowEditModal(false);
               setSelectedBanner(null);
             }}
-            onSuccess={loadBanners}
+            onSuccess={() => {
+              loadBanners();
+              setToast({ message: 'Banner updated successfully', type: 'success' });
+            }}
             banner={selectedBanner}
           />
 
@@ -389,6 +384,29 @@ export default function AdminBannersPage() {
             banner={selectedBanner}
           />
         </>
+      )}
+
+      {/* Toast Notification */}
+      {toast && (
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          onClose={() => setToast(null)}
+        />
+      )}
+
+      {/* Confirm Dialog */}
+      {confirmDialog && (
+        <ConfirmDialog
+          isOpen={confirmDialog.isOpen}
+          title={confirmDialog.title}
+          message={confirmDialog.message}
+          confirmText="Delete"
+          cancelText="Cancel"
+          type="danger"
+          onConfirm={confirmDelete}
+          onCancel={() => setConfirmDialog(null)}
+        />
       )}
     </div>
   );

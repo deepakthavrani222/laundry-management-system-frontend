@@ -10,6 +10,7 @@ import { useState, useEffect } from 'react'
 import { useRouter, useParams } from 'next/navigation'
 import BookingModal from '@/components/BookingModal'
 import { translations } from '@/lib/translations'
+import BannerCarousel from '@/components/customer/BannerCarousel'
 
 const services = [
   { id: 'wash-fold', name: 'Wash & Fold', icon: Shirt, description: 'Regular washing and folding', price: '₹25/item', features: ['Same day pickup', 'Eco-friendly'] },
@@ -58,7 +59,11 @@ export default function TenantServicesPage() {
       <TemplateHeader />
       <BookingModal isOpen={showBookingModal} onClose={() => setShowBookingModal(false)} onLoginRequired={() => router.push(`/${tenant}`)} />
       
-      <section className="relative h-[400px] overflow-hidden pt-28">
+      <div className="pt-20">
+        <BannerCarousel page="SERVICES" />
+      </div>
+      
+      <section className="relative h-[400px] overflow-hidden pt-8">
         <video autoPlay loop muted playsInline className="absolute inset-0 w-full h-full object-cover"><source src="/images/pricing.mp4" type="video/mp4" /></video>
         <div className="absolute inset-0 bg-gradient-to-r from-gray-900/80 to-gray-900/40"></div>
         <div className="relative container mx-auto px-4 h-full flex items-center">

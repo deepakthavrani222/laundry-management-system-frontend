@@ -30,6 +30,7 @@ import {
   Users2,
   Target,
   MapPin,
+  Image,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useState, useEffect, createContext, useContext } from 'react'
@@ -45,13 +46,14 @@ const navigation = [
   { name: 'Inventory', href: '/admin/inventory', icon: Package, permission: { module: 'inventory', action: 'view' } },
   { name: 'Services', href: '/admin/services', icon: Sparkles, permission: { module: 'services', action: 'view' } },
   { name: 'Branches', href: '/admin/branches', icon: MapPin, permission: { module: 'settings', action: 'view' } },
-  { name: 'Campaigns', href: '/admin/campaigns', icon: Target, permission: { module: 'coupons', action: 'view' } },
   { 
     name: 'Programs', 
     icon: Gift, 
     permission: { module: 'coupons', action: 'view' },
     isExpandable: true,
     subItems: [
+      { name: 'Campaigns', href: '/admin/campaigns', icon: Target, permission: { module: 'coupons', action: 'view' } },
+      { name: 'Banners', href: '/admin/banners', icon: Image, permission: { module: 'coupons', action: 'view' } },
       { name: 'Coupons', href: '/admin/coupons', icon: Tag, permission: { module: 'coupons', action: 'view' } },
       { name: 'Discounts', href: '/admin/discounts', icon: Percent, permission: { module: 'coupons', action: 'view' } },
       { name: 'Referrals', href: '/admin/referrals', icon: Users2, permission: { module: 'coupons', action: 'view' } },

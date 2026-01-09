@@ -40,14 +40,13 @@ interface LoyaltyTransaction {
 
 export function useLoyaltyBalance() {
   const { token } = useAuthStore();
-  const [balance, setBalance] = useState<LoyaltyBalance | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchBalance = async () => {
+  const getBalance = async () => {
     if (!token) {
       setLoading(false);
-      return;
+      return { success: false, data: null };
     }
 
     try {
@@ -59,22 +58,20 @@ export function useLoyaltyBalance() {
       const data = await response.json();
       
       if (data.success) {
-        setBalance(data.data);
+        return { success: true, data: data.data };
       } else {
         setError(data.message || 'Failed to fetch loyalty balance');
+        return { success: false, data: null };
       }
     } catch (err: any) {
       setError(err.message || 'Failed to fetch loyalty balance');
+      return { success: false, data: null };
     } finally {
       setLoading(false);
     }
   };
 
-  useEffect(() => {
-    fetchBalance();
-  }, [token]);
-
-  return { balance, loading, error, refetch: fetchBalance };
+  return { getBalance, loading, error };
 }
 
 export function useLoyaltyTransactions(page: number = 1, limit: number = 20) {
@@ -197,15 +194,13 @@ export function useRedeemPoints() {
 
 export function useAvailableRewards() {
   const { token } = useAuthStore();
-  const [rewards, setRewards] = useState<any[]>([]);
-  const [pointsBalance, setPointsBalance] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchRewards = async () => {
+  const getRewards = async () => {
     if (!token) {
       setLoading(false);
-      return;
+      return { success: false, data: [] };
     }
 
     try {
@@ -217,35 +212,31 @@ export function useAvailableRewards() {
       const data = await response.json();
       
       if (data.success) {
-        setRewards(data.data.rewards);
-        setPointsBalance(data.data.pointsBalance);
+        return { success: true, data: data.data.rewards || [] };
       } else {
         setError(data.message || 'Failed to fetch rewards');
+        return { success: false, data: [] };
       }
     } catch (err: any) {
       setError(err.message || 'Failed to fetch rewards');
+      return { success: false, data: [] };
     } finally {
       setLoading(false);
     }
   };
 
-  useEffect(() => {
-    fetchRewards();
-  }, [token]);
-
-  return { rewards, pointsBalance, loading, error, refetch: fetchRewards };
+  return { getRewards, loading, error };
 }
 
 export function useTierInfo() {
   const { token } = useAuthStore();
-  const [tierInfo, setTierInfo] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchTierInfo = async () => {
+  const getTierInfo = async () => {
     if (!token) {
       setLoading(false);
-      return;
+      return { success: false, data: null };
     }
 
     try {
@@ -257,20 +248,18 @@ export function useTierInfo() {
       const data = await response.json();
       
       if (data.success) {
-        setTierInfo(data.data);
+        return { success: true, data: data.data };
       } else {
         setError(data.message || 'Failed to fetch tier info');
+        return { success: false, data: null };
       }
     } catch (err: any) {
       setError(err.message || 'Failed to fetch tier info');
+      return { success: false, data: null };
     } finally {
       setLoading(false);
     }
   };
 
-  useEffect(() => {
-    fetchTierInfo();
-  }, [token]);
-
-  return { tierInfo, loading, error, refetch: fetchTierInfo };
+  return { getTierInfo, loading, error };
 }

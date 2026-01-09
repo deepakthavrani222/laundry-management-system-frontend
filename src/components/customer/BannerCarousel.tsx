@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
-import { useActiveBanners, useRecordImpression, useRecordClick } from '@/hooks/useCustomerBanners';
+import { useActiveBannersByPage, useRecordImpression, useRecordClick } from '@/hooks/useCustomerBanners';
 
 interface BannerCarouselProps {
   page: string;
@@ -13,7 +13,7 @@ interface BannerCarouselProps {
 export default function BannerCarousel({ page, autoPlay = true, interval = 5000 }: BannerCarouselProps) {
   const [banners, setBanners] = useState<any[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
-  const { getActiveBanners, loading } = useActiveBanners();
+  const { getActiveBannersByPage, loading } = useActiveBannersByPage();
   const { recordImpression } = useRecordImpression();
   const { recordClick } = useRecordClick();
   const impressionRecorded = useRef<Set<string>>(new Set());
@@ -41,10 +41,25 @@ export default function BannerCarousel({ page, autoPlay = true, interval = 5000 
 
   const loadBanners = async () => {
     try {
-      const result = await getActiveBanners(page);
-      setBanners(result.data || []);
+      const result = await getActiveBannersByPage(page);
+      // Extract banners from bannersByPosition object
+      const bannersByPosition = result.data?.bannersByPosition || {};
+      
+      // Flatten all banners from all positions into a single array
+      const allBanners: any[] = [];
+      Object.values(bannersByPosition).forEach((positionBanners: any) => {
+        if (Array.isArray(positionBanners)) {
+          allBanners.push(...positionBanners);
+        }
+      });
+      
+      // Filter banners that have images (suitable for carousel)
+      const carouselBanners = allBanners.filter(b => b.imageUrl);
+      
+      setBanners(carouselBanners);
     } catch (error) {
       console.error('Failed to load banners:', error);
+      setBanners([]);
     }
   };
 
@@ -66,7 +81,17 @@ export default function BannerCarousel({ page, autoPlay = true, interval = 5000 
       } else if (result.data.actionType === 'PROMOTION' && result.data.linkedPromotion) {
         // Navigate to promotion page
         const { type, id } = result.data.linkedPromotion;
-        window.location.href = `/promotions/${type.toLowerCase()}/${id}`;
+        
+        // Redirect to offers page with promotion highlighted
+        if (type === 'Campaign' || type === 'Coupon') {
+          window.location.href = `/customer/offers?highlight=${id}`;
+        } else if (type === 'Discount') {
+          window.location.href = `/customer/offers?highlight=${id}`;
+        } else if (type === 'Referral') {
+          window.location.href = `/customer/referrals`;
+        } else if (type === 'LoyaltyProgram') {
+          window.location.href = `/customer/loyalty`;
+        }
       }
     } catch (error) {
       console.error('Failed to handle banner click:', error);
@@ -87,24 +112,45 @@ export default function BannerCarousel({ page, autoPlay = true, interval = 5000 
 
   const currentBanner = banners[currentIndex];
 
+  // Skip if current banner doesn't have required data
+  if (!currentBanner || !currentBanner.imageUrl) {
+    return null;
+  }
+
   return (
     <div className="relative w-full group">
       {/* Banner Image */}
       <div
-        onClick={() => handleBannerClick(currentBanner)}
-        className="relative w-full h-64 md:h-96 rounded-lg overflow-hidden cursor-pointer"
+        className="relative w-full h-64 md:h-96 rounded-lg overflow-hidden cursor-pointer group"
       >
         <img
-          src={currentBanner.imageUrl}
-          alt={currentBanner.title}
+          src={`${process.env.NEXT_PUBLIC_API_URL?.replace('/api', '')}${currentBanner.imageUrl}`}
+          alt={currentBanner.title || currentBanner.content?.title || 'Banner'}
           className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
         />
         
-        {/* Overlay with title */}
-        <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-6">
-          <h3 className="text-white text-2xl font-bold mb-2">{currentBanner.title}</h3>
-          {currentBanner.description && (
-            <p className="text-white/90 text-sm">{currentBanner.description}</p>
+        {/* Overlay with title and CTA */}
+        <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 via-black/50 to-transparent p-6">
+          <h3 className="text-white text-2xl font-bold mb-2">
+            {currentBanner.title || currentBanner.content?.title || 'Special Offer'}
+          </h3>
+          {(currentBanner.description || currentBanner.content?.description) && (
+            <p className="text-white/90 text-sm mb-4">
+              {currentBanner.description || currentBanner.content?.description}
+            </p>
+          )}
+          
+          {/* CTA Button */}
+          {(currentBanner.ctaText || currentBanner.cta?.text) && (
+            <button
+              onClick={() => handleBannerClick(currentBanner)}
+              className="inline-flex items-center gap-2 bg-white text-gray-900 px-6 py-3 rounded-lg font-semibold hover:bg-gray-100 transition-all transform hover:scale-105 shadow-lg"
+            >
+              {currentBanner.ctaText || currentBanner.cta?.text || 'View Offer'}
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              </svg>
+            </button>
           )}
         </div>
       </div>

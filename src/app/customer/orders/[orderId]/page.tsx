@@ -22,7 +22,10 @@ import {
   RotateCcw,
   X,
   Loader2,
-  Home
+  Home,
+  Gift,
+  Tag,
+  Wallet
 } from 'lucide-react'
 import { customerAPI } from '@/lib/api'
 import { useAuthStore } from '@/store/authStore'
@@ -564,7 +567,7 @@ export default function OrderDetailsPage() {
                   <span className="font-medium">₹{order.pricing.subtotal}</span>
                 </div>
                 
-                {order.pricing.expressCharge > 0 && (
+                {order.isExpress && order.pricing.expressCharge > 0 && (
                   <div className="flex justify-between">
                     <span className="text-gray-600">Express Charge</span>
                     <span className="font-medium">₹{order.pricing.expressCharge}</span>
@@ -597,10 +600,48 @@ export default function OrderDetailsPage() {
                   </div>
                 )}
                 
-                {order.pricing.discount > 0 && (
-                  <div className="flex justify-between text-green-600">
-                    <span>Discount</span>
-                    <span className="font-medium">-₹{order.pricing.discount}</span>
+                {/* Promotional Savings Section */}
+                {(order.pricing.discount > 0 || (order as any).loyaltyPointsRedeemed || (order as any).walletAmountUsed) && (
+                  <div className="pt-2 border-t border-gray-200">
+                    <p className="text-sm font-medium text-green-700 mb-2 flex items-center gap-1">
+                      <Gift className="w-4 h-4" />
+                      Savings Applied
+                    </p>
+                    
+                    {order.pricing.discount > 0 && (
+                      <div className="flex justify-between text-green-600 text-sm">
+                        <span className="flex items-center gap-1">
+                          <Tag className="w-3 h-3" />
+                          {(order as any).couponCode ? `Coupon (${(order as any).couponCode})` : 'Discount'}
+                        </span>
+                        <span className="font-medium">-₹{order.pricing.discount}</span>
+                      </div>
+                    )}
+                    
+                    {(order as any).loyaltyPointsRedeemed > 0 && (
+                      <div className="flex justify-between text-purple-600 text-sm mt-1">
+                        <span className="flex items-center gap-1">
+                          <Star className="w-3 h-3" />
+                          Loyalty Points ({(order as any).loyaltyPointsRedeemed} pts)
+                        </span>
+                        <span className="font-medium">-₹{(order as any).loyaltyPointsRedeemed}</span>
+                      </div>
+                    )}
+                    
+                    {(order as any).walletAmountUsed > 0 && (
+                      <div className="flex justify-between text-blue-600 text-sm mt-1">
+                        <span className="flex items-center gap-1">
+                          <Wallet className="w-3 h-3" />
+                          Wallet Payment
+                        </span>
+                        <span className="font-medium">-₹{(order as any).walletAmountUsed}</span>
+                      </div>
+                    )}
+                    
+                    <div className="flex justify-between text-green-700 font-medium text-sm mt-2 pt-2 border-t border-green-100">
+                      <span>Total Savings</span>
+                      <span>₹{order.pricing.discount + ((order as any).loyaltyPointsRedeemed || 0) + ((order as any).walletAmountUsed || 0)}</span>
+                    </div>
                   </div>
                 )}
                 
@@ -617,6 +658,19 @@ export default function OrderDetailsPage() {
                   <span>Total</span>
                   <span className="text-teal-600">₹{order.pricing.total}</span>
                 </div>
+                
+                {/* Loyalty Points Earned */}
+                {(order as any).loyaltyPointsEarned > 0 && order.status === 'delivered' && (
+                  <div className="mt-3 p-3 bg-purple-50 rounded-lg border border-purple-200">
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-purple-700 flex items-center gap-1">
+                        <Star className="w-4 h-4 fill-purple-600" />
+                        Points Earned
+                      </span>
+                      <span className="font-bold text-purple-700">+{(order as any).loyaltyPointsEarned} pts</span>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
 

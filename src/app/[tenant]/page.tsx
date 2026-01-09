@@ -9,6 +9,8 @@ import BookingModal from '@/components/BookingModal'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useAuthStore } from '@/store/authStore'
 import { TenantProvider } from '@/contexts/TenantContext'
+import BannerCarousel from '@/components/customer/BannerCarousel'
+import BannerDisplay from '@/components/customer/BannerDisplay'
 
 // Dynamic imports for templates
 const OriginalTemplate = dynamic(() => import('@/components/landing/templates/OriginalTemplate'), { ssr: false })
@@ -144,6 +146,23 @@ export default function TenantLandingPage() {
     return () => window.removeEventListener('tenantBookNow', handleTenantBookNow)
   }, [isAuthenticated, tenant])
 
+  // Move banner section before footer
+  useEffect(() => {
+    const moveBannerBeforeFooter = () => {
+      const bannerSection = document.getElementById('promotional-banner-section')
+      const footer = document.querySelector('footer')
+      
+      if (bannerSection && footer && footer.parentNode) {
+        // Move banner before footer
+        footer.parentNode.insertBefore(bannerSection, footer)
+      }
+    }
+
+    // Run after template renders
+    const timer = setTimeout(moveBannerBeforeFooter, 100)
+    return () => clearTimeout(timer)
+  }, [tenantData])
+
   const handleBookNow = () => {
     console.log('handleBookNow called, isAuthenticated:', isAuthenticated)
     if (!isAuthenticated) {
@@ -212,6 +231,8 @@ export default function TenantLandingPage() {
     tenantContact: tenantData.contact,
     // Mark as tenant page to hide color/template selectors
     isTenantPage: true,
+    // Hide footer - we'll render it separately with banner
+    hideFooter: true,
   }
 
   // Render selected template
@@ -243,7 +264,34 @@ export default function TenantLandingPage() {
       }}
       isTenantPage={true}
     >
-      {renderTemplate()}
+      <div className="relative">
+        {/* Global Strip Banner - Top of page */}
+        <BannerDisplay position="GLOBAL_STRIP_TOP" />
+        
+        {/* Home Hero Banner - Large banner at top */}
+        <BannerDisplay position="HOME_HERO_TOP" className="mb-6" />
+        
+        {renderTemplate()}
+        
+        {/* Home Slider Banner - Mid page carousel */}
+        <div className="my-8">
+          <BannerDisplay position="HOME_SLIDER_MID" />
+        </div>
+        
+        {/* Promotional Banner Section - Will appear before footer */}
+        <div id="promotional-banner-section" className="w-full bg-gradient-to-b from-gray-50 to-white py-12 border-t border-gray-100">
+          <div className="container mx-auto px-4">
+            <h2 className="text-2xl font-bold text-center text-gray-800 mb-6">Special Offers</h2>
+            <BannerCarousel page="HOME" />
+          </div>
+        </div>
+        
+        {/* Home Strip Banner - Bottom */}
+        <BannerDisplay position="HOME_STRIP_BOTTOM" />
+        
+        {/* Global Floating Corner Banner */}
+        <BannerDisplay position="GLOBAL_FLOATING_CORNER" />
+      </div>
       
       <BookingModal 
         isOpen={showBookingModal} 
@@ -251,6 +299,11 @@ export default function TenantLandingPage() {
         onLoginRequired={handleLoginRequired}
         tenantBranches={tenantData.branches}
         tenancyId={tenantData.tenancyId}
+        tenantBranding={{
+          primaryColor: tenantData.branding?.theme?.primaryColor,
+          secondaryColor: tenantData.branding?.theme?.secondaryColor,
+          accentColor: tenantData.branding?.theme?.accentColor
+        }}
       />
     </TenantProvider>
   )

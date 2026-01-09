@@ -6,7 +6,8 @@ import { useParams, useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { 
   MapPin, Plus, Edit2, Trash2, Star, Phone, Home as HomeIcon, Building, Loader2, Check,
-  Sparkles, User, HelpCircle, ShoppingBag, ArrowLeft, LogOut, Menu, X
+  Sparkles, User, HelpCircle, ShoppingBag, ArrowLeft, LogOut, Menu, X, Wallet as WalletIcon,
+  Gift, Users2
 } from 'lucide-react'
 import { useAddresses } from '@/hooks/useAddresses'
 import { useAuthStore } from '@/store/authStore'
@@ -24,6 +25,10 @@ interface TenantInfo {
 const sidebarNavigation = [
   { name: 'Dashboard', href: 'dashboard', icon: HomeIcon, current: false },
   { name: 'My Orders', href: 'orders', icon: ShoppingBag, current: false },
+  { name: 'Loyalty', href: 'loyalty', icon: Star, current: false },
+  { name: 'Referrals', href: 'referrals', icon: Users2, current: false },
+  { name: 'Wallet', href: 'wallet', icon: WalletIcon, current: false },
+  { name: 'Offers', href: 'offers', icon: Gift, current: false },
   { name: 'Support', href: 'support', icon: HelpCircle, current: false },
   { name: 'Addresses', href: 'addresses', icon: MapPin, current: true },
   { name: 'Profile', href: 'profile', icon: User, current: false },

@@ -1,12 +1,12 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import Link from 'next/link'
-import { useParams, useRouter } from 'next/navigation'
+import { useParams, useRouter, usePathname } from 'next/navigation'
 import { 
   Package, Calendar, ArrowLeft, MapPin, Phone, Clock, CheckCircle, 
   Truck, Sparkles, User, HelpCircle, Home, LogOut, Menu, X, ShoppingBag,
-  CreditCard, FileText
+  CreditCard, FileText, Star, Users2, Wallet, Gift, ChevronLeft, ChevronRight
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useAuthStore } from '@/store/authStore'
@@ -23,12 +23,16 @@ interface TenantInfo {
   }
 }
 
-const sidebarNavigation = [
-  { name: 'Dashboard', href: 'dashboard', icon: Home, current: false },
-  { name: 'My Orders', href: 'orders', icon: ShoppingBag, current: true },
-  { name: 'Support', href: 'support', icon: HelpCircle, current: false },
-  { name: 'Addresses', href: 'addresses', icon: MapPin, current: false },
-  { name: 'Profile', href: 'profile', icon: User, current: false },
+const getSidebarNavigation = (tenantSlug: string, currentPath: string) => [
+  { name: 'Dashboard', href: `/${tenantSlug}/dashboard`, icon: Home, current: currentPath === `/${tenantSlug}/dashboard` },
+  { name: 'My Orders', href: `/${tenantSlug}/orders`, icon: ShoppingBag, current: currentPath.startsWith(`/${tenantSlug}/orders`) },
+  { name: 'Loyalty', href: `/${tenantSlug}/loyalty`, icon: Star, current: currentPath === `/${tenantSlug}/loyalty` },
+  { name: 'Referrals', href: `/${tenantSlug}/referrals`, icon: Users2, current: currentPath === `/${tenantSlug}/referrals` },
+  { name: 'Wallet', href: `/${tenantSlug}/wallet`, icon: Wallet, current: currentPath === `/${tenantSlug}/wallet` },
+  { name: 'Offers', href: `/${tenantSlug}/offers`, icon: Gift, current: currentPath === `/${tenantSlug}/offers` },
+  { name: 'Support', href: `/${tenantSlug}/support`, icon: HelpCircle, current: currentPath.startsWith(`/${tenantSlug}/support`) },
+  { name: 'Addresses', href: `/${tenantSlug}/addresses`, icon: MapPin, current: currentPath === `/${tenantSlug}/addresses` },
+  { name: 'Profile', href: `/${tenantSlug}/profile`, icon: User, current: currentPath === `/${tenantSlug}/profile` },
 ]
 
 const statusSteps = [
@@ -43,6 +47,7 @@ const statusSteps = [
 export default function TenantOrderDetail() {
   const params = useParams()
   const router = useRouter()
+  const pathname = usePathname()
   const tenant = params.tenant as string
   const orderId = params.id as string
   const { user, token, isAuthenticated, logout } = useAuthStore()
@@ -51,6 +56,9 @@ export default function TenantOrderDetail() {
   const [order, setOrder] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const [sidebarOpen, setSidebarOpen] = useState(false)
+
+  // Generate navigation with current path highlighting
+  const sidebarNavigation = useMemo(() => getSidebarNavigation(tenant, pathname), [tenant, pathname])
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -195,12 +203,11 @@ export default function TenantOrderDetail() {
 
           <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
             {sidebarNavigation.map((item) => {
-              const href = item.external ? item.href : `/${tenant}/${item.href}`
               const isActive = item.current
               return (
                 <Link
                   key={item.name}
-                  href={href}
+                  href={item.href}
                   className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${
                     isActive 
                       ? 'bg-gradient-to-r from-teal-500 to-cyan-500 text-white shadow-lg shadow-teal-500/30' 

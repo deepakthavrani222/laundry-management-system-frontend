@@ -1,84 +1,50 @@
 import { useState } from 'react';
-import { useAuthStore } from '@/store/authStore';
+import axios from 'axios';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
 
-export function useApplicableDiscounts() {
-  const { token } = useAuthStore();
+export const useActiveDiscounts = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const getDiscounts = async (orderValue: number, serviceType?: string, items?: any[]) => {
-    if (!token) {
-      return { success: false, discounts: [], totalDiscount: 0 };
-    }
-
+  const getActiveDiscounts = async () => {
+    setLoading(true);
+    setError(null);
     try {
-      setLoading(true);
-      setError(null);
-      const response = await fetch(`${API_URL}/customer/discounts/applicable`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ orderValue, serviceType, items }),
+      const response = await axios.get(`${API_URL}/customer/discounts/active`, {
+        withCredentials: true
       });
-      const data = await response.json();
-      
-      if (data.success) {
-        return {
-          success: true,
-          discounts: data.data.applicableDiscounts,
-          totalDiscount: data.data.totalDiscount,
-          finalAmount: data.data.finalAmount,
-        };
-      } else {
-        setError(data.message || 'Failed to fetch discounts');
-        return { success: false, discounts: [], totalDiscount: 0 };
-      }
+      return response.data;
     } catch (err: any) {
-      setError(err.message || 'Failed to fetch discounts');
-      return { success: false, discounts: [], totalDiscount: 0 };
+      setError(err.response?.data?.message || 'Failed to fetch discounts');
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return { getActiveDiscounts, loading, error };
+};
+
+export const useApplicableDiscounts = () => {
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const getDiscounts = async (orderData: any) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await axios.post(`${API_URL}/customer/discounts/applicable`, orderData, {
+        withCredentials: true
+      });
+      return response.data;
+    } catch (err: any) {
+      setError(err.response?.data?.message || 'Failed to fetch applicable discounts');
+      throw err;
     } finally {
       setLoading(false);
     }
   };
 
   return { getDiscounts, loading, error };
-}
-
-export function useActiveDiscounts() {
-  const { token } = useAuthStore();
-  const [discounts, setDiscounts] = useState<any[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  const fetchDiscounts = async () => {
-    if (!token) {
-      setLoading(false);
-      return;
-    }
-
-    try {
-      setLoading(true);
-      setError(null);
-      const response = await fetch(`${API_URL}/customer/discounts/active`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      const data = await response.json();
-      
-      if (data.success) {
-        setDiscounts(data.data.discounts);
-      } else {
-        setError(data.message || 'Failed to fetch discounts');
-      }
-    } catch (err: any) {
-      setError(err.message || 'Failed to fetch discounts');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  return { discounts, loading, error, fetchDiscounts };
-}
+};

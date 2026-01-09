@@ -63,7 +63,18 @@ const BUDGET_TYPES = [
 const TRIGGER_TYPES = [
   { value: 'ORDER_CHECKOUT', label: 'Order Checkout' },
   { value: 'USER_REGISTRATION', label: 'User Registration' },
-  { value: 'TIME_BASED', label: 'Time Based' }
+  { value: 'TIME_BASED', label: 'Time Based' },
+  { value: 'BEHAVIOR_BASED', label: 'Behavior Based' }
+]
+
+const DAYS_OF_WEEK = [
+  { value: 'monday', label: 'Monday' },
+  { value: 'tuesday', label: 'Tuesday' },
+  { value: 'wednesday', label: 'Wednesday' },
+  { value: 'thursday', label: 'Thursday' },
+  { value: 'friday', label: 'Friday' },
+  { value: 'saturday', label: 'Saturday' },
+  { value: 'sunday', label: 'Sunday' }
 ]
 
 export default function CreateAdminCampaignModal({ 
@@ -77,6 +88,15 @@ export default function CreateAdminCampaignModal({
   const [loading, setLoading] = useState(false)
   const [templates, setTemplates] = useState<Template[]>([])
   const [selectedTemplate, setSelectedTemplate] = useState<Template | null>(null)
+  const [availablePromotions, setAvailablePromotions] = useState<{
+    discounts: any[]
+    coupons: any[]
+    loyaltyPrograms: any[]
+  }>({
+    discounts: [],
+    coupons: [],
+    loyaltyPrograms: []
+  })
 
   const [formData, setFormData] = useState({
     name: '',
@@ -85,18 +105,46 @@ export default function CreateAdminCampaignModal({
     endDate: format(new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), 'yyyy-MM-dd'),
     priority: 0,
     
-    // Triggers
-    triggers: [{ type: 'ORDER_CHECKOUT', conditions: {} }],
+    // Triggers - ENHANCED
+    triggers: [{
+      type: 'ORDER_CHECKOUT',
+      conditions: {
+        minOrderValue: 0,
+        dayOfWeek: [] as string[],
+        timeRange: {
+          start: '00:00',
+          end: '23:59'
+        },
+        userSegment: '',
+        behaviorType: ''
+      }
+    }],
     
-    // Audience
+    // Audience - ENHANCED
     audience: {
       targetType: 'ALL_USERS',
       userSegments: [],
-      customFilters: {}
+      customFilters: {
+        minOrderCount: 0,
+        maxOrderCount: 0,
+        minTotalSpent: 0,
+        maxTotalSpent: 0,
+        lastOrderDays: 0,
+        registrationDays: 0
+      }
     },
     
-    // Promotions
-    promotions: [],
+    // Promotions - ENHANCED
+    promotions: [] as Array<{
+      type: string
+      promotionId: string
+      promotionModel: string
+      overrides: {
+        value?: number
+        maxDiscount?: number
+        minOrderValue?: number
+      }
+    }>,
     
     // Budget
     budget: {
@@ -112,7 +160,7 @@ export default function CreateAdminCampaignModal({
       dailyLimit: 0
     },
     
-    // Stacking
+    // Stacking - ENHANCED
     stacking: {
       allowStackingWithCoupons: false,
       allowStackingWithDiscounts: false,
@@ -124,6 +172,9 @@ export default function CreateAdminCampaignModal({
   useEffect(() => {
     if (isOpen && step === 'method') {
       fetchTemplates()
+    }
+    if (isOpen && step === 'form') {
+      fetchAvailablePromotions()
     }
   }, [isOpen, step])
 
@@ -151,6 +202,36 @@ export default function CreateAdminCampaignModal({
       }
     } catch (error) {
       console.error('Failed to fetch templates:', error)
+    }
+  }
+
+  const fetchAvailablePromotions = async () => {
+    try {
+      // Fetch discounts
+      const discountsRes = await fetch(`${API_BASE}/admin/discounts`, {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      const discountsData = await discountsRes.json()
+
+      // Fetch coupons
+      const couponsRes = await fetch(`${API_BASE}/admin/coupons`, {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      const couponsData = await couponsRes.json()
+
+      // Fetch loyalty programs
+      const loyaltyRes = await fetch(`${API_BASE}/admin/loyalty/programs`, {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      const loyaltyData = await loyaltyRes.json()
+
+      setAvailablePromotions({
+        discounts: discountsData.success ? discountsData.data.discounts || [] : [],
+        coupons: couponsData.success ? couponsData.data.coupons || [] : [],
+        loyaltyPrograms: loyaltyData.success ? loyaltyData.data.programs || [] : []
+      })
+    } catch (error) {
+      console.error('Failed to fetch promotions:', error)
     }
   }
 
@@ -211,8 +292,28 @@ export default function CreateAdminCampaignModal({
       startDate: format(new Date(), 'yyyy-MM-dd'),
       endDate: format(new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), 'yyyy-MM-dd'),
       priority: 0,
-      triggers: [{ type: 'ORDER_CHECKOUT', conditions: {} }],
-      audience: { targetType: 'ALL_USERS', userSegments: [], customFilters: {} },
+      triggers: [{
+        type: 'ORDER_CHECKOUT',
+        conditions: {
+          minOrderValue: 0,
+          dayOfWeek: [],
+          timeRange: { start: '00:00', end: '23:59' },
+          userSegment: '',
+          behaviorType: ''
+        }
+      }],
+      audience: {
+        targetType: 'ALL_USERS',
+        userSegments: [],
+        customFilters: {
+          minOrderCount: 0,
+          maxOrderCount: 0,
+          minTotalSpent: 0,
+          maxTotalSpent: 0,
+          lastOrderDays: 0,
+          registrationDays: 0
+        }
+      },
       promotions: [],
       budget: { type: 'UNLIMITED', totalAmount: 1000, budgetSource: 'TENANT_BUDGET' },
       limits: { totalUsageLimit: 0, perUserLimit: 1, dailyLimit: 0 },
@@ -229,7 +330,11 @@ export default function CreateAdminCampaignModal({
           type: 'DISCOUNT',
           promotionId: '',
           promotionModel: 'Discount',
-          overrides: {}
+          overrides: {
+            value: undefined,
+            maxDiscount: undefined,
+            minOrderValue: undefined
+          }
         }
       ]
     }))
@@ -455,6 +560,290 @@ export default function CreateAdminCampaignModal({
                   <option key={type.value} value={type.value}>{type.label}</option>
                 ))}
               </select>
+
+              {/* Custom Audience Filters */}
+              {formData.audience.targetType === 'CUSTOM' && (
+                <div className="mt-4 p-4 border border-gray-200 rounded-lg bg-gray-50">
+                  <h5 className="text-sm font-medium text-gray-900 mb-3">Custom Filters</h5>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-xs font-medium text-gray-700 mb-1">
+                        Min Order Count
+                      </label>
+                      <input
+                        type="number"
+                        min="0"
+                        value={formData.audience.customFilters.minOrderCount}
+                        onChange={(e) => setFormData({ 
+                          ...formData, 
+                          audience: {
+                            ...formData.audience,
+                            customFilters: {
+                              ...formData.audience.customFilters,
+                              minOrderCount: parseInt(e.target.value) || 0
+                            }
+                          }
+                        })}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                        placeholder="0 = no minimum"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-medium text-gray-700 mb-1">
+                        Max Order Count
+                      </label>
+                      <input
+                        type="number"
+                        min="0"
+                        value={formData.audience.customFilters.maxOrderCount}
+                        onChange={(e) => setFormData({ 
+                          ...formData, 
+                          audience: {
+                            ...formData.audience,
+                            customFilters: {
+                              ...formData.audience.customFilters,
+                              maxOrderCount: parseInt(e.target.value) || 0
+                            }
+                          }
+                        })}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                        placeholder="0 = no maximum"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-medium text-gray-700 mb-1">
+                        Min Total Spent (₹)
+                      </label>
+                      <input
+                        type="number"
+                        min="0"
+                        value={formData.audience.customFilters.minTotalSpent}
+                        onChange={(e) => setFormData({ 
+                          ...formData, 
+                          audience: {
+                            ...formData.audience,
+                            customFilters: {
+                              ...formData.audience.customFilters,
+                              minTotalSpent: parseInt(e.target.value) || 0
+                            }
+                          }
+                        })}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                        placeholder="0 = no minimum"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-medium text-gray-700 mb-1">
+                        Max Total Spent (₹)
+                      </label>
+                      <input
+                        type="number"
+                        min="0"
+                        value={formData.audience.customFilters.maxTotalSpent}
+                        onChange={(e) => setFormData({ 
+                          ...formData, 
+                          audience: {
+                            ...formData.audience,
+                            customFilters: {
+                              ...formData.audience.customFilters,
+                              maxTotalSpent: parseInt(e.target.value) || 0
+                            }
+                          }
+                        })}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                        placeholder="0 = no maximum"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-medium text-gray-700 mb-1">
+                        Last Order Within (days)
+                      </label>
+                      <input
+                        type="number"
+                        min="0"
+                        value={formData.audience.customFilters.lastOrderDays}
+                        onChange={(e) => setFormData({ 
+                          ...formData, 
+                          audience: {
+                            ...formData.audience,
+                            customFilters: {
+                              ...formData.audience.customFilters,
+                              lastOrderDays: parseInt(e.target.value) || 0
+                            }
+                          }
+                        })}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                        placeholder="0 = any time"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-medium text-gray-700 mb-1">
+                        Registered Within (days)
+                      </label>
+                      <input
+                        type="number"
+                        min="0"
+                        value={formData.audience.customFilters.registrationDays}
+                        onChange={(e) => setFormData({ 
+                          ...formData, 
+                          audience: {
+                            ...formData.audience,
+                            customFilters: {
+                              ...formData.audience.customFilters,
+                              registrationDays: parseInt(e.target.value) || 0
+                            }
+                          }
+                        })}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                        placeholder="0 = any time"
+                      />
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Trigger Configuration */}
+            <div>
+              <h4 className="text-lg font-medium text-gray-900 mb-4">Campaign Triggers</h4>
+              
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Trigger Type
+                  </label>
+                  <select
+                    value={formData.triggers[0].type}
+                    onChange={(e) => setFormData({ 
+                      ...formData, 
+                      triggers: [{ ...formData.triggers[0], type: e.target.value as any }]
+                    })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  >
+                    {TRIGGER_TYPES.map(type => (
+                      <option key={type.value} value={type.value}>{type.label}</option>
+                    ))}
+                  </select>
+                </div>
+
+                {formData.triggers[0].type === 'ORDER_CHECKOUT' && (
+                  <>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Minimum Order Value (₹)
+                      </label>
+                      <input
+                        type="number"
+                        min="0"
+                        value={formData.triggers[0].conditions.minOrderValue}
+                        onChange={(e) => setFormData({ 
+                          ...formData, 
+                          triggers: [{
+                            ...formData.triggers[0],
+                            conditions: {
+                              ...formData.triggers[0].conditions,
+                              minOrderValue: parseInt(e.target.value) || 0
+                            }
+                          }]
+                        })}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        placeholder="0 = no minimum"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Days of Week (leave empty for all days)
+                      </label>
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                        {DAYS_OF_WEEK.map(day => (
+                          <label key={day.value} className="flex items-center gap-2 p-2 border rounded-lg cursor-pointer hover:bg-gray-50">
+                            <input
+                              type="checkbox"
+                              checked={formData.triggers[0].conditions.dayOfWeek?.includes(day.value)}
+                              onChange={(e) => {
+                                const currentDays = formData.triggers[0].conditions.dayOfWeek || []
+                                const newDays = e.target.checked
+                                  ? [...currentDays, day.value]
+                                  : currentDays.filter(d => d !== day.value)
+                                
+                                setFormData({ 
+                                  ...formData, 
+                                  triggers: [{
+                                    ...formData.triggers[0],
+                                    conditions: {
+                                      ...formData.triggers[0].conditions,
+                                      dayOfWeek: newDays
+                                    }
+                                  }]
+                                })
+                              }}
+                              className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                            />
+                            <span className="text-sm">{day.label}</span>
+                          </label>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Start Time
+                        </label>
+                        <input
+                          type="time"
+                          value={formData.triggers[0].conditions.timeRange?.start || '00:00'}
+                          onChange={(e) => setFormData({ 
+                            ...formData, 
+                            triggers: [{
+                              ...formData.triggers[0],
+                              conditions: {
+                                ...formData.triggers[0].conditions,
+                                timeRange: {
+                                  ...formData.triggers[0].conditions.timeRange,
+                                  start: e.target.value
+                                }
+                              }
+                            }]
+                          })}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          End Time
+                        </label>
+                        <input
+                          type="time"
+                          value={formData.triggers[0].conditions.timeRange?.end || '23:59'}
+                          onChange={(e) => setFormData({ 
+                            ...formData, 
+                            triggers: [{
+                              ...formData.triggers[0],
+                              conditions: {
+                                ...formData.triggers[0].conditions,
+                                timeRange: {
+                                  ...formData.triggers[0].conditions.timeRange,
+                                  end: e.target.value
+                                }
+                              }
+                            }]
+                          })}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        />
+                      </div>
+                    </div>
+                  </>
+                )}
+              </div>
             </div>
 
             {/* Budget Configuration */}
@@ -556,6 +945,77 @@ export default function CreateAdminCampaignModal({
               </div>
             </div>
 
+            {/* Stacking Rules */}
+            <div>
+              <h4 className="text-lg font-medium text-gray-900 mb-4">Stacking Rules</h4>
+              <div className="space-y-3">
+                <label className="flex items-center gap-3 p-3 border border-gray-200 rounded-lg cursor-pointer hover:bg-gray-50">
+                  <input
+                    type="checkbox"
+                    checked={formData.stacking.allowStackingWithCoupons}
+                    onChange={(e) => setFormData({ 
+                      ...formData, 
+                      stacking: { ...formData.stacking, allowStackingWithCoupons: e.target.checked }
+                    })}
+                    className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                  />
+                  <div>
+                    <span className="text-sm font-medium text-gray-900">Allow Stacking with Coupons</span>
+                    <p className="text-xs text-gray-500">Campaign can be combined with coupon codes</p>
+                  </div>
+                </label>
+
+                <label className="flex items-center gap-3 p-3 border border-gray-200 rounded-lg cursor-pointer hover:bg-gray-50">
+                  <input
+                    type="checkbox"
+                    checked={formData.stacking.allowStackingWithDiscounts}
+                    onChange={(e) => setFormData({ 
+                      ...formData, 
+                      stacking: { ...formData.stacking, allowStackingWithDiscounts: e.target.checked }
+                    })}
+                    className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                  />
+                  <div>
+                    <span className="text-sm font-medium text-gray-900">Allow Stacking with Discounts</span>
+                    <p className="text-xs text-gray-500">Campaign can be combined with automatic discounts</p>
+                  </div>
+                </label>
+
+                <label className="flex items-center gap-3 p-3 border border-gray-200 rounded-lg cursor-pointer hover:bg-gray-50">
+                  <input
+                    type="checkbox"
+                    checked={formData.stacking.allowStackingWithLoyalty}
+                    onChange={(e) => setFormData({ 
+                      ...formData, 
+                      stacking: { ...formData.stacking, allowStackingWithLoyalty: e.target.checked }
+                    })}
+                    className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                  />
+                  <div>
+                    <span className="text-sm font-medium text-gray-900">Allow Stacking with Loyalty</span>
+                    <p className="text-xs text-gray-500">Campaign can be combined with loyalty rewards</p>
+                  </div>
+                </label>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Stacking Priority (higher = applied first)
+                  </label>
+                  <input
+                    type="number"
+                    min="0"
+                    max="100"
+                    value={formData.stacking.stackingPriority}
+                    onChange={(e) => setFormData({ 
+                      ...formData, 
+                      stacking: { ...formData.stacking, stackingPriority: parseInt(e.target.value) || 0 }
+                    })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                </div>
+              </div>
+            </div>
+
             {/* Promotions */}
             <div>
               <div className="flex items-center justify-between mb-4">
@@ -585,41 +1045,144 @@ export default function CreateAdminCampaignModal({
               ) : (
                 <div className="space-y-3">
                   {formData.promotions.map((promotion, index) => (
-                    <div key={index} className="flex items-center gap-4 p-3 border border-gray-200 rounded-lg">
-                      <select
-                        value={promotion.type}
-                        onChange={(e) => {
-                          const newPromotions = [...formData.promotions]
-                          newPromotions[index] = { ...promotion, type: e.target.value as any }
-                          setFormData({ ...formData, promotions: newPromotions })
-                        }}
-                        className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      >
-                        <option value="DISCOUNT">Discount</option>
-                        <option value="COUPON">Coupon</option>
-                        <option value="LOYALTY_POINTS">Loyalty Points</option>
-                        <option value="WALLET_CREDIT">Wallet Credit</option>
-                      </select>
+                    <div key={index} className="p-4 border border-gray-200 rounded-lg space-y-3">
+                      <div className="flex items-center gap-4">
+                        <select
+                          value={promotion.type}
+                          onChange={(e) => {
+                            const newPromotions = [...formData.promotions]
+                            newPromotions[index] = { 
+                              ...promotion, 
+                              type: e.target.value as any,
+                              promotionId: '', // Reset ID when type changes
+                              promotionModel: e.target.value === 'DISCOUNT' ? 'Discount' : 
+                                             e.target.value === 'COUPON' ? 'Coupon' : 
+                                             'LoyaltyProgram'
+                            }
+                            setFormData({ ...formData, promotions: newPromotions })
+                          }}
+                          className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        >
+                          <option value="DISCOUNT">Discount</option>
+                          <option value="COUPON">Coupon</option>
+                          <option value="LOYALTY_POINTS">Loyalty Points</option>
+                          <option value="WALLET_CREDIT">Wallet Credit</option>
+                        </select>
 
-                      <input
-                        type="text"
-                        placeholder="Promotion ID (select from existing promotions)"
-                        value={promotion.promotionId}
-                        onChange={(e) => {
-                          const newPromotions = [...formData.promotions]
-                          newPromotions[index] = { ...promotion, promotionId: e.target.value }
-                          setFormData({ ...formData, promotions: newPromotions })
-                        }}
-                        className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      />
+                        <select
+                          value={promotion.promotionId}
+                          onChange={(e) => {
+                            const newPromotions = [...formData.promotions]
+                            newPromotions[index] = { ...promotion, promotionId: e.target.value }
+                            setFormData({ ...formData, promotions: newPromotions })
+                          }}
+                          className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        >
+                          <option value="">Select {promotion.type === 'DISCOUNT' ? 'Discount' : 
+                                                      promotion.type === 'COUPON' ? 'Coupon' : 
+                                                      'Loyalty Program'}</option>
+                          
+                          {promotion.type === 'DISCOUNT' && availablePromotions.discounts.map(discount => (
+                            <option key={discount._id} value={discount._id}>
+                              {discount.name} - {discount.rules?.[0]?.value || 0}% off
+                            </option>
+                          ))}
+                          
+                          {promotion.type === 'COUPON' && availablePromotions.coupons.map(coupon => (
+                            <option key={coupon._id} value={coupon._id}>
+                              {coupon.code} - {coupon.type === 'percentage' ? `${coupon.value}%` : `₹${coupon.value}`} off
+                            </option>
+                          ))}
+                          
+                          {(promotion.type === 'LOYALTY_POINTS' || promotion.type === 'WALLET_CREDIT') && 
+                           availablePromotions.loyaltyPrograms.map(program => (
+                            <option key={program._id} value={program._id}>
+                              {program.name} - {program.pointsConfig?.earningRate || 1} pts/₹
+                            </option>
+                          ))}
+                        </select>
 
-                      <button
-                        type="button"
-                        onClick={() => removePromotion(index)}
-                        className="p-2 text-red-600 hover:text-red-800"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
+                        <button
+                          type="button"
+                          onClick={() => removePromotion(index)}
+                          className="p-2 text-red-600 hover:text-red-800"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
+
+                      {/* Promotion Overrides */}
+                      <div className="pl-4 border-l-2 border-blue-200 space-y-2">
+                        <p className="text-xs font-medium text-gray-700">Override Settings (optional)</p>
+                        
+                        <div className="grid grid-cols-3 gap-2">
+                          <div>
+                            <label className="block text-xs text-gray-600 mb-1">Value</label>
+                            <input
+                              type="number"
+                              min="0"
+                              value={promotion.overrides?.value || ''}
+                              onChange={(e) => {
+                                const newPromotions = [...formData.promotions]
+                                newPromotions[index] = {
+                                  ...promotion,
+                                  overrides: {
+                                    ...promotion.overrides,
+                                    value: parseInt(e.target.value) || undefined
+                                  }
+                                }
+                                setFormData({ ...formData, promotions: newPromotions })
+                              }}
+                              className="w-full px-2 py-1 border border-gray-300 rounded text-sm"
+                              placeholder="Auto"
+                            />
+                          </div>
+
+                          <div>
+                            <label className="block text-xs text-gray-600 mb-1">Max Discount</label>
+                            <input
+                              type="number"
+                              min="0"
+                              value={promotion.overrides?.maxDiscount || ''}
+                              onChange={(e) => {
+                                const newPromotions = [...formData.promotions]
+                                newPromotions[index] = {
+                                  ...promotion,
+                                  overrides: {
+                                    ...promotion.overrides,
+                                    maxDiscount: parseInt(e.target.value) || undefined
+                                  }
+                                }
+                                setFormData({ ...formData, promotions: newPromotions })
+                              }}
+                              className="w-full px-2 py-1 border border-gray-300 rounded text-sm"
+                              placeholder="Auto"
+                            />
+                          </div>
+
+                          <div>
+                            <label className="block text-xs text-gray-600 mb-1">Min Order</label>
+                            <input
+                              type="number"
+                              min="0"
+                              value={promotion.overrides?.minOrderValue || ''}
+                              onChange={(e) => {
+                                const newPromotions = [...formData.promotions]
+                                newPromotions[index] = {
+                                  ...promotion,
+                                  overrides: {
+                                    ...promotion.overrides,
+                                    minOrderValue: parseInt(e.target.value) || undefined
+                                  }
+                                }
+                                setFormData({ ...formData, promotions: newPromotions })
+                              }}
+                              className="w-full px-2 py-1 border border-gray-300 rounded text-sm"
+                              placeholder="Auto"
+                            />
+                          </div>
+                        </div>
+                      </div>
                     </div>
                   ))}
                 </div>

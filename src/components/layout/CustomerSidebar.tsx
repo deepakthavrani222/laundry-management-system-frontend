@@ -1,10 +1,11 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useAuthStore } from '@/store/authStore'
 import { useTenancyTheme } from '@/contexts/TenancyThemeContext'
+import { useTenant } from '@/contexts/TenantContext'
 import { 
   LayoutDashboard,
   ShoppingBag,
@@ -19,16 +20,24 @@ import {
   Home,
   Menu,
   X,
-  Headphones
+  Headphones,
+  Star,
+  Users2,
+  Wallet,
+  Gift
 } from 'lucide-react'
 
-const navigation = [
-  { name: 'Dashboard', href: '/customer/dashboard', icon: LayoutDashboard },
-  { name: 'My Orders', href: '/customer/orders', icon: ShoppingBag },
-  { name: 'New Order', href: '/customer/orders/new', icon: Plus },
-  { name: 'Addresses', href: '/customer/addresses', icon: MapPin },
-  { name: 'Support', href: '/customer/support', icon: Headphones },
-  { name: 'Profile', href: '/customer/profile', icon: User },
+const baseNavigation = [
+  { name: 'Dashboard', path: '/dashboard', icon: LayoutDashboard },
+  { name: 'My Orders', path: '/orders', icon: ShoppingBag },
+  { name: 'New Order', path: '/orders/new', icon: Plus },
+  { name: 'Loyalty', path: '/loyalty', icon: Star },
+  { name: 'Referrals', path: '/referrals', icon: Users2 },
+  { name: 'Wallet', path: '/wallet', icon: Wallet },
+  { name: 'Offers', path: '/offers', icon: Gift },
+  { name: 'Addresses', path: '/addresses', icon: MapPin },
+  { name: 'Support', path: '/support', icon: Headphones },
+  { name: 'Profile', path: '/profile', icon: User },
 ]
 
 interface CustomerSidebarProps {
@@ -47,10 +56,25 @@ export default function CustomerSidebar({
   const pathname = usePathname()
   const { user, logout } = useAuthStore()
   const { theme } = useTenancyTheme()
+  const { tenant, isTenantPage } = useTenant()
+
+  // Generate navigation with tenant-aware URLs
+  const navigation = useMemo(() => {
+    return baseNavigation.map(item => ({
+      ...item,
+      href: isTenantPage && tenant?.slug 
+        ? `/${tenant.slug}${item.path}`
+        : `/customer${item.path}`
+    }))
+  }, [isTenantPage, tenant?.slug])
 
   const handleLogout = () => {
     logout()
-    window.location.href = '/'
+    if (isTenantPage && tenant?.slug) {
+      window.location.href = `/${tenant.slug}`
+    } else {
+      window.location.href = '/'
+    }
   }
 
   const handleNavClick = () => {
@@ -192,7 +216,7 @@ export default function CustomerSidebar({
       {/* Back to Home & Logout */}
       <div className="flex-shrink-0 border-t border-gray-200 p-2 space-y-1">
         <Link
-          href="/"
+          href={isTenantPage && tenant?.slug ? `/${tenant.slug}` : '/'}
           onClick={handleNavClick}
           className={`group flex items-center w-full px-3 py-2 text-sm font-medium text-gray-700 rounded-xl hover:bg-gray-100 transition-colors ${
             collapsed ? 'justify-center' : ''

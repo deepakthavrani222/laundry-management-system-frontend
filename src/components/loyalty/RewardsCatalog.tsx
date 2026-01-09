@@ -48,12 +48,13 @@ export default function RewardsCatalog({ rewards, currentPoints, onRedeem }: Rew
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {rewards.map((reward) => {
-          const canAfford = currentPoints >= reward.pointsCost;
-          const isAvailable = reward.isActive && (!reward.expiryDate || new Date(reward.expiryDate) > new Date());
+          const pointsRequired = reward.pointsRequired || reward.pointsCost || 0;
+          const canAfford = currentPoints >= pointsRequired;
+          const isAvailable = reward.canRedeem !== false && (!reward.expiryDate || new Date(reward.expiryDate) > new Date());
 
           return (
             <div
-              key={reward._id}
+              key={reward.id || reward._id}
               className={`bg-white border-2 rounded-xl p-6 transition ${
                 canAfford && isAvailable
                   ? 'border-purple-200 hover:border-purple-400 hover:shadow-lg'
@@ -77,7 +78,7 @@ export default function RewardsCatalog({ rewards, currentPoints, onRedeem }: Rew
               <div className="flex items-center justify-between pt-4 border-t border-gray-200">
                 <div className="flex items-center gap-1">
                   <Star size={16} className="text-purple-600" fill="currentColor" />
-                  <span className="font-bold text-purple-900">{reward.pointsCost}</span>
+                  <span className="font-bold text-purple-900">{pointsRequired}</span>
                   <span className="text-sm text-gray-600">points</span>
                 </div>
 

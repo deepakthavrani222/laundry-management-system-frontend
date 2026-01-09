@@ -36,6 +36,7 @@ import {
 } from 'lucide-react'
 import { useAdminOrders, useLogisticsPartners } from '@/hooks/useAdmin'
 import toast from 'react-hot-toast'
+import OrderQRCode from '@/components/OrderQRCode'
 
 interface Order {
   _id: string
@@ -504,6 +505,15 @@ export default function AdminOrdersPage() {
                       </div>
                       <div className="flex-1">
                         <div className="flex items-center gap-3 mb-2 flex-wrap">
+                          {/* Barcode */}
+                          <OrderQRCode 
+                            orderNumber={order.orderNumber}
+                            orderId={order._id}
+                            barcode={order.orderNumber}
+                            size="small"
+                            mode="barcode-only"
+                          />
+                          
                           <h3 className="text-lg font-semibold text-gray-800">{order.orderNumber}</h3>
                           <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium border ${getStatusColor(order.status)}`}>
                             <StatusIcon className="w-3 h-3 mr-1" />

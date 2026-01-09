@@ -3,17 +3,16 @@ import axios from 'axios';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
 
-// Get active banners for a page
+// Get active banners by position
 export const useActiveBanners = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const getActiveBanners = async (page: string, limit: number = 10) => {
+  const getActiveBanners = async (position: string) => {
     setLoading(true);
     setError(null);
     try {
-      const response = await axios.get(`${API_URL}/customer/banners`, {
-        params: { page, limit },
+      const response = await axios.get(`${API_URL}/customer/banners/position/${position}`, {
         withCredentials: true
       });
       return response.data;
@@ -26,6 +25,30 @@ export const useActiveBanners = () => {
   };
 
   return { getActiveBanners, loading, error };
+};
+
+// Get active banners by page (all positions for a page)
+export const useActiveBannersByPage = () => {
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const getActiveBannersByPage = async (page: string) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await axios.get(`${API_URL}/customer/banners/page/${page}`, {
+        withCredentials: true
+      });
+      return response.data;
+    } catch (err: any) {
+      setError(err.response?.data?.message || 'Failed to fetch banners');
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return { getActiveBannersByPage, loading, error };
 };
 
 // Record banner impression

@@ -6,6 +6,8 @@ import { ShoppingBag, Clock, CheckCircle, Truck, Plus, MapPin, Calendar, ArrowRi
 import { Button } from '@/components/ui/button'
 import { useAuthStore } from '@/store/authStore'
 import { useOrders } from '@/hooks/useOrders'
+import BannerCarousel from '@/components/customer/BannerCarousel'
+import BannerDisplay from '@/components/customer/BannerDisplay'
 
 function AnimatedCounter({ value, duration = 1000 }: { value: number; duration?: number }) {
   const [count, setCount] = useState(0)
@@ -171,6 +173,15 @@ export default function CustomerDashboard() {
 
   return (
     <div className="space-y-6 pb-8">
+      {/* Global Banners */}
+      <BannerDisplay position="GLOBAL_STRIP_TOP" />
+      <BannerDisplay position="GLOBAL_FLOATING_CORNER" />
+      
+      {/* Dashboard Hero Banner */}
+      <BannerDisplay position="DASHBOARD_HERO_TOP" />
+      
+      <BannerCarousel page="DASHBOARD" />
+      
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl md:text-3xl font-bold text-gray-800">{greeting}, {user?.name?.split(' ')[0] || 'there'}! 👋</h1>

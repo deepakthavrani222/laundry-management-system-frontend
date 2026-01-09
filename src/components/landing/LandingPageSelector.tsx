@@ -37,15 +37,29 @@ export default function LandingPageSelector() {
       const savedColor = localStorage.getItem(STORAGE_KEY_COLOR) as ThemeColor
       const savedLanguage = localStorage.getItem(STORAGE_KEY_LANGUAGE) as Language
       
+      // Set template - default to 'original' if not saved or invalid
       if (savedTemplate && ['original', 'minimal', 'freshspin', 'starter'].includes(savedTemplate)) {
         setCurrentTemplate(savedTemplate)
+      } else {
+        // Force original template as default
+        setCurrentTemplate('original')
+        localStorage.setItem(STORAGE_KEY_TEMPLATE, 'original')
       }
+      
       if (savedColor && ['teal', 'blue', 'purple', 'orange'].includes(savedColor)) {
         setCurrentColor(savedColor)
+      } else {
+        setCurrentColor('teal')
+        localStorage.setItem(STORAGE_KEY_COLOR, 'teal')
       }
+      
       if (savedLanguage && ['en', 'es', 'hi'].includes(savedLanguage)) {
         setCurrentLanguage(savedLanguage)
+      } else {
+        setCurrentLanguage('en')
+        localStorage.setItem(STORAGE_KEY_LANGUAGE, 'en')
       }
+      
       setIsLoaded(true)
     }
   }, [])

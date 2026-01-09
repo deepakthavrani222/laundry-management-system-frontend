@@ -1,28 +1,11 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { ArrowUpCircle, ArrowDownCircle, Calendar } from 'lucide-react';
 import { useLoyaltyTransactions } from '@/hooks/useLoyalty';
 
 export default function PointsHistory() {
-  const { getTransactions, loading } = useLoyaltyTransactions();
-  const [transactions, setTransactions] = useState<any[]>([]);
-  const [page, setPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
-
-  useEffect(() => {
-    loadTransactions();
-  }, [page]);
-
-  const loadTransactions = async () => {
-    try {
-      const result = await getTransactions(page, 10);
-      setTransactions(result.data || []);
-      setTotalPages(result.pagination?.totalPages || 1);
-    } catch (error) {
-      console.error('Failed to load transactions:', error);
-    }
-  };
+  const { transactions, pagination, loading, refetch } = useLoyaltyTransactions(1, 20);
 
   if (loading) {
     return (
@@ -54,11 +37,11 @@ export default function PointsHistory() {
           >
             <div className="flex items-center gap-4">
               <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
-                transaction.type === 'EARNED'
+                transaction.type === 'earned'
                   ? 'bg-green-100'
                   : 'bg-red-100'
               }`}>
-                {transaction.type === 'EARNED' ? (
+                {transaction.type === 'earned' ? (
                   <ArrowUpCircle size={20} className="text-green-600" />
                 ) : (
                   <ArrowDownCircle size={20} className="text-red-600" />
@@ -81,42 +64,16 @@ export default function PointsHistory() {
             
             <div className="text-right">
               <p className={`text-lg font-bold ${
-                transaction.type === 'EARNED'
+                transaction.type === 'earned'
                   ? 'text-green-600'
                   : 'text-red-600'
               }`}>
-                {transaction.type === 'EARNED' ? '+' : '-'}{transaction.points}
-              </p>
-              <p className="text-xs text-gray-500">
-                Balance: {transaction.balanceAfter}
+                {transaction.type === 'earned' ? '+' : '-'}{transaction.points}
               </p>
             </div>
           </div>
         ))}
       </div>
-
-      {/* Pagination */}
-      {totalPages > 1 && (
-        <div className="flex justify-center gap-2 mt-6">
-          <button
-            onClick={() => setPage(p => Math.max(1, p - 1))}
-            disabled={page === 1}
-            className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50"
-          >
-            Previous
-          </button>
-          <span className="px-4 py-2 text-gray-600">
-            Page {page} of {totalPages}
-          </span>
-          <button
-            onClick={() => setPage(p => Math.min(totalPages, p + 1))}
-            disabled={page === totalPages}
-            className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50"
-          >
-            Next
-          </button>
-        </div>
-      )}
     </div>
   );
 }

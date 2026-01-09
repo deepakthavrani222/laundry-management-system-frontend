@@ -2,13 +2,16 @@
 
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api'
-import { useState, useEffect, useCallback } from 'react'
-import { X, MapPin, Sparkles, Package, Calendar, Clock, ChevronRight, ChevronLeft, Loader2, Check, Minus, Plus, Phone, CreditCard, Truck, CheckCircle, Building2, Home, Tag } from 'lucide-react'
+import { useState, useEffect, useCallback, useRef } from 'react'
+import { X, MapPin, Sparkles, Package, Calendar, Clock, ChevronRight, ChevronLeft, Loader2, Check, Minus, Plus, Phone, CreditCard, Truck, CheckCircle, Building2, Home, Tag, Star, Wallet, Gift, TrendingUp } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useAuthStore } from '@/store/authStore'
 import toast from 'react-hot-toast'
 import { formatOrderNumber } from '@/utils/orderUtils'
-import QRCodeDisplay from '@/components/QRCodeDisplay'
+import { useLoyaltyBalance } from '@/hooks/useLoyalty'
+import { useWalletBalance } from '@/hooks/useWallet'
+import { useApplicableDiscounts } from '@/hooks/useDiscounts'
+import JsBarcode from 'jsbarcode'
 
 interface Branch {
   _id: string
@@ -58,6 +61,11 @@ interface BookingModalProps {
   onLoginRequired: () => void
   tenantBranches?: Branch[]
   tenancyId?: string
+  tenantBranding?: {
+    primaryColor?: string
+    secondaryColor?: string
+    accentColor?: string
+  }
 }
 
 const STEPS = [
@@ -78,11 +86,22 @@ const SERVICE_TYPES = [
   { id: 'home_pickup_self_pickup', title: 'Pickup + Self Collect', subtitle: 'Home Pickup + Collect from Branch', icon: 'package', discount: 25, discountLabel: 'Save upto ₹25' },
 ]
 
-export default function BookingModal({ isOpen, onClose, onLoginRequired, tenantBranches, tenancyId }: BookingModalProps) {
+export default function BookingModal({ isOpen, onClose, onLoginRequired, tenantBranches, tenancyId, tenantBranding }: BookingModalProps) {
   const { isAuthenticated, user, token } = useAuthStore()
   const [step, setStep] = useState(1)
   const [loading, setLoading] = useState(false)
   const [submitting, setSubmitting] = useState(false)
+  
+  // Tenant branding state - use prop if provided, otherwise fetch
+  const [brandingColors, setBrandingColors] = useState<{
+    primaryColor: string
+    secondaryColor: string
+    accentColor: string
+  }>({
+    primaryColor: tenantBranding?.primaryColor || '#14b8a6', // Default teal
+    secondaryColor: tenantBranding?.secondaryColor || '#0d9488',
+    accentColor: tenantBranding?.accentColor || '#2dd4bf'
+  })
   
   // Data states
   const [services, setServices] = useState<Service[]>([])
@@ -118,6 +137,19 @@ export default function BookingModal({ isOpen, onClose, onLoginRequired, tenantB
   const [appliedCoupon, setAppliedCoupon] = useState<any>(null)
   const [couponError, setCouponError] = useState('')
   
+  // Promotional features
+  const { balance: loyaltyBalance } = useLoyaltyBalance()
+  const { balance: walletBalance } = useWalletBalance()
+  const { getDiscounts } = useApplicableDiscounts()
+  const [applicableDiscounts, setApplicableDiscounts] = useState<any[]>([])
+  const [totalAutoDiscount, setTotalAutoDiscount] = useState(0)
+  const [pointsToEarn, setPointsToEarn] = useState(0)
+  const [useWallet, setUseWallet] = useState(false)
+  const [walletAmountUsed, setWalletAmountUsed] = useState(0)
+  const [redeemPoints, setRedeemPoints] = useState(false)
+  const [pointsToRedeem, setPointsToRedeem] = useState(0)
+  const [pointsRedemptionValue, setPointsRedemptionValue] = useState(0)
+  
   // Order states
   const [isExpress, setIsExpress] = useState(false)
   const [orderSuccess, setOrderSuccess] = useState(false)
@@ -134,6 +166,11 @@ export default function BookingModal({ isOpen, onClose, onLoginRequired, tenantB
   // Fetch branches on mount OR use tenant branches
   useEffect(() => {
     if (isOpen) {
+      // Fetch tenant branding colors only if not provided as prop
+      if (!tenantBranding) {
+        fetchTenantBranding()
+      }
+      
       if (isTenantBooking && tenantBranches) {
         // Use tenant's branches directly
         setBranches(tenantBranches)
@@ -150,7 +187,7 @@ export default function BookingModal({ isOpen, onClose, onLoginRequired, tenantB
         fetchTimeSlots()
       }
     }
-  }, [isOpen, isAuthenticated, isTenantBooking, tenantBranches])
+  }, [isOpen, isAuthenticated, isTenantBooking, tenantBranches, tenantBranding])
 
   // Update new address with user info when authenticated
   useEffect(() => {
@@ -179,13 +216,99 @@ export default function BookingModal({ isOpen, onClose, onLoginRequired, tenantB
       setCalculatedPricing(null)
     }
   }, [items, selectedService, isExpress])
+  
+  // Fetch applicable discounts when price changes
+  useEffect(() => {
+    if (step === 7 && getTotalPrice() > 0) {
+      fetchApplicableDiscounts()
+      calculateLoyaltyPoints()
+    }
+  }, [step, items, isExpress, deliveryInfo])
 
   // Calculate delivery when address and branch selected
   useEffect(() => {
+    // Skip delivery calculation for self drop & self pickup
+    if (serviceType === 'self_drop_self_pickup') {
+      setDeliveryInfo(null)
+      return
+    }
+    
     if (selectedBranch && selectedAddressId && addresses.length > 0) {
       calculateDelivery()
     }
-  }, [selectedBranch, selectedAddressId, addresses, isExpress])
+  }, [selectedBranch, selectedAddressId, addresses, isExpress, serviceType])
+
+  const fetchTenantBranding = async () => {
+    try {
+      const response = await fetch(`${API_URL}/admin/tenancy/branding`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      })
+      const data = await response.json()
+      if (data.success && data.data?.branding?.theme) {
+        const theme = data.data.branding.theme
+        setBrandingColors({
+          primaryColor: theme.primaryColor || '#14b8a6',
+          secondaryColor: theme.secondaryColor || '#0d9488',
+          accentColor: theme.accentColor || '#2dd4bf'
+        })
+      }
+    } catch (error) {
+      console.error('Failed to fetch tenant branding:', error)
+      // Keep default teal colors
+    }
+  }
+
+  // Helper function to create gradient style
+  const getGradientStyle = () => ({
+    background: `linear-gradient(to right, ${brandingColors.primaryColor}, ${brandingColors.accentColor})`
+  })
+
+  // Helper function to get color with opacity
+  const getColorWithOpacity = (color: string, opacity: number) => {
+    const hex = color.replace('#', '')
+    const r = parseInt(hex.substring(0, 2), 16)
+    const g = parseInt(hex.substring(2, 4), 16)
+    const b = parseInt(hex.substring(4, 6), 16)
+    return `rgba(${r}, ${g}, ${b}, ${opacity})`
+  }
+
+  // Ref for barcode canvas
+  const barcodeCanvasRef = useRef<HTMLCanvasElement>(null)
+
+  // Generate real scannable barcode when order is created
+  useEffect(() => {
+    if (createdOrder && createdOrder.orderNumber && barcodeCanvasRef.current) {
+      try {
+        const orderNum = createdOrder.orderNumber || createdOrder._id || '';
+        // Generate Code 128 barcode (industry standard)
+        JsBarcode(barcodeCanvasRef.current, orderNum, {
+          format: 'CODE128',
+          width: 2,
+          height: 60,
+          displayValue: true,
+          fontSize: 14,
+          margin: 10,
+          background: '#ffffff',
+          lineColor: '#000000'
+        })
+      } catch (error) {
+        console.error('Barcode generation failed:', error)
+      }
+    }
+  }, [createdOrder])
+
+  // Helper function to get theme-based styles
+  const getThemeStyles = () => ({
+    primary: { color: brandingColors.primaryColor },
+    primaryBg: { backgroundColor: brandingColors.primaryColor },
+    primaryBgLight: { backgroundColor: getColorWithOpacity(brandingColors.primaryColor, 0.1) },
+    primaryBorder: { borderColor: brandingColors.primaryColor },
+    secondary: { color: brandingColors.secondaryColor },
+    secondaryBg: { backgroundColor: brandingColors.secondaryColor },
+    accent: { color: brandingColors.accentColor },
+  })
 
   const fetchBranches = async () => {
     try {
@@ -263,7 +386,7 @@ export default function BookingModal({ isOpen, onClose, onLoginRequired, tenantB
     if (orderItems.length === 0) return
     
     try {
-      const response = await fetch(`${API_URL}/services/calculate-pricing`, {
+      const response = await fetch(`${API_URL}/services/calculate`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ items: orderItems, isExpress })
@@ -346,6 +469,58 @@ export default function BookingModal({ isOpen, onClose, onLoginRequired, tenantB
     setCouponCode('')
     setCouponError('')
   }
+  
+  const fetchApplicableDiscounts = async () => {
+    const orderValue = getTotalPrice() + (deliveryInfo?.deliveryCharge || 0)
+    const result = await getDiscounts({
+      orderValue,
+      serviceType: selectedService?.code,
+      items: Object.entries(items).map(([itemId, qty]) => ({
+        itemId,
+        quantity: qty
+      }))
+    })
+    if (result.success) {
+      setApplicableDiscounts(result.data?.discounts || [])
+      setTotalAutoDiscount(result.data?.totalDiscount || 0)
+      console.log('✅ Fetched applicable discounts:', result.data)
+    } else {
+      console.log('❌ Failed to fetch discounts:', result)
+    }
+  }
+  
+  const calculateLoyaltyPoints = () => {
+    if (!loyaltyBalance?.enrolled) return
+    const orderValue = getTotalPrice() + (deliveryInfo?.deliveryCharge || 0)
+    // Assuming 1% points earning rate (1 point per ₹100)
+    const points = Math.floor(orderValue / 100)
+    setPointsToEarn(points)
+  }
+  
+  const handleRedeemPointsToggle = (checked: boolean) => {
+    setRedeemPoints(checked)
+    if (checked && loyaltyBalance?.pointsBalance) {
+      // Calculate max points that can be redeemed (assuming 1 point = ₹1)
+      const orderValue = getTotalPrice() + (deliveryInfo?.deliveryCharge || 0) - (appliedCoupon?.discount || 0) - totalAutoDiscount
+      const maxPoints = Math.min(loyaltyBalance.pointsBalance, Math.floor(orderValue * 0.5)) // Max 50% of order
+      setPointsToRedeem(maxPoints)
+      setPointsRedemptionValue(maxPoints) // 1 point = ₹1
+    } else {
+      setPointsToRedeem(0)
+      setPointsRedemptionValue(0)
+    }
+  }
+  
+  const handleWalletToggle = (checked: boolean) => {
+    setUseWallet(checked)
+    if (checked && walletBalance > 0) {
+      const orderValue = getTotalPrice() + (deliveryInfo?.deliveryCharge || 0) - (appliedCoupon?.discount || 0) - totalAutoDiscount - pointsRedemptionValue
+      const amountToUse = Math.min(walletBalance, orderValue)
+      setWalletAmountUsed(amountToUse)
+    } else {
+      setWalletAmountUsed(0)
+    }
+  }
 
   const handleAddAddress = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -405,6 +580,12 @@ export default function BookingModal({ isOpen, onClose, onLoginRequired, tenantB
       tenancyId: tenancyId,
       // Coupon code if applied
       couponCode: appliedCoupon?.coupon?.code || undefined,
+      // Promotional features
+      useWallet: useWallet && walletAmountUsed > 0,
+      walletAmount: walletAmountUsed,
+      redeemLoyaltyPoints: redeemPoints && pointsToRedeem > 0,
+      loyaltyPointsRedeemed: pointsToRedeem,
+      applicableDiscounts: applicableDiscounts.map(d => d._id),
       deliveryDetails: deliveryInfo ? {
         distance: deliveryInfo.distance,
         deliveryCharge: deliveryInfo.deliveryCharge,
@@ -509,6 +690,15 @@ export default function BookingModal({ isOpen, onClose, onLoginRequired, tenantB
     setCouponCode('')
     setAppliedCoupon(null)
     setCouponError('')
+    // Reset promotional features
+    setApplicableDiscounts([])
+    setTotalAutoDiscount(0)
+    setPointsToEarn(0)
+    setUseWallet(false)
+    setWalletAmountUsed(0)
+    setRedeemPoints(false)
+    setPointsToRedeem(0)
+    setPointsRedemptionValue(0)
   }
 
   const handleClose = () => {
@@ -536,32 +726,32 @@ export default function BookingModal({ isOpen, onClose, onLoginRequired, tenantB
           </div>
           
           <div className="p-6 space-y-4">
-            {/* QR Code Section */}
+            {/* Order Barcode Section - Real Scannable */}
             {createdOrder && (
-              <div className="flex flex-col items-center py-2">
-                <QRCodeDisplay 
-                  data={qrData}
-                  orderNumber={orderNumber}
-                  size={140}
-                  showPrint={false}
-                />
+              <div className="flex flex-col items-center py-3 bg-white rounded-xl border-2 border-gray-200">
+                <p className="text-xs text-gray-500 mb-2 font-semibold">Order Barcode</p>
+                <div className="bg-white p-2">
+                  <canvas ref={barcodeCanvasRef}></canvas>
+                </div>
+                <p className="text-xs text-gray-500 mt-2">Scan with barcode scanner or mobile app</p>
+                <p className="text-xs text-gray-400">Order: {orderNumber}</p>
               </div>
             )}
             
             <div className="bg-gray-50 rounded-xl p-4 space-y-3">
               <div className="flex items-center text-gray-700">
-                <Calendar className="w-5 h-5 mr-3 text-teal-500" />
+                <Calendar className="w-5 h-5 mr-3" style={getThemeStyles().primary} />
                 <span>{selectedDate && new Date(selectedDate).toLocaleDateString('en-IN', { 
                   day: 'numeric', month: 'short', year: 'numeric', weekday: 'long'
                 })}</span>
               </div>
               <div className="flex items-center text-gray-700">
-                <Clock className="w-5 h-5 mr-3 text-teal-500" />
+                <Clock className="w-5 h-5 mr-3" style={getThemeStyles().primary} />
                 <span>{selectedTimeSlot}</span>
               </div>
               {getSelectedAddress() && (
               <div className="flex items-center text-gray-700">
-                <MapPin className="w-5 h-5 mr-3 text-teal-500" />
+                <MapPin className="w-5 h-5 mr-3" style={getThemeStyles().primary} />
                 <span className="text-sm">{getSelectedAddress()?.addressLine1}, {getSelectedAddress()?.city}</span>
               </div>
               )}
@@ -570,7 +760,7 @@ export default function BookingModal({ isOpen, onClose, onLoginRequired, tenantB
             {createdOrder && (
               <div className="text-center">
                 <p className="text-sm text-gray-500">Order ID</p>
-                <p className="font-mono font-bold text-teal-600">{displayOrderNumber}</p>
+                <p className="font-mono font-bold" style={getThemeStyles().secondary}>{displayOrderNumber}</p>
               </div>
             )}
             
@@ -582,7 +772,11 @@ export default function BookingModal({ isOpen, onClose, onLoginRequired, tenantB
                 <Clock className="w-4 h-4 mr-2" />
                 Reschedule
               </Button>
-              <Button className="flex-1 bg-teal-500 hover:bg-teal-600" onClick={handleClose}>
+              <Button className="flex-1 bg-teal-500 hover:bg-teal-600" onClick={handleClose}
+                style={getThemeStyles().primaryBg}
+                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = brandingColors.secondaryColor}
+                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = brandingColors.primaryColor}
+              >
                 Done
               </Button>
             </div>
@@ -594,19 +788,36 @@ export default function BookingModal({ isOpen, onClose, onLoginRequired, tenantB
 
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-2xl w-full max-w-lg max-h-[90vh] flex flex-col shadow-2xl">
+      <div 
+        className="bg-white rounded-2xl w-full max-w-lg max-h-[90vh] flex flex-col shadow-2xl quick-book-modal"
+        style={{
+          '--theme-primary': brandingColors.primaryColor,
+          '--theme-secondary': brandingColors.secondaryColor,
+          '--theme-accent': brandingColors.accentColor,
+          '--theme-primary-rgb': brandingColors.primaryColor.replace('#', '').match(/.{2}/g)?.map(x => parseInt(x, 16)).join(', '),
+        } as React.CSSProperties}
+      >
+        <style jsx>{`
+          .quick-book-modal .theme-primary { color: var(--theme-primary) !important; }
+          .quick-book-modal .theme-primary-bg { background-color: var(--theme-primary) !important; }
+          .quick-book-modal .theme-primary-bg-light { background-color: rgba(var(--theme-primary-rgb), 0.1) !important; }
+          .quick-book-modal .theme-primary-border { border-color: var(--theme-primary) !important; }
+          .quick-book-modal .theme-secondary-bg { background-color: var(--theme-secondary) !important; }
+          .quick-book-modal .theme-gradient { background: linear-gradient(to right, var(--theme-primary), var(--theme-accent)) !important; }
+        `}</style>
+        
         {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b bg-gradient-to-r from-teal-500 to-cyan-500 rounded-t-2xl">
+        <div className="flex items-center justify-between p-4 border-b rounded-t-2xl theme-gradient">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center">
+            <div className="w-10 h-10 rounded-full flex items-center justify-center" style={{ backgroundColor: getColorWithOpacity('#ffffff', 0.2) }}>
               <Sparkles className="w-5 h-5 text-white" />
             </div>
             <div>
               <h2 className="text-lg font-bold text-white">Quick Book</h2>
-              <p className="text-xs text-white/80">Step {step} of 7 - {STEPS[step-1].title}</p>
+              <p className="text-xs" style={{ color: getColorWithOpacity('#ffffff', 0.8) }}>Step {step} of 7 - {STEPS[step-1].title}</p>
             </div>
           </div>
-          <button onClick={handleClose} className="p-2 hover:bg-white/20 rounded-full transition-colors">
+          <button onClick={handleClose} className="p-2 rounded-full transition-colors" style={{ backgroundColor: 'transparent' }} onMouseEnter={(e) => e.currentTarget.style.backgroundColor = getColorWithOpacity('#ffffff', 0.2)} onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}>
             <X className="w-5 h-5 text-white" />
           </button>
         </div>
@@ -615,7 +826,7 @@ export default function BookingModal({ isOpen, onClose, onLoginRequired, tenantB
         <div className="px-4 pt-3">
           <div className="flex gap-1">
             {STEPS.map((s) => (
-              <div key={s.id} className={`h-1.5 flex-1 rounded-full transition-colors ${s.id <= step ? 'bg-teal-500' : 'bg-gray-200'}`} />
+              <div key={s.id} className={`h-1.5 flex-1 rounded-full transition-colors ${s.id <= step ? 'theme-primary-bg' : 'bg-gray-200'}`} />
             ))}
           </div>
         </div>
@@ -624,7 +835,7 @@ export default function BookingModal({ isOpen, onClose, onLoginRequired, tenantB
         <div className="flex-1 overflow-y-auto p-4">
           {loading && step === 1 ? (
             <div className="flex items-center justify-center py-12">
-              <Loader2 className="w-8 h-8 animate-spin text-teal-500" />
+              <Loader2 className="w-8 h-8 animate-spin" style={getThemeStyles().primary} />
             </div>
           ) : (
             <>
@@ -632,7 +843,7 @@ export default function BookingModal({ isOpen, onClose, onLoginRequired, tenantB
               {step === 1 && (
                 <div className="space-y-3">
                   <h3 className="font-semibold text-gray-800 flex items-center gap-2">
-                    <Building2 className="w-5 h-5 text-teal-500" />
+                    <Building2 className="w-5 h-5" style={getThemeStyles().primary} />
                     Select Branch
                   </h3>
                   <p className="text-sm text-gray-500">Choose a branch near you</p>
@@ -646,16 +857,15 @@ export default function BookingModal({ isOpen, onClose, onLoginRequired, tenantB
                     <div className="space-y-2">
                       {branches.map((branch) => (
                         <div key={branch._id} onClick={() => setSelectedBranch(branch)}
-                          className={`p-3 border-2 rounded-xl cursor-pointer transition-all ${
-                            selectedBranch?._id === branch._id ? 'border-teal-500 bg-teal-50' : 'border-gray-200 hover:border-gray-300'
-                          }`}>
+                          className="p-3 border-2 rounded-xl cursor-pointer transition-all border-gray-200 hover:border-gray-300"
+                          style={selectedBranch?._id === branch._id ? { ...getThemeStyles().primaryBorder, ...getThemeStyles().primaryBgLight } : {}}>
                           <div className="flex items-center justify-between">
                             <div>
                               <p className="font-medium text-gray-800">{branch.name}</p>
                               <p className="text-sm text-gray-500">{branch.address?.city || branch.address?.addressLine1 || 'Location available'}</p>
                             </div>
                             {selectedBranch?._id === branch._id && (
-                              <div className="w-6 h-6 bg-teal-500 rounded-full flex items-center justify-center">
+                              <div className="w-6 h-6 rounded-full flex items-center justify-center" style={getThemeStyles().primaryBg}>
                                 <Check className="w-4 h-4 text-white" />
                               </div>
                             )}
@@ -671,7 +881,7 @@ export default function BookingModal({ isOpen, onClose, onLoginRequired, tenantB
               {step === 2 && (
                 <div className="space-y-3">
                   <h3 className="font-semibold text-gray-800 flex items-center gap-2">
-                    <Truck className="w-5 h-5 text-teal-500" />
+                    <Truck className="w-5 h-5" style={getThemeStyles().primary} />
                     Service Type
                   </h3>
                   <p className="text-sm text-gray-500">How would you like pickup & delivery?</p>
@@ -681,13 +891,12 @@ export default function BookingModal({ isOpen, onClose, onLoginRequired, tenantB
                       const IconComp = type.icon === 'truck' ? Truck : type.icon === 'building' ? Building2 : type.icon === 'home' ? Home : Package
                       return (
                         <div key={type.id} onClick={() => setServiceType(type.id as any)}
-                          className={`p-3 border-2 rounded-xl cursor-pointer transition-all ${
-                            serviceType === type.id ? 'border-teal-500 bg-teal-50' : 'border-gray-200 hover:border-gray-300'
-                          }`}>
+                          className="p-3 border-2 rounded-xl cursor-pointer transition-all border-gray-200 hover:border-gray-300"
+                          style={serviceType === type.id ? { ...getThemeStyles().primaryBorder, ...getThemeStyles().primaryBgLight } : {}}>
                           <div className="flex items-center justify-between">
                             <div className="flex items-center gap-3">
-                              <div className="w-10 h-10 bg-teal-100 rounded-lg flex items-center justify-center">
-                                <IconComp className="w-5 h-5 text-teal-600" />
+                              <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={getThemeStyles().primaryBgLight}>
+                                <IconComp className="w-5 h-5" style={getThemeStyles().secondary} />
                               </div>
                               <div>
                                 <div className="flex items-center gap-2">
@@ -702,7 +911,7 @@ export default function BookingModal({ isOpen, onClose, onLoginRequired, tenantB
                               </div>
                             </div>
                             {serviceType === type.id && (
-                              <div className="w-6 h-6 bg-teal-500 rounded-full flex items-center justify-center">
+                              <div className="w-6 h-6 rounded-full flex items-center justify-center" style={getThemeStyles().primaryBg}>
                                 <Check className="w-4 h-4 text-white" />
                               </div>
                             )}
@@ -726,14 +935,14 @@ export default function BookingModal({ isOpen, onClose, onLoginRequired, tenantB
               {step === 3 && (
                 <div className="space-y-3">
                   <h3 className="font-semibold text-gray-800 flex items-center gap-2">
-                    <Sparkles className="w-5 h-5 text-teal-500" />
+                    <Sparkles className="w-5 h-5" style={getThemeStyles().primary} />
                     Select Service
                   </h3>
                   <p className="text-sm text-gray-500">Choose a laundry service</p>
                   
                   {loading ? (
                     <div className="flex items-center justify-center py-8">
-                      <Loader2 className="w-6 h-6 animate-spin text-teal-500" />
+                      <Loader2 className="w-6 h-6 animate-spin" style={getThemeStyles().primary} />
                     </div>
                   ) : services.length === 0 ? (
                     <div className="text-center py-8 text-gray-500">
@@ -753,7 +962,7 @@ export default function BookingModal({ isOpen, onClose, onLoginRequired, tenantB
                               <p className="text-xs text-gray-500">{service.turnaroundTime?.standard || 48}h delivery</p>
                             </div>
                             {selectedService?._id === service._id && (
-                              <div className="w-6 h-6 bg-teal-500 rounded-full flex items-center justify-center">
+                              <div className="w-6 h-6 rounded-full flex items-center justify-center" style={getThemeStyles().primaryBg}>
                                 <Check className="w-4 h-4 text-white" />
                               </div>
                             )}
@@ -769,7 +978,7 @@ export default function BookingModal({ isOpen, onClose, onLoginRequired, tenantB
               {step === 4 && (
                 <div className="space-y-3">
                   <h3 className="font-semibold text-gray-800 flex items-center gap-2">
-                    <Package className="w-5 h-5 text-teal-500" />
+                    <Package className="w-5 h-5" style={getThemeStyles().primary} />
                     Select Items
                   </h3>
                   <p className="text-sm text-gray-500">Add items for {selectedService?.displayName}</p>
@@ -785,7 +994,7 @@ export default function BookingModal({ isOpen, onClose, onLoginRequired, tenantB
                         <div key={item.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-xl">
                           <div>
                             <p className="font-medium text-gray-800">{item.name}</p>
-                            <p className="text-sm text-teal-600">₹{item.basePrice}</p>
+                            <p className="text-sm" style={getThemeStyles().secondary}>₹{item.basePrice}</p>
                           </div>
                           <div className="flex items-center gap-2">
                             <button onClick={() => updateItemQuantity(item.id, -1)}
@@ -793,8 +1002,13 @@ export default function BookingModal({ isOpen, onClose, onLoginRequired, tenantB
                               <Minus className="w-4 h-4" />
                             </button>
                             <span className="w-8 text-center font-medium">{items[item.id] || 0}</span>
-                            <button onClick={() => updateItemQuantity(item.id, 1)}
-                              className="w-8 h-8 rounded-full bg-teal-500 hover:bg-teal-600 text-white flex items-center justify-center">
+                            <button 
+                              onClick={() => updateItemQuantity(item.id, 1)}
+                              className="w-8 h-8 rounded-full text-white flex items-center justify-center"
+                              style={getThemeStyles().primaryBg}
+                              onMouseEnter={(e) => e.currentTarget.style.backgroundColor = brandingColors.secondaryColor}
+                              onMouseLeave={(e) => e.currentTarget.style.backgroundColor = brandingColors.primaryColor}
+                            >
                               <Plus className="w-4 h-4" />
                             </button>
                           </div>
@@ -812,14 +1026,14 @@ export default function BookingModal({ isOpen, onClose, onLoginRequired, tenantB
                             <p className="text-xs text-gray-500">Get it faster (+50%)</p>
                           </div>
                           <input type="checkbox" checked={isExpress} onChange={(e) => setIsExpress(e.target.checked)}
-                            className="w-5 h-5 text-teal-500 rounded" />
+                            className="w-5 h-5 rounded" style={{ accentColor: brandingColors.primaryColor }} />
                         </label>
                       </div>
-                      <div className="p-4 bg-teal-50 rounded-xl">
+                      <div className="p-4 rounded-xl" style={getThemeStyles().primaryBgLight}>
                         <div className="flex justify-between items-center">
                           <div>
                             <p className="text-sm text-gray-600">Total ({getTotalItems()} items)</p>
-                            <p className="text-2xl font-bold text-teal-600">₹{getTotalPrice()}</p>
+                            <p className="text-2xl font-bold" style={getThemeStyles().secondary}>₹{getTotalPrice()}</p>
                           </div>
                         </div>
                       </div>
@@ -832,7 +1046,7 @@ export default function BookingModal({ isOpen, onClose, onLoginRequired, tenantB
               {step === 5 && (
                 <div className="space-y-3">
                   <h3 className="font-semibold text-gray-800 flex items-center gap-2">
-                    <MapPin className="w-5 h-5 text-teal-500" />
+                    <MapPin className="w-5 h-5" style={getThemeStyles().primary} />
                     {serviceType === 'self_drop_self_pickup' ? 'Branch Location' : 'Pickup Address'}
                   </h3>
                   
@@ -844,8 +1058,8 @@ export default function BookingModal({ isOpen, onClose, onLoginRequired, tenantB
                       </div>
                       <h4 className="font-medium text-gray-800 mb-2">No Address Required!</h4>
                       <p className="text-sm text-gray-600 mb-4">Drop off and pick up at:</p>
-                      <div className="p-4 bg-teal-50 rounded-xl inline-block">
-                        <div className="flex items-center text-teal-700">
+                      <div className="p-4 rounded-xl inline-block" style={getThemeStyles().primaryBgLight}>
+                        <div className="flex items-center" style={getThemeStyles().secondary}>
                           <Building2 className="w-5 h-5 mr-2" />
                           <span className="font-medium">{selectedBranch?.name}</span>
                         </div>
@@ -875,7 +1089,12 @@ export default function BookingModal({ isOpen, onClose, onLoginRequired, tenantB
                         <div className="text-center py-6">
                           <MapPin className="w-12 h-12 text-gray-300 mx-auto mb-4" />
                           <p className="text-gray-500 mb-4">No addresses saved</p>
-                          <Button onClick={() => setShowAddressForm(true)} className="bg-teal-500 hover:bg-teal-600">
+                          <Button 
+                            onClick={() => setShowAddressForm(true)} 
+                            style={getThemeStyles().primaryBg}
+                            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = brandingColors.secondaryColor}
+                            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = brandingColors.primaryColor}
+                          >
                             <Plus className="w-4 h-4 mr-2" /> Add Address
                           </Button>
                         </div>
@@ -1027,6 +1246,105 @@ export default function BookingModal({ isOpen, onClose, onLoginRequired, tenantB
                       )
                     })}
                   </div>
+                  
+                  {/* Automatic Discounts */}
+                  {applicableDiscounts.length > 0 && (
+                    <div className="p-4 bg-green-50 border border-green-200 rounded-xl">
+                      <div className="flex items-center gap-2 mb-2">
+                        <Gift className="w-5 h-5 text-green-600" />
+                        <p className="font-medium text-green-800">Auto-Applied Discounts</p>
+                      </div>
+                      {applicableDiscounts.map((discount, idx) => (
+                        <div key={idx} className="flex justify-between text-sm text-green-700 mb-1">
+                          <span>✓ {discount.name}</span>
+                          <span className="font-medium">-₹{discount.discountAmount}</span>
+                        </div>
+                      ))}
+                      <div className="flex justify-between text-sm font-bold text-green-800 mt-2 pt-2 border-t border-green-200">
+                        <span>Total Savings</span>
+                        <span>₹{totalAutoDiscount}</span>
+                      </div>
+                    </div>
+                  )}
+                  
+                  {/* Loyalty Points */}
+                  {loyaltyBalance?.enrolled && (
+                    <div className="p-4 bg-purple-50 border border-purple-200 rounded-xl">
+                      <div className="flex items-center justify-between mb-3">
+                        <div className="flex items-center gap-2">
+                          <Star className="w-5 h-5 text-purple-600" />
+                          <p className="font-medium text-purple-800">Loyalty Points</p>
+                        </div>
+                        <span className="text-sm text-purple-600">Balance: {loyaltyBalance.pointsBalance || 0} pts</span>
+                      </div>
+                      
+                      {pointsToEarn > 0 && (
+                        <div className="flex items-center justify-between text-sm text-purple-700 mb-2">
+                          <span>🎉 You'll earn</span>
+                          <span className="font-bold">+{pointsToEarn} points</span>
+                        </div>
+                      )}
+                      
+                      {(loyaltyBalance.pointsBalance || 0) >= 100 && (
+                        <label className="flex items-center justify-between cursor-pointer p-2 bg-white rounded-lg">
+                          <div>
+                            <p className="text-sm font-medium text-gray-800">Redeem Points</p>
+                            <p className="text-xs text-gray-500">Use up to {Math.min(loyaltyBalance.pointsBalance || 0, Math.floor((getTotalPrice() + (deliveryInfo?.deliveryCharge || 0)) * 0.5))} points</p>
+                          </div>
+                          <input
+                            type="checkbox"
+                            checked={redeemPoints}
+                            onChange={(e) => handleRedeemPointsToggle(e.target.checked)}
+                            className="w-5 h-5 text-purple-500 rounded"
+                          />
+                        </label>
+                      )}
+                      
+                      {redeemPoints && pointsRedemptionValue > 0 && (
+                        <div className="mt-2 p-2 bg-purple-100 rounded-lg text-sm text-purple-800">
+                          <div className="flex justify-between">
+                            <span>Points Redeemed: {pointsToRedeem}</span>
+                            <span className="font-bold">-₹{pointsRedemptionValue}</span>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                  
+                  {/* Wallet Payment */}
+                  {walletBalance > 0 && (
+                    <div className="p-4 bg-blue-50 border border-blue-200 rounded-xl">
+                      <div className="flex items-center justify-between mb-3">
+                        <div className="flex items-center gap-2">
+                          <Wallet className="w-5 h-5 text-blue-600" />
+                          <p className="font-medium text-blue-800">Wallet Balance</p>
+                        </div>
+                        <span className="text-sm text-blue-600">₹{walletBalance}</span>
+                      </div>
+                      
+                      <label className="flex items-center justify-between cursor-pointer p-2 bg-white rounded-lg">
+                        <div>
+                          <p className="text-sm font-medium text-gray-800">Pay from Wallet</p>
+                          <p className="text-xs text-gray-500">Use wallet balance for this order</p>
+                        </div>
+                        <input
+                          type="checkbox"
+                          checked={useWallet}
+                          onChange={(e) => handleWalletToggle(e.target.checked)}
+                          className="w-5 h-5 text-blue-500 rounded"
+                        />
+                      </label>
+                      
+                      {useWallet && walletAmountUsed > 0 && (
+                        <div className="mt-2 p-2 bg-blue-100 rounded-lg text-sm text-blue-800">
+                          <div className="flex justify-between">
+                            <span>Wallet Payment</span>
+                            <span className="font-bold">-₹{walletAmountUsed}</span>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
 
                   {/* Schedule Summary */}
                   <div className="p-4 bg-gray-50 rounded-xl">
@@ -1114,19 +1432,43 @@ export default function BookingModal({ isOpen, onClose, onLoginRequired, tenantB
                         </span>
                       </div>
                     )}
+                    {totalAutoDiscount > 0 && (
+                      <div className="flex justify-between text-sm mb-1 text-green-600">
+                        <span>Auto Discounts</span>
+                        <span>-₹{totalAutoDiscount}</span>
+                      </div>
+                    )}
                     {appliedCoupon && (
                       <div className="flex justify-between text-sm mb-1 text-green-600">
-                        <span>Coupon Discount ({appliedCoupon.coupon.code})</span>
+                        <span>Coupon ({appliedCoupon.coupon.code})</span>
                         <span>-₹{appliedCoupon.discount}</span>
                       </div>
                     )}
+                    {pointsRedemptionValue > 0 && (
+                      <div className="flex justify-between text-sm mb-1 text-purple-600">
+                        <span>Points Redeemed</span>
+                        <span>-₹{pointsRedemptionValue}</span>
+                      </div>
+                    )}
+                    {walletAmountUsed > 0 && (
+                      <div className="flex justify-between text-sm mb-1 text-blue-600">
+                        <span>Wallet Payment</span>
+                        <span>-₹{walletAmountUsed}</span>
+                      </div>
+                    )}
                     <hr className="my-2 border-teal-200" />
-                    <div className="flex justify-between font-bold">
+                    <div className="flex justify-between font-bold text-lg">
                       <span>Total</span>
                       <span className="text-teal-600">
-                        ₹{Math.max(0, getTotalPrice() + (deliveryInfo?.deliveryCharge || 0) - (appliedCoupon?.discount || 0))}
+                        ₹{Math.max(0, getTotalPrice() + (deliveryInfo?.deliveryCharge || 0) - totalAutoDiscount - (appliedCoupon?.discount || 0) - pointsRedemptionValue - walletAmountUsed)}
                       </span>
                     </div>
+                    {(totalAutoDiscount + (appliedCoupon?.discount || 0) + pointsRedemptionValue + walletAmountUsed) > 0 && (
+                      <div className="mt-2 pt-2 border-t border-teal-200 flex items-center justify-between text-sm">
+                        <span className="text-green-600 font-medium">🎉 Total Savings</span>
+                        <span className="text-green-600 font-bold">₹{totalAutoDiscount + (appliedCoupon?.discount || 0) + pointsRedemptionValue + walletAmountUsed}</span>
+                      </div>
+                    )}
                   </div>
                 </div>
               )}
@@ -1142,8 +1484,14 @@ export default function BookingModal({ isOpen, onClose, onLoginRequired, tenantB
                 <ChevronLeft className="w-4 h-4 mr-1" /> Back
               </Button>
             )}
-            <Button onClick={handleNext} disabled={!canProceed() || submitting}
-              className="flex-1 bg-teal-500 hover:bg-teal-600">
+            <Button 
+              onClick={handleNext} 
+              disabled={!canProceed() || submitting}
+              className="flex-1"
+              style={getThemeStyles().primaryBg}
+              onMouseEnter={(e) => !submitting && !(!canProceed()) && (e.currentTarget.style.backgroundColor = brandingColors.secondaryColor)}
+              onMouseLeave={(e) => !submitting && !(!canProceed()) && (e.currentTarget.style.backgroundColor = brandingColors.primaryColor)}
+            >
               {submitting ? (
                 <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Processing...</>
               ) : step === 7 ? (

@@ -510,6 +510,16 @@ export default function AdminCampaignsPage() {
                           <Edit2 className="w-4 h-4" />
                         </button>
                         
+                        {campaign.status === 'DRAFT' && (
+                          <button
+                            onClick={() => handleStatusChange(campaign._id, 'ACTIVE')}
+                            className="text-green-600 hover:text-green-900"
+                            title="Activate campaign"
+                          >
+                            <Play className="w-4 h-4" />
+                          </button>
+                        )}
+                        
                         {campaign.status === 'ACTIVE' && (
                           <button
                             onClick={() => handleStatusChange(campaign._id, 'PAUSED')}

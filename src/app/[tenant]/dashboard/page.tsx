@@ -170,12 +170,15 @@ function SpendingChart({ orders }: { orders: any[] }) {
 }
 
 // Sidebar Navigation
-const sidebarNavigation = [
-  { name: 'Dashboard', href: 'dashboard', icon: Home, current: true },
-  { name: 'My Orders', href: 'orders', icon: ShoppingBag, current: false },
-  { name: 'Support', href: 'support', icon: HelpCircle, current: false },
-  { name: 'Addresses', href: 'addresses', icon: MapPin, current: false },
-  { name: 'Profile', href: 'profile', icon: User, current: false },
+const getSidebarNavigation = (tenantSlug: string) => [
+  { name: 'Dashboard', href: `/${tenantSlug}/dashboard`, icon: Home, current: true },
+  { name: 'My Orders', href: `/${tenantSlug}/orders`, icon: ShoppingBag, current: false },
+  { name: 'Loyalty', href: `/${tenantSlug}/loyalty`, icon: Star, current: false },
+  { name: 'Referrals', href: `/${tenantSlug}/referrals`, icon: Gift, current: false },
+  { name: 'Wallet', href: `/${tenantSlug}/wallet`, icon: Wallet, current: false },
+  { name: 'Support', href: `/${tenantSlug}/support`, icon: HelpCircle, current: false },
+  { name: 'Addresses', href: `/${tenantSlug}/addresses`, icon: MapPin, current: false },
+  { name: 'Profile', href: `/${tenantSlug}/profile`, icon: User, current: false },
 ]
 
 export default function TenantDashboard() {
@@ -191,6 +194,9 @@ export default function TenantDashboard() {
   const [greeting, setGreeting] = useState('')
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
+
+  // Generate navigation with tenant slug
+  const sidebarNavigation = useMemo(() => getSidebarNavigation(tenant), [tenant])
 
   // Load sidebar collapsed state from localStorage
   useEffect(() => {
@@ -399,12 +405,11 @@ export default function TenantDashboard() {
           {/* Navigation */}
           <nav className={`flex-1 ${sidebarCollapsed ? 'p-2' : 'p-4'} space-y-1 overflow-y-auto`}>
             {sidebarNavigation.map((item) => {
-              const href = `/${tenant}/${item.href}`
               const isActive = item.current
               return (
                 <Link
                   key={item.name}
-                  href={href}
+                  href={item.href}
                   title={sidebarCollapsed ? item.name : undefined}
                   className={`flex items-center ${sidebarCollapsed ? 'justify-center px-2' : 'gap-3 px-4'} py-3 rounded-xl transition-all ${
                     isActive 

@@ -775,6 +775,21 @@ export default function OriginalTemplate({ themeColor, isAuthenticated, user, on
     window.location.href = '/'
   }
   
+  // Get tenant-aware URL helper
+  const getTenantUrl = (path: string) => {
+    if (isTenantPage) {
+      const pathParts = window.location.pathname.split('/')
+      if (pathParts.length > 1 && pathParts[1]) {
+        // For root path, return just the tenant slug
+        if (path === '/') return `/${pathParts[1]}`
+        // For other paths, append to tenant slug
+        return `/${pathParts[1]}${path}`
+      }
+    }
+    // For non-tenant pages, return the path as-is
+    return path
+  }
+  
   // Get login URL with tenant redirect if on tenant page
   const getLoginUrl = () => {
     if (isTenantPage) {
@@ -908,10 +923,10 @@ export default function OriginalTemplate({ themeColor, isAuthenticated, user, on
               </button>
             </div>
             <div className="hidden md:flex items-center space-x-8">
-              <Link href="/" className="hover:opacity-80 transition-opacity" style={{ color: isDarkTheme ? '#d1d5db' : theme.textSecondary }}>{t('nav.home')}</Link>
-              <Link href="/services" className="hover:opacity-80 transition-opacity" style={{ color: isDarkTheme ? '#d1d5db' : theme.textSecondary }}>{t('nav.services')}</Link>
-              <Link href="/pricing" className="hover:opacity-80 transition-opacity" style={{ color: isDarkTheme ? '#d1d5db' : theme.textSecondary }}>{t('nav.pricing')}</Link>
-              <Link href="/help" className="hover:opacity-80 transition-opacity" style={{ color: isDarkTheme ? '#d1d5db' : theme.textSecondary }}>{t('nav.help')}</Link>
+              <Link href={getTenantUrl('/')} className="hover:opacity-80 transition-opacity" style={{ color: isDarkTheme ? '#d1d5db' : theme.textSecondary }}>{t('nav.home')}</Link>
+              <Link href={getTenantUrl('/services')} className="hover:opacity-80 transition-opacity" style={{ color: isDarkTheme ? '#d1d5db' : theme.textSecondary }}>{t('nav.services')}</Link>
+              <Link href={getTenantUrl('/pricing')} className="hover:opacity-80 transition-opacity" style={{ color: isDarkTheme ? '#d1d5db' : theme.textSecondary }}>{t('nav.pricing')}</Link>
+              <Link href={getTenantUrl('/help')} className="hover:opacity-80 transition-opacity" style={{ color: isDarkTheme ? '#d1d5db' : theme.textSecondary }}>{t('nav.help')}</Link>
               {isAuthenticated ? (
                 <div className="flex items-center space-x-4">
                   {/* Dark Mode Toggle */}
@@ -933,7 +948,7 @@ export default function OriginalTemplate({ themeColor, isAuthenticated, user, on
                       <Moon className="w-5 h-5" style={{ color: theme.textSecondary }} />
                     )}
                   </button>
-                  <Link href="/customer/dashboard"><Button className="text-white" style={{ backgroundColor: theme.accent }}><User className="w-4 h-4 mr-2" />{t('nav.dashboard')}</Button></Link>
+                  <Link href={getTenantUrl('/dashboard')}><Button className="text-white" style={{ backgroundColor: theme.accent }}><User className="w-4 h-4 mr-2" />{t('nav.dashboard')}</Button></Link>
                   <div className="relative group">
                     <button className="flex items-center space-x-2 py-2" style={{ color: isDarkTheme ? '#d1d5db' : theme.textSecondary }}>
                       <div className="w-8 h-8 rounded-full flex items-center justify-center" style={{ backgroundColor: theme.accent }}><span className="text-white text-sm font-medium">{user?.name?.charAt(0).toUpperCase()}</span></div>
@@ -942,9 +957,9 @@ export default function OriginalTemplate({ themeColor, isAuthenticated, user, on
                     </button>
                     <div className="absolute right-0 top-full mt-1 w-48 rounded-lg shadow-lg border opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50" style={{ backgroundColor: theme.cardBg, borderColor: theme.border }}>
                       <div className="py-2">
-                        <Link href="/customer/dashboard" className="flex items-center px-4 py-2 hover:opacity-80" style={{ color: theme.textSecondary }}><User className="w-4 h-4 mr-3" />{t('nav.dashboard')}</Link>
-                        <Link href="/customer/orders" className="flex items-center px-4 py-2 hover:opacity-80" style={{ color: theme.textSecondary }}><ShoppingBag className="w-4 h-4 mr-3" />{t('nav.myOrders')}</Link>
-                        <Link href="/customer/addresses" className="flex items-center px-4 py-2 hover:opacity-80" style={{ color: theme.textSecondary }}><MapPin className="w-4 h-4 mr-3" />{t('nav.addresses')}</Link>
+                        <Link href={getTenantUrl('/dashboard')} className="flex items-center px-4 py-2 hover:opacity-80" style={{ color: theme.textSecondary }}><User className="w-4 h-4 mr-3" />{t('nav.dashboard')}</Link>
+                        <Link href={getTenantUrl('/orders')} className="flex items-center px-4 py-2 hover:opacity-80" style={{ color: theme.textSecondary }}><ShoppingBag className="w-4 h-4 mr-3" />{t('nav.myOrders')}</Link>
+                        <Link href={getTenantUrl('/addresses')} className="flex items-center px-4 py-2 hover:opacity-80" style={{ color: theme.textSecondary }}><MapPin className="w-4 h-4 mr-3" />{t('nav.addresses')}</Link>
                         <hr style={{ borderColor: theme.border }} className="my-2" />
                         <button onClick={handleLogout} className="flex items-center w-full px-4 py-2 text-red-500 hover:bg-red-50/10"><LogOut className="w-4 h-4 mr-3" />{t('nav.logout')}</button>
                       </div>

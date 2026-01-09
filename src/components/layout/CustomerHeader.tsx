@@ -20,6 +20,9 @@ import {
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { api } from '@/lib/api'
+import LoyaltyPointsWidget from '@/components/loyalty/LoyaltyPointsWidget'
+import ReferralWidget from '@/components/referral/ReferralWidget'
+import WalletWidget from '@/components/wallet/WalletWidget'
 
 interface Notification {
   _id: string

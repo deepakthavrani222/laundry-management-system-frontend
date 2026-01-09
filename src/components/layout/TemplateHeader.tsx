@@ -60,12 +60,30 @@ export default function TemplateHeader() {
   // Translation helper
   const t = (key: string) => getTranslation(language, key)
   
+  // Detect tenant from URL as fallback (in case context is not set)
+  const tenantFromUrl = pathname?.split('/')[1]
+  const isOnTenantRoute = tenantFromUrl && 
+    tenantFromUrl !== 'auth' && 
+    tenantFromUrl !== 'admin' && 
+    tenantFromUrl !== 'customer' &&
+    tenantFromUrl !== 'center-admin' &&
+    tenantFromUrl !== 'branch' &&
+    tenantFromUrl !== 'services' &&
+    tenantFromUrl !== 'pricing' &&
+    tenantFromUrl !== 'help' &&
+    tenantFromUrl !== 'about' &&
+    tenantFromUrl !== 'contact'
+  
+  // Use context values if available, otherwise use URL detection
+  const effectiveTenantSlug = tenant?.slug || (isOnTenantRoute ? tenantFromUrl : null)
+  const effectiveIsTenantPage = isTenantPage || isOnTenantRoute
+  
   // Get display name and logo from tenant or default
   const displayName = tenant?.name || 'LaundryPro'
   const logoUrl = tenant?.logo
   
   // Use tenant template if on tenant page, otherwise use localStorage
-  const activeTemplate = (isTenantPage && tenant?.landingPageTemplate) 
+  const activeTemplate = (effectiveIsTenantPage && tenant?.landingPageTemplate) 
     ? tenant.landingPageTemplate as TemplateType 
     : template
 
@@ -76,22 +94,38 @@ export default function TemplateHeader() {
     window.dispatchEvent(new CustomEvent('languageChange', { detail: { language: lang } }))
     setShowLangMenu(false)
   }
+  
   // Helper to generate tenant-aware URLs
   const getLink = (path: string) => {
-    if (isTenantPage && tenant?.slug) {
+    // Debug logging
+    console.log('🔗 getLink called:', {
+      path,
+      pathname,
+      tenantFromUrl,
+      isOnTenantRoute,
+      effectiveTenantSlug,
+      effectiveIsTenantPage,
+      contextTenant: tenant?.slug,
+      contextIsTenantPage: isTenantPage
+    });
+    
+    // Use effective values (context or URL detection)
+    if (effectiveIsTenantPage && effectiveTenantSlug) {
       // For tenant pages, keep URLs within tenant space
-      if (path === '/') return `/${tenant.slug}`
-      return `/${tenant.slug}${path}`
+      const result = path === '/' ? `/${effectiveTenantSlug}` : `/${effectiveTenantSlug}${path}`;
+      console.log('✅ Returning tenant-aware URL:', result);
+      return result;
     }
+    console.log('⚠️ Returning plain path:', path);
     return path
   }
 
   // Handle Book Now click
   const handleBookNow = () => {
-    if (isTenantPage && tenant?.slug) {
+    if (effectiveIsTenantPage && effectiveTenantSlug) {
       // On tenant pages, redirect to tenant landing with openBooking param
       // This works on all tenant pages (help, services, pricing, etc.)
-      window.location.href = `/${tenant.slug}?openBooking=true`
+      window.location.href = `/${effectiveTenantSlug}?openBooking=true`
     } else {
       // Regular flow - redirect to orders page
       if (isAuthenticated) {
@@ -105,8 +139,8 @@ export default function TemplateHeader() {
   // Handle Logout - redirect to tenant page if on tenant, otherwise to home
   const handleLogout = () => {
     useAuthStore.getState().logout()
-    if (isTenantPage && tenant?.slug) {
-      window.location.href = `/${tenant.slug}`
+    if (effectiveIsTenantPage && effectiveTenantSlug) {
+      window.location.href = `/${effectiveTenantSlug}`
     } else {
       window.location.href = '/'
     }
@@ -114,10 +148,18 @@ export default function TemplateHeader() {
 
   // Get login URL with tenant redirect if on tenant page
   const getLoginUrl = () => {
-    if (isTenantPage && tenant?.slug) {
-      return `/auth/login?redirect=${encodeURIComponent(`/${tenant.slug}`)}`
+    if (effectiveIsTenantPage && effectiveTenantSlug) {
+      return `/auth/login?redirect=${encodeURIComponent(`/${effectiveTenantSlug}`)}`
     }
     return '/auth/login'
+  }
+
+  // Get dashboard URL - tenant dashboard if on tenant page
+  const getDashboardUrl = () => {
+    if (effectiveIsTenantPage && effectiveTenantSlug) {
+      return `/${effectiveTenantSlug}/dashboard`
+    }
+    return '/customer/dashboard'
   }
 
   // Dark mode toggle handler
@@ -240,7 +282,7 @@ export default function TemplateHeader() {
               
               {isAuthenticated ? (
                 <>
-                  <Link href={isTenantPage && tenant?.slug ? `/${tenant.slug}/dashboard` : '/customer/dashboard'}>
+                  <Link href={getDashboardUrl()}>
                     <Button 
                       variant="outline"
                       className={`rounded-full px-4 h-8 text-sm ${isDarkMode ? 'border-gray-600 text-gray-300 hover:bg-gray-800' : 'border-gray-300 text-gray-700 hover:bg-gray-100'}`}
