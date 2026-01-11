@@ -1207,7 +1207,7 @@ export default function OriginalTemplate({ themeColor, isAuthenticated, user, on
           </div>
           <div className="pt-8 text-center text-sm" style={{ borderTop: `1px solid ${theme.footerText}20`, color: `${theme.footerText}70` }}>
             <p>{t('footer.copyright')}</p>
-            <p className="mt-2 text-xs opacity-60">v2.0.0</p>
+            <p className="mt-2 text-xs opacity-60">v2.1.0</p>
           </div>
         </div>
       </footer>

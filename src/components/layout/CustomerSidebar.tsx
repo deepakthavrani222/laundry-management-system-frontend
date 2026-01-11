@@ -217,7 +217,7 @@ export default function CustomerSidebar({
       {!collapsed && (
         <div className="flex-shrink-0 px-4 py-2 border-t border-gray-200">
           <div className="text-xs text-gray-400 text-center">
-            v2.0.0
+            v2.1.0
           </div>
         </div>
       )}
