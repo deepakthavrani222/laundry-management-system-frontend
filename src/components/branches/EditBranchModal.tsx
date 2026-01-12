@@ -604,8 +604,11 @@ export function EditBranchModal({ isOpen, onClose, onSuccess, branch }: EditBran
                       type="radio"
                       name="status"
                       value="active"
-                      checked={formData.status === 'active'}
-                      onChange={(e) => handleInputChange('', 'status', e.target.value)}
+                      checked={formData.status === 'active' && formData.isActive}
+                      onChange={(e) => {
+                        handleInputChange('', 'status', e.target.value)
+                        handleInputChange('', 'isActive', true)
+                      }}
                       className="text-blue-600"
                     />
                     <span className="text-sm">Active</span>
@@ -616,7 +619,10 @@ export function EditBranchModal({ isOpen, onClose, onSuccess, branch }: EditBran
                       name="status"
                       value="maintenance"
                       checked={formData.status === 'maintenance'}
-                      onChange={(e) => handleInputChange('', 'status', e.target.value)}
+                      onChange={(e) => {
+                        handleInputChange('', 'status', e.target.value)
+                        handleInputChange('', 'isActive', true)
+                      }}
                       className="text-blue-600"
                     />
                     <span className="text-sm">Maintenance</span>
@@ -626,8 +632,11 @@ export function EditBranchModal({ isOpen, onClose, onSuccess, branch }: EditBran
                       type="radio"
                       name="status"
                       value="inactive"
-                      checked={formData.status === 'inactive'}
-                      onChange={(e) => handleInputChange('', 'status', e.target.value)}
+                      checked={formData.status === 'inactive' || !formData.isActive}
+                      onChange={(e) => {
+                        handleInputChange('', 'status', e.target.value)
+                        handleInputChange('', 'isActive', false)
+                      }}
                       className="text-blue-600"
                     />
                     <span className="text-sm">Inactive</span>

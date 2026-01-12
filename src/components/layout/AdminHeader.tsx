@@ -22,7 +22,6 @@ import {
 import Link from 'next/link'
 import { api } from '@/lib/api'
 import toast from 'react-hot-toast'
-import ThemeSettingsPanel from './ThemeSettingsPanel'
 
 interface Notification {
   _id: string
@@ -48,7 +47,6 @@ export default function AdminHeader({ onMenuClick, sidebarCollapsed = false }: A
   const [notifications, setNotifications] = useState<Notification[]>([])
   const [showNotifDropdown, setShowNotifDropdown] = useState(false)
   const [showUserDropdown, setShowUserDropdown] = useState(false)
-  const [showThemeSettings, setShowThemeSettings] = useState(false)
   const [loading, setLoading] = useState(false)
   const notifDropdownRef = useRef<HTMLDivElement>(null)
   const userDropdownRef = useRef<HTMLDivElement>(null)
@@ -277,15 +275,6 @@ export default function AdminHeader({ onMenuClick, sidebarCollapsed = false }: A
               </div>
             )}
           </div>
-
-          {/* Settings Button */}
-          <button
-            onClick={() => setShowThemeSettings(true)}
-            className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-xl transition-colors"
-            title="Theme Settings"
-          >
-            <Settings className="w-5 h-5" />
-          </button>
 
           {/* User Avatar with Dropdown */}
           <div className="relative" ref={userDropdownRef}>

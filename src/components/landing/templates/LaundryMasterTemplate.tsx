@@ -732,7 +732,7 @@ export default function LaundryMasterTemplate({ themeColor, isAuthenticated, onB
         className="fixed top-0 left-0 right-0 z-50 shadow-sm py-4 transition-colors duration-300"
         style={{ backgroundColor: theme.headerBg, borderBottom: `1px solid ${theme.border}` }}
       >
-        <div className="container mx-auto px-4">
+        <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between">
             {/* Logo */}
             <div className="flex items-center gap-3 flex-shrink-0">
@@ -839,57 +839,59 @@ export default function LaundryMasterTemplate({ themeColor, isAuthenticated, onB
 
       {/* Hero Section - Balanced Height */}
       <section className="relative flex items-center overflow-hidden pt-16">
-        {/* Background Image - Full width, increased height */}
-        <div className="w-full h-[70vh] min-h-[500px] max-h-[700px]">
-          <div className="relative h-full">
-            <img 
-              src="/images/image.png" 
-              alt="Laundry Service"
-              className="w-full h-full object-cover object-center"
-            />
-            {/* Overlay */}
-            <div className="absolute inset-0 bg-black/40"></div>
-            
-            {/* Content positioned over image */}
-            <div className="absolute inset-0 flex items-center">
-              <div className="container mx-auto px-4">
-                <div className="max-w-2xl">
-                  <div 
-                    className="inline-flex items-center gap-2 text-white px-3 py-1.5 rounded-full text-xs font-medium mb-4"
-                    style={{ backgroundColor: theme.accent }}
-                  >
-                    <Sparkles className="w-3 h-3" />
-                    {t('hero.badge')}
-                  </div>
-                  
-                  <h1 className="text-3xl md:text-5xl font-bold text-white mb-4 leading-tight italic" style={{ fontFamily: 'Georgia, serif' }}>
-                    {t('hero.title')}
-                  </h1>
-                  
-                  <p className="text-base md:text-lg text-white/90 mb-6 max-w-xl">
-                    {t('hero.subtitle')}
-                  </p>
-
-                  <div className="flex flex-wrap gap-3">
-                    <Button 
-                      size="lg" 
-                      className="text-white px-6 py-3 text-base rounded-full font-semibold transition-all hover:opacity-90"
+        <div className="max-w-screen-2xl mx-auto w-full">
+          {/* Background Image - Full width, increased height */}
+          <div className="w-full h-[70vh] min-h-[500px] max-h-[700px] mx-0 lg:mx-8 rounded-none lg:rounded-2xl overflow-hidden">
+            <div className="relative h-full">
+              <img 
+                src="/images/image.png" 
+                alt="Laundry Service"
+                className="w-full h-full object-cover object-center"
+              />
+              {/* Overlay */}
+              <div className="absolute inset-0 bg-black/40"></div>
+              
+              {/* Content positioned over image */}
+              <div className="absolute inset-0 flex items-center">
+                <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8">
+                  <div className="max-w-2xl">
+                    <div 
+                      className="inline-flex items-center gap-2 text-white px-3 py-1.5 rounded-full text-xs font-medium mb-4"
                       style={{ backgroundColor: theme.accent }}
-                      onClick={onBookNow}
                     >
-                      <Truck className="w-4 h-4 mr-2" />
-                      {t('hero.schedulePickup')}
-                    </Button>
-                    <Link href="/services">
+                      <Sparkles className="w-3 h-3" />
+                      {t('hero.badge')}
+                    </div>
+                    
+                    <h1 className="text-3xl md:text-5xl font-bold text-white mb-4 leading-tight italic" style={{ fontFamily: 'Georgia, serif' }}>
+                      {t('hero.title')}
+                    </h1>
+                    
+                    <p className="text-base md:text-lg text-white/90 mb-6 max-w-xl">
+                      {t('hero.subtitle')}
+                    </p>
+
+                    <div className="flex flex-wrap gap-3">
                       <Button 
                         size="lg" 
-                        variant="outline"
-                        className="border-2 border-white text-white hover:bg-white hover:text-gray-900 px-6 py-3 text-base rounded-full font-semibold bg-transparent"
+                        className="text-white px-6 py-3 text-base rounded-full font-semibold transition-all hover:opacity-90"
+                        style={{ backgroundColor: theme.accent }}
+                        onClick={onBookNow}
                       >
-                        {t('hero.exploreServices')}
-                        <ArrowRight className="w-4 h-4 ml-2" />
+                        <Truck className="w-4 h-4 mr-2" />
+                        {t('hero.schedulePickup')}
                       </Button>
-                    </Link>
+                      <Link href="/services">
+                        <Button 
+                          size="lg" 
+                          variant="outline"
+                          className="border-2 border-white text-white hover:bg-white hover:text-gray-900 px-6 py-3 text-base rounded-full font-semibold bg-transparent"
+                        >
+                          {t('hero.exploreServices')}
+                          <ArrowRight className="w-4 h-4 ml-2" />
+                        </Button>
+                      </Link>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -903,7 +905,7 @@ export default function LaundryMasterTemplate({ themeColor, isAuthenticated, onB
         className="py-24 relative transition-colors duration-300"
         style={{ backgroundColor: theme.sectionBg }}
       >
-        <div className="container mx-auto px-4">
+        <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <span className="font-semibold text-lg" style={{ color: theme.accentText }}>{t('process.subtitle')}</span>
             <h2 className="text-4xl md:text-5xl font-bold mt-2" style={{ color: theme.textPrimary }}>{t('process.title')}</h2>
@@ -934,7 +936,7 @@ export default function LaundryMasterTemplate({ themeColor, isAuthenticated, onB
 
       {/* Services Grid - Checkerboard Style */}
       <section className="py-20 transition-colors duration-300" style={{ backgroundColor: theme.pageBg }}>
-        <div className="container mx-auto px-4">
+        <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
             <h2 className="text-3xl md:text-4xl font-bold italic" style={{ fontFamily: 'Georgia, serif', color: theme.textPrimary }}>
               {t('services.title')}
@@ -1033,7 +1035,7 @@ export default function LaundryMasterTemplate({ themeColor, isAuthenticated, onB
 
       {/* CTA Banner - Dark with Circles */}
       <section className="py-8 px-4" style={{ backgroundColor: theme.pageBg }}>
-        <div className="container mx-auto">
+        <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="rounded-2xl relative overflow-hidden py-12 px-8 md:px-16" style={{ backgroundColor: isDark ? theme.cardBg : theme.footerBg }}>
             {/* Decorative Circles */}
             <div className="absolute top-4 right-32 w-4 h-4 rounded-full border border-white/20"></div>
@@ -1070,7 +1072,7 @@ export default function LaundryMasterTemplate({ themeColor, isAuthenticated, onB
         className="py-16 transition-colors duration-300"
         style={{ backgroundColor: theme.sectionBgAlt }}
       >
-        <div className="container mx-auto px-4">
+        <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8">
           {/* Title */}
           <div className="text-center mb-8">
             <p className="font-medium mb-2" style={{ color: theme.accentText }}>{t('testimonials.subtitle')}</p>
@@ -1135,7 +1137,7 @@ export default function LaundryMasterTemplate({ themeColor, isAuthenticated, onB
         className="py-24 transition-colors duration-300"
         style={{ backgroundColor: theme.sectionBgAlt }}
       >
-        <div className="container mx-auto px-4">
+        <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid lg:grid-cols-2 gap-16 items-center">
             {/* Video */}
             <div className="relative">
@@ -1192,56 +1194,60 @@ export default function LaundryMasterTemplate({ themeColor, isAuthenticated, onB
       </section>
 
       {/* Map Section with Contact Card */}
-      <section className="relative h-[400px]">
-        {/* Google Map Embed */}
-        <iframe
-          src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d193595.15830869428!2d-74.11976397304603!3d40.69766374874431!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x89c24fa5d33f083b%3A0xc80b8f06e177fe62!2sNew%20York%2C%20NY%2C%20USA!5e0!3m2!1sen!2sin!4v1699000000000!5m2!1sen!2sin"
-          width="100%"
-          height="100%"
-          style={{ border: 0 }}
-          allowFullScreen
-          loading="lazy"
-          referrerPolicy="no-referrer-when-downgrade"
-          className={isDark ? '' : 'grayscale'}
-        ></iframe>
+      <section className="relative">
+        <div className="max-w-screen-2xl mx-auto w-full relative">
+          <div className="relative h-[400px] mx-0 lg:mx-8 rounded-none lg:rounded-2xl overflow-hidden">
+            {/* Google Map Embed */}
+            <iframe
+              src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d193595.15830869428!2d-74.11976397304603!3d40.69766374874431!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x89c24fa5d33f083b%3A0xc80b8f06e177fe62!2sNew%20York%2C%20NY%2C%20USA!5e0!3m2!1sen!2sin!4v1699000000000!5m2!1sen!2sin"
+              width="100%"
+              height="100%"
+              style={{ border: 0 }}
+              allowFullScreen
+              loading="lazy"
+              referrerPolicy="no-referrer-when-downgrade"
+              className={isDark ? '' : 'grayscale'}
+            ></iframe>
 
-        {/* Contact Card Overlay */}
-        <div 
-          className="absolute top-1/2 right-8 md:right-16 -translate-y-1/2 text-white p-6 md:p-8 rounded-lg shadow-2xl max-w-sm"
-          style={{ backgroundColor: theme.footerBg }}
-        >
-          <h3 className="text-xl font-bold mb-3" style={{ color: theme.accentText }}>{t('hero.badge')}</h3>
-          <p className="text-gray-300 text-sm mb-6">
-            Professional laundry services at your doorstep
-          </p>
-          
-          <div className="space-y-4">
-            <div className="flex items-center gap-3">
-              <div 
-                className="w-8 h-8 rounded-full flex items-center justify-center"
-                style={{ backgroundColor: theme.accent }}
-              >
-                <MapPin className="w-4 h-4 text-white" />
+            {/* Contact Card Overlay */}
+            <div 
+              className="absolute top-1/2 right-8 md:right-16 -translate-y-1/2 text-white p-6 md:p-8 rounded-lg shadow-2xl max-w-sm"
+              style={{ backgroundColor: theme.footerBg }}
+            >
+              <h3 className="text-xl font-bold mb-3" style={{ color: theme.accentText }}>{t('hero.badge')}</h3>
+              <p className="text-gray-300 text-sm mb-6">
+                Professional laundry services at your doorstep
+              </p>
+              
+              <div className="space-y-4">
+                <div className="flex items-center gap-3">
+                  <div 
+                    className="w-8 h-8 rounded-full flex items-center justify-center"
+                    style={{ backgroundColor: theme.accent }}
+                  >
+                    <MapPin className="w-4 h-4 text-white" />
+                  </div>
+                  <span className="text-sm text-gray-200">20+ Cities across India</span>
+                </div>
+                <div className="flex items-center gap-3">
+                  <div 
+                    className="w-8 h-8 rounded-full flex items-center justify-center"
+                    style={{ backgroundColor: theme.accent }}
+                  >
+                    <Phone className="w-4 h-4 text-white" />
+                  </div>
+                  <span className="text-sm text-gray-200">+91 98765 43210</span>
+                </div>
+                <div className="flex items-center gap-3">
+                  <div 
+                    className="w-8 h-8 rounded-full flex items-center justify-center"
+                    style={{ backgroundColor: theme.accent }}
+                  >
+                    <Mail className="w-4 h-4 text-white" />
+                  </div>
+                  <span className="text-sm text-gray-200">support@laundrypro.com</span>
+                </div>
               </div>
-              <span className="text-sm text-gray-200">20+ Cities across India</span>
-            </div>
-            <div className="flex items-center gap-3">
-              <div 
-                className="w-8 h-8 rounded-full flex items-center justify-center"
-                style={{ backgroundColor: theme.accent }}
-              >
-                <Phone className="w-4 h-4 text-white" />
-              </div>
-              <span className="text-sm text-gray-200">+91 98765 43210</span>
-            </div>
-            <div className="flex items-center gap-3">
-              <div 
-                className="w-8 h-8 rounded-full flex items-center justify-center"
-                style={{ backgroundColor: theme.accent }}
-              >
-                <Mail className="w-4 h-4 text-white" />
-              </div>
-              <span className="text-sm text-gray-200">support@laundrypro.com</span>
             </div>
           </div>
         </div>
@@ -1249,7 +1255,7 @@ export default function LaundryMasterTemplate({ themeColor, isAuthenticated, onB
 
       {/* Footer */}
       <footer className="pt-20 pb-8 transition-colors duration-300" style={{ backgroundColor: theme.footerBg, color: theme.footerText }}>
-        <div className="container mx-auto px-4">
+        <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid md:grid-cols-4 gap-12 mb-16">
             {/* About */}
             <div>

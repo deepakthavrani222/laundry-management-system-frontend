@@ -117,19 +117,23 @@ export default function TenantPricingPage() {
       <BookingModal isOpen={showBookingModal} onClose={() => setShowBookingModal(false)} onLoginRequired={() => router.push(`/${tenant}`)} />
       
       <section className="relative h-[400px] overflow-hidden pt-28">
-        <video autoPlay loop muted playsInline className="absolute inset-0 w-full h-full object-cover"><source src="/images/pricing.mp4" type="video/mp4" /></video>
-        <div className="absolute inset-0 bg-gradient-to-r from-gray-900/80 to-gray-900/40"></div>
-        <div className="relative container mx-auto px-4 h-full flex items-center">
-          <div className="max-w-xl">
-            <h1 className="text-4xl md:text-5xl font-bold text-white mb-4">{t('pricing.hero.title')}</h1>
-            <p className="text-lg text-gray-200 mb-8">{t('pricing.hero.subtitle')}</p>
-            <Button size="lg" className="bg-gray-800 hover:bg-gray-900 text-white" onClick={handleBookNow}><Truck className="w-5 h-5 mr-2" />{t('pricing.hero.schedulePickup')}</Button>
+        <div className="max-w-screen-2xl mx-auto h-full relative">
+          <div className="absolute inset-0 mx-0 lg:mx-8 rounded-none lg:rounded-2xl overflow-hidden">
+            <video autoPlay loop muted playsInline className="w-full h-full object-cover"><source src="/images/pricing.mp4" type="video/mp4" /></video>
+            <div className="absolute inset-0 bg-gradient-to-r from-gray-900/80 to-gray-900/40"></div>
+          </div>
+          <div className="relative max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 h-full flex items-center">
+            <div className="max-w-xl lg:ml-8">
+              <h1 className="text-4xl md:text-5xl font-bold text-white mb-4">{t('pricing.hero.title')}</h1>
+              <p className="text-lg text-gray-200 mb-8">{t('pricing.hero.subtitle')}</p>
+              <Button size="lg" className="bg-gray-800 hover:bg-gray-900 text-white" onClick={handleBookNow}><Truck className="w-5 h-5 mr-2" />{t('pricing.hero.schedulePickup')}</Button>
+            </div>
           </div>
         </div>
       </section>
 
       <section className="py-16" style={{ backgroundColor: theme.pageBg }}>
-        <div className="container mx-auto px-4">
+        <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
             <h2 className="text-3xl font-bold mb-4" style={{ color: theme.textPrimary }}>{t('pricing.table.title')}</h2>
             <p style={{ color: theme.textSecondary }}>{t('pricing.table.subtitle')}</p>
@@ -139,7 +143,7 @@ export default function TenantPricingPage() {
       </section>
 
       <section className="py-16" style={{ background: `linear-gradient(to right, ${theme.accent}, ${theme.accentSecondary})` }}>
-        <div className="container mx-auto px-4 text-center">
+        <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h2 className="text-3xl font-bold text-white mb-4">{t('pricing.cta.title')}</h2>
           <p className="text-white/80 mb-8">{t('pricing.cta.subtitle')}</p>
           <Button size="lg" className="bg-white hover:bg-gray-100" style={{ color: theme.accent }} onClick={handleBookNow}><Truck className="w-5 h-5 mr-2" />{t('pricing.cta.bookNow')}</Button>

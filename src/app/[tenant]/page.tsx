@@ -233,6 +233,8 @@ export default function TenantLandingPage() {
     isTenantPage: true,
     // Hide footer - we'll render it separately with banner
     hideFooter: true,
+    // Tenancy ID for fetching reviews
+    tenancyId: tenantData.tenancyId,
   }
 
   // Render selected template

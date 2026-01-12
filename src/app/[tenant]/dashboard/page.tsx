@@ -6,7 +6,7 @@ import { useParams, useRouter } from 'next/navigation'
 import { 
   ShoppingBag, Clock, CheckCircle, Truck, Plus, MapPin, Calendar, ArrowRight, 
   Package, Sparkles, User, HelpCircle, Star, Gift, ChevronRight, ChevronLeft, BarChart3, 
-  TrendingUp, ArrowLeft, Home, LogOut, Menu, X, Wallet
+  TrendingUp, ArrowLeft, Home, LogOut, Menu, X, Wallet, MessageSquare, Award
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useAuthStore } from '@/store/authStore'
@@ -173,7 +173,8 @@ function SpendingChart({ orders }: { orders: any[] }) {
 const getSidebarNavigation = (tenantSlug: string) => [
   { name: 'Dashboard', href: `/${tenantSlug}/dashboard`, icon: Home, current: true },
   { name: 'My Orders', href: `/${tenantSlug}/orders`, icon: ShoppingBag, current: false },
-  { name: 'Loyalty', href: `/${tenantSlug}/loyalty`, icon: Star, current: false },
+  { name: 'My Reviews', href: `/${tenantSlug}/reviews`, icon: MessageSquare, current: false },
+  { name: 'Loyalty', href: `/${tenantSlug}/loyalty`, icon: Award, current: false },
   { name: 'Referrals', href: `/${tenantSlug}/referrals`, icon: Gift, current: false },
   { name: 'Wallet', href: `/${tenantSlug}/wallet`, icon: Wallet, current: false },
   { name: 'Support', href: `/${tenantSlug}/support`, icon: HelpCircle, current: false },

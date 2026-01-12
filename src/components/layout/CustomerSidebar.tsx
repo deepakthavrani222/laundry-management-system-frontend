@@ -24,13 +24,15 @@ import {
   Star,
   Users2,
   Wallet,
-  Gift
+  Gift,
+  MessageSquare
 } from 'lucide-react'
 
 const baseNavigation = [
   { name: 'Dashboard', path: '/dashboard', icon: LayoutDashboard },
   { name: 'My Orders', path: '/orders', icon: ShoppingBag },
   { name: 'New Order', path: '/orders/new', icon: Plus },
+  { name: 'My Reviews', path: '/reviews', icon: MessageSquare },
   { name: 'Loyalty', path: '/loyalty', icon: Star },
   { name: 'Referrals', path: '/referrals', icon: Users2 },
   { name: 'Wallet', path: '/wallet', icon: Wallet },

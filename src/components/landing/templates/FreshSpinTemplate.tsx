@@ -307,7 +307,7 @@ function HeroCarousel({ onBookNow, t, theme }: { onBookNow: () => void; t: (key:
   const actualSlideIndex = ((currentSlide % slides.length) + slides.length) % slides.length
 
   return (
-    <section className="relative min-h-[420px] flex items-center justify-center overflow-hidden">
+    <section className="relative min-h-[420px] flex items-center justify-center overflow-hidden rounded-none lg:rounded-2xl mx-0 lg:mx-8">
       {/* Sliding Background Images Container */}
       <div 
         className={`absolute inset-0 flex ${isTransitioning ? 'transition-transform duration-700 ease-in-out' : ''}`}
@@ -444,7 +444,7 @@ function TestimonialsSection({ theme, onBookNow, t }: { theme: ThemeColors; onBo
       className="transition-colors duration-300"
       style={{ backgroundColor: theme.sectionBg, paddingTop: '4rem', paddingBottom: '4rem' }}
     >
-      <div className="container mx-auto px-4">
+      <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Title - on theme background */}
         <div className="text-center mb-8">
           <p className="font-medium mb-2" style={{ color: theme.accent }}>{t('testimonials.subtitle')}</p>
@@ -652,7 +652,9 @@ export default function FreshSpinTemplate({ themeColor, isAuthenticated, onBookN
 
       {/* Hero Banner with Carousel */}
       <div className="pt-20">
-        <HeroCarousel onBookNow={onBookNow} t={t} theme={theme} />
+        <div className="max-w-screen-2xl mx-auto w-full relative">
+          <HeroCarousel onBookNow={onBookNow} t={t} theme={theme} />
+        </div>
       </div>
 
       {/* Welcome Section - 2 Columns */}
@@ -660,7 +662,7 @@ export default function FreshSpinTemplate({ themeColor, isAuthenticated, onBookN
         className="pt-16 pb-12 transition-colors duration-300"
         style={{ backgroundColor: theme.sectionBg }}
       >
-        <div className="container mx-auto px-4">
+        <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid lg:grid-cols-2 gap-8 items-start">
             {/* Left - Image with Circular Overlay */}
             <div className="relative pt-12 pl-4">
@@ -739,7 +741,7 @@ export default function FreshSpinTemplate({ themeColor, isAuthenticated, onBookN
         className="pt-12 pb-20 transition-colors duration-300"
         style={{ backgroundColor: theme.sectionBgAlt }}
       >
-        <div className="container mx-auto px-4">
+        <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid lg:grid-cols-2 gap-12">
             {/* Left - Content */}
             <div>
@@ -812,7 +814,7 @@ export default function FreshSpinTemplate({ themeColor, isAuthenticated, onBookN
         className="py-20 transition-colors duration-300"
         style={{ backgroundColor: theme.sectionBg }}
       >
-        <div className="container mx-auto px-4">
+        <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <p className="font-semibold text-lg mb-2 font-serif" style={{ color: theme.accentText }}>{t('process.subtitle')}</p>
             <h2 className="text-4xl font-bold font-serif" style={{ color: theme.textPrimary }}>{t('process.title')}</h2>
@@ -852,7 +854,7 @@ export default function FreshSpinTemplate({ themeColor, isAuthenticated, onBookN
         {/* Top decorative line */}
         <div className="absolute top-0 left-0 right-0 h-1" style={{ backgroundColor: `${theme.accent}30` }}></div>
         
-        <div className="container mx-auto px-4">
+        <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid lg:grid-cols-2 gap-8 items-end">
             {/* Left - Image with circular background */}
             <div className="relative">
@@ -930,7 +932,7 @@ export default function FreshSpinTemplate({ themeColor, isAuthenticated, onBookN
 
       {/* CTA Banner - Refer a Friend */}
       <section className="py-16 px-4" style={{ backgroundColor: theme.pageBg }}>
-        <div className="container mx-auto">
+        <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="rounded-3xl relative min-h-[280px] flex items-center" style={{ backgroundColor: theme.footerBg }}>
             {/* Left - Image */}
             <div className="absolute left-8 lg:left-20 bottom-0 top-0 flex items-end">
@@ -969,56 +971,60 @@ export default function FreshSpinTemplate({ themeColor, isAuthenticated, onBookN
       </section>
 
       {/* Map Section with Contact Card */}
-      <section className="relative h-[400px]">
-        {/* Google Map Embed */}
-        <iframe
-          src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d193595.15830869428!2d-74.11976397304603!3d40.69766374874431!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x89c24fa5d33f083b%3A0xc80b8f06e177fe62!2sNew%20York%2C%20NY%2C%20USA!5e0!3m2!1sen!2sin!4v1699000000000!5m2!1sen!2sin"
-          width="100%"
-          height="100%"
-          style={{ border: 0 }}
-          allowFullScreen
-          loading="lazy"
-          referrerPolicy="no-referrer-when-downgrade"
-          className="grayscale"
-        ></iframe>
+      <section className="relative">
+        <div className="max-w-screen-2xl mx-auto w-full relative">
+          <div className="relative h-[400px] mx-0 lg:mx-8 rounded-none lg:rounded-2xl overflow-hidden">
+            {/* Google Map Embed */}
+            <iframe
+              src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d193595.15830869428!2d-74.11976397304603!3d40.69766374874431!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x89c24fa5d33f083b%3A0xc80b8f06e177fe62!2sNew%20York%2C%20NY%2C%20USA!5e0!3m2!1sen!2sin!4v1699000000000!5m2!1sen!2sin"
+              width="100%"
+              height="100%"
+              style={{ border: 0 }}
+              allowFullScreen
+              loading="lazy"
+              referrerPolicy="no-referrer-when-downgrade"
+              className="grayscale"
+            ></iframe>
 
-        {/* Contact Card Overlay */}
-        <div 
-          className="absolute top-1/2 right-8 md:right-16 -translate-y-1/2 p-6 md:p-8 rounded-lg shadow-2xl max-w-sm"
-          style={{ backgroundColor: theme.footerBg }}
-        >
-          <h3 className="text-xl font-bold mb-3" style={{ color: theme.accent }}>{t('hero.badge')}</h3>
-          <p className="text-sm mb-6" style={{ color: `${theme.footerText}99` }}>
-            Professional laundry services at your doorstep
-          </p>
-          
-          <div className="space-y-4">
-            <div className="flex items-center gap-3">
-              <div 
-                className="w-8 h-8 rounded-full flex items-center justify-center"
-                style={{ backgroundColor: theme.accent }}
-              >
-                <MapPin className="w-4 h-4 text-white" />
+            {/* Contact Card Overlay */}
+            <div 
+              className="absolute top-1/2 right-8 md:right-16 -translate-y-1/2 p-6 md:p-8 rounded-lg shadow-2xl max-w-sm"
+              style={{ backgroundColor: theme.footerBg }}
+            >
+              <h3 className="text-xl font-bold mb-3" style={{ color: theme.accent }}>{t('hero.badge')}</h3>
+              <p className="text-sm mb-6" style={{ color: `${theme.footerText}99` }}>
+                Professional laundry services at your doorstep
+              </p>
+              
+              <div className="space-y-4">
+                <div className="flex items-center gap-3">
+                  <div 
+                    className="w-8 h-8 rounded-full flex items-center justify-center"
+                    style={{ backgroundColor: theme.accent }}
+                  >
+                    <MapPin className="w-4 h-4 text-white" />
+                  </div>
+                  <span className="text-sm" style={{ color: theme.footerText }}>20+ Cities across India</span>
+                </div>
+                <div className="flex items-center gap-3">
+                  <div 
+                    className="w-8 h-8 rounded-full flex items-center justify-center"
+                    style={{ backgroundColor: theme.accent }}
+                  >
+                    <Phone className="w-4 h-4 text-white" />
+                  </div>
+                  <span className="text-sm" style={{ color: theme.footerText }}>+91 98765 43210</span>
+                </div>
+                <div className="flex items-center gap-3">
+                  <div 
+                    className="w-8 h-8 rounded-full flex items-center justify-center"
+                    style={{ backgroundColor: theme.accent }}
+                  >
+                    <Mail className="w-4 h-4 text-white" />
+                  </div>
+                  <span className="text-sm" style={{ color: theme.footerText }}>support@laundrypro.com</span>
+                </div>
               </div>
-              <span className="text-sm" style={{ color: theme.footerText }}>20+ Cities across India</span>
-            </div>
-            <div className="flex items-center gap-3">
-              <div 
-                className="w-8 h-8 rounded-full flex items-center justify-center"
-                style={{ backgroundColor: theme.accent }}
-              >
-                <Phone className="w-4 h-4 text-white" />
-              </div>
-              <span className="text-sm" style={{ color: theme.footerText }}>+91 98765 43210</span>
-            </div>
-            <div className="flex items-center gap-3">
-              <div 
-                className="w-8 h-8 rounded-full flex items-center justify-center"
-                style={{ backgroundColor: theme.accent }}
-              >
-                <Mail className="w-4 h-4 text-white" />
-              </div>
-              <span className="text-sm" style={{ color: theme.footerText }}>support@laundrypro.com</span>
             </div>
           </div>
         </div>
@@ -1026,7 +1032,7 @@ export default function FreshSpinTemplate({ themeColor, isAuthenticated, onBookN
 
       {/* Footer */}
       <footer className="py-16 transition-colors duration-300" style={{ backgroundColor: theme.footerBg }}>
-        <div className="container mx-auto px-4">
+        <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid md:grid-cols-3 gap-12 mb-12">
             {/* About */}
             <div>
@@ -1091,7 +1097,7 @@ export default function FreshSpinTemplate({ themeColor, isAuthenticated, onBookN
 
         {/* Copyright Bar */}
         <div className="py-4" style={{ backgroundColor: theme.accent }}>
-          <div className="container mx-auto px-4">
+          <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex flex-wrap justify-between items-center text-white">
               <p>{t('footer.copyright')}</p>
               <p>{t('hero.badge')}</p>

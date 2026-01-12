@@ -28,6 +28,7 @@ interface OriginalTemplateProps {
   isTenantPage?: boolean
   tenantName?: string
   tenantLogo?: string
+  tenancyId?: string
 }
 
 type SchemeMode = 'light' | 'dark' | 'auto'
@@ -564,90 +565,154 @@ function HeroCarousel({ isAuthenticated, user, onBookNow, colors, t, theme }: { 
   )
 }
 
-// Testimonials Carousel
-function TestimonialsCarousel({ colors, theme }: { colors: any; theme: ThemeColors }) {
-  const [currentIndex, setCurrentIndex] = useState(0)
-  const [slidesPerView, setSlidesPerView] = useState(1)
+// Testimonials Carousel - Infinite scroll animation
+function TestimonialsCarousel({ colors, theme, tenancyId }: { colors: any; theme: ThemeColors; tenancyId?: string }) {
+  const [reviews, setReviews] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
+  const [isPaused, setIsPaused] = useState(false)
   
-  const testimonials = [
+  // Fallback testimonials if no real reviews
+  const fallbackTestimonials = [
     { id: 1, name: 'Divya K.', review: 'I gave them my silk saree and was honestly worried. But they handled it with such care. Impressive service!', rating: 5 },
     { id: 2, name: 'Rajat T.', review: 'Very smooth process — booked on the app, got a confirmation instantly, and pickup arrived right on time.', rating: 5 },
     { id: 3, name: 'Tanvi M.', review: 'Affordable prices and great quality. Clothes were perfectly ironed and smelled so fresh. 10/10!', rating: 5 },
     { id: 4, name: 'Karan V.', review: "This is my third time using LaundryPro and I'm never going back. So easy and dependable!", rating: 5 },
     { id: 5, name: 'Priya S.', review: 'Best laundry service in the city! My curtains came back looking brand new.', rating: 5 },
     { id: 6, name: 'Amit R.', review: 'The pickup and delivery is so convenient. Excellent quality every single time!', rating: 5 },
-    { id: 7, name: 'Sneha P.', review: 'Quality exceeded my expectations. My formal suits look professionally cleaned.', rating: 5 },
-    { id: 8, name: 'Vikram J.', review: 'Fast, reliable, and affordable. Been using for 6 months now, never disappointed.', rating: 5 },
   ]
 
-  // Detect screen size for slides per view - more cards on larger screens
+  // Fetch real reviews from API
   useEffect(() => {
-    const updateSlidesPerView = () => {
-      if (window.innerWidth >= 1536) setSlidesPerView(5)      // 2xl screens
-      else if (window.innerWidth >= 1280) setSlidesPerView(4) // xl screens
-      else if (window.innerWidth >= 1024) setSlidesPerView(4) // lg screens
-      else if (window.innerWidth >= 640) setSlidesPerView(2)  // sm screens
-      else setSlidesPerView(1)                                 // mobile
+    const fetchReviews = async () => {
+      if (!tenancyId) {
+        setReviews(fallbackTestimonials)
+        setLoading(false)
+        return
+      }
+      
+      try {
+        const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api'
+        const apiBase = baseUrl.endsWith('/api') ? baseUrl.slice(0, -4) : baseUrl
+        const response = await fetch(`${apiBase}/api/public/tenancy/reviews/tenancy/${tenancyId}/featured?limit=12`)
+        const data = await response.json()
+        
+        if (data.success && data.data.reviews && data.data.reviews.length > 0) {
+          const formattedReviews = data.data.reviews.map((review: any, index: number) => ({
+            id: review._id || index,
+            name: review.customer?.name || 'Customer',
+            review: review.content,
+            rating: review.ratings?.overall || 5,
+            branch: review.branch?.name,
+            badges: review.badges || [],
+            createdAt: review.createdAt
+          }))
+          setReviews(formattedReviews)
+        } else {
+          setReviews(fallbackTestimonials)
+        }
+      } catch (error) {
+        console.log('Using fallback testimonials')
+        setReviews(fallbackTestimonials)
+      } finally {
+        setLoading(false)
+      }
     }
-    updateSlidesPerView()
-    window.addEventListener('resize', updateSlidesPerView)
-    return () => window.removeEventListener('resize', updateSlidesPerView)
-  }, [])
+    
+    fetchReviews()
+  }, [tenancyId])
 
-  const nextSlide = () => setCurrentIndex(prev => (prev + 1) % testimonials.length)
-  const prevSlide = () => setCurrentIndex(prev => (prev - 1 + testimonials.length) % testimonials.length)
+  const testimonials = reviews.length > 0 ? reviews : fallbackTestimonials
+  // Only use infinite scroll if more than 4 reviews
+  const shouldScroll = testimonials.length > 4
+  const duplicatedTestimonials = shouldScroll ? [...testimonials, ...testimonials] : testimonials
 
-  // Auto slide
-  useEffect(() => {
-    const timer = setInterval(nextSlide, 4000)
-    return () => clearInterval(timer)
-  }, [])
-
-  const slideWidth = 100 / slidesPerView
-
-  return (
-    <div className="relative max-w-screen-2xl mx-auto">
-      <button onClick={prevSlide} className={`absolute left-0 top-1/2 -translate-y-1/2 -translate-x-2 sm:-translate-x-4 z-10 w-8 h-8 sm:w-10 sm:h-10 rounded-full border-2 ${colors.border} bg-white flex items-center justify-center ${colors.hoverText} shadow-md`}>
-        <ChevronLeft className={`w-4 h-4 sm:w-5 sm:h-5 ${colors.text}`} />
-      </button>
-      <button onClick={nextSlide} className={`absolute right-0 top-1/2 -translate-y-1/2 translate-x-2 sm:translate-x-4 z-10 w-8 h-8 sm:w-10 sm:h-10 rounded-full border-2 ${colors.border} bg-white flex items-center justify-center ${colors.hoverText} shadow-md`}>
-        <ChevronRight className={`w-4 h-4 sm:w-5 sm:h-5 ${colors.text}`} />
-      </button>
-      <div className="overflow-hidden mx-6 sm:mx-8">
-        <div 
-          className="flex transition-transform duration-500 ease-in-out" 
-          style={{ transform: `translateX(-${currentIndex * slideWidth}%)` }}
-        >
-          {testimonials.map((testimonial) => (
-            <div 
-              key={testimonial.id} 
-              className="flex-shrink-0 px-2 2xl:px-3"
-              style={{ width: `${slideWidth}%` }}
-            >
-              <div className="bg-white rounded-xl p-4 sm:p-6 text-center h-full shadow-sm border border-gray-100">
-                <div className={`w-10 h-10 sm:w-14 sm:h-14 ${colors.primary} rounded-full flex items-center justify-center mx-auto mb-3 sm:mb-4`}>
-                  <svg className="w-5 h-5 sm:w-7 sm:h-7 text-white" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M14.017 21v-7.391c0-5.704 3.731-9.57 8.983-10.609l.995 2.151c-2.432.917-3.995 3.638-3.995 5.849h4v10h-9.983zm-14.017 0v-7.391c0-5.704 3.748-9.57 9-10.609l.996 2.151c-2.433.917-3.996 3.638-3.996 5.849h3.983v10h-9.983z" />
-                  </svg>
-                </div>
-                <div className="flex justify-center mb-3 sm:mb-4">{[...Array(testimonial.rating)].map((_, i) => <Star key={i} className="w-4 h-4 sm:w-5 sm:h-5 text-yellow-400 fill-yellow-400" />)}</div>
-                <p className="text-gray-700 text-sm sm:text-base mb-3 sm:mb-4 leading-relaxed line-clamp-4">{testimonial.review}</p>
-                <p className="font-bold text-gray-800 text-sm sm:text-lg">{testimonial.name}</p>
-              </div>
-            </div>
+  // Render single testimonial card
+  const renderCard = (testimonial: any, index: number) => (
+    <div 
+      key={`${testimonial.id}-${index}`} 
+      className="flex-shrink-0 w-72 sm:w-80"
+    >
+      <div className="bg-white rounded-xl p-5 sm:p-6 text-center h-full shadow-sm border border-gray-100 flex flex-col hover:shadow-lg transition-shadow duration-300">
+        <div className={`w-12 h-12 sm:w-14 sm:h-14 ${colors.primary} rounded-full flex items-center justify-center mx-auto mb-3 sm:mb-4`}>
+          <svg className="w-6 h-6 sm:w-7 sm:h-7 text-white" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M14.017 21v-7.391c0-5.704 3.731-9.57 8.983-10.609l.995 2.151c-2.432.917-3.995 3.638-3.995 5.849h4v10h-9.983zm-14.017 0v-7.391c0-5.704 3.748-9.57 9-10.609l.996 2.151c-2.433.917-3.996 3.638-3.996 5.849h3.983v10h-9.983z" />
+          </svg>
+        </div>
+        <div className="flex justify-center mb-3 sm:mb-4">
+          {[...Array(testimonial.rating)].map((_, i) => (
+            <Star key={i} className="w-4 h-4 sm:w-5 sm:h-5 text-yellow-400 fill-yellow-400" />
           ))}
         </div>
+        <p className="text-gray-700 text-sm sm:text-base mb-3 sm:mb-4 leading-relaxed line-clamp-4 flex-1">
+          "{testimonial.review}"
+        </p>
+        <div>
+          <p className="font-bold text-gray-800 text-sm sm:text-lg">{testimonial.name}</p>
+          {testimonial.badges?.includes('verified_purchase') && (
+            <span className="inline-flex items-center gap-1 text-xs text-green-600 mt-1">
+              <CheckCircle className="w-3 h-3" />
+              Verified Customer
+            </span>
+          )}
+          {testimonial.branch && (
+            <p className="text-xs text-gray-400 mt-1">{testimonial.branch}</p>
+          )}
+        </div>
       </div>
-      {/* Dots indicator for mobile */}
-      <div className="flex justify-center gap-2 mt-4 sm:hidden">
-        {testimonials.map((_, index) => (
-          <button
-            key={index}
-            onClick={() => setCurrentIndex(index)}
-            className={`w-2 h-2 rounded-full transition-all ${currentIndex === index ? `${colors.primary} w-4` : 'bg-gray-300'}`}
-          />
-        ))}
-      </div>
+    </div>
+  )
+
+  return (
+    <div className="relative max-w-screen-2xl mx-auto overflow-hidden">
+      {loading ? (
+        <div className="flex justify-center py-8">
+          <div className="animate-pulse flex gap-4">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="w-64 h-48 bg-gray-200 rounded-xl" />
+            ))}
+          </div>
+        </div>
+      ) : shouldScroll ? (
+        // Infinite scroll for many reviews
+        <div 
+          className="relative"
+          onMouseEnter={() => setIsPaused(true)}
+          onMouseLeave={() => setIsPaused(false)}
+        >
+          {/* Gradient overlays for fade effect */}
+          <div className="absolute left-0 top-0 bottom-0 w-16 z-10 pointer-events-none" style={{ background: `linear-gradient(to right, ${theme.sectionBg}, transparent)` }} />
+          <div className="absolute right-0 top-0 bottom-0 w-16 z-10 pointer-events-none" style={{ background: `linear-gradient(to left, ${theme.sectionBg}, transparent)` }} />
+          
+          {/* Scrolling container */}
+          <div 
+            className="flex gap-4 py-4"
+            style={{
+              animation: `scroll ${testimonials.length * 5}s linear infinite`,
+              animationPlayState: isPaused ? 'paused' : 'running',
+              width: 'max-content'
+            }}
+          >
+            {duplicatedTestimonials.map((testimonial, index) => renderCard(testimonial, index))}
+          </div>
+          
+          {/* CSS Animation */}
+          <style jsx>{`
+            @keyframes scroll {
+              0% {
+                transform: translateX(0);
+              }
+              100% {
+                transform: translateX(-50%);
+              }
+            }
+          `}</style>
+        </div>
+      ) : (
+        // Centered static display for few reviews
+        <div className="flex justify-center gap-4 py-4 flex-wrap">
+          {testimonials.map((testimonial, index) => renderCard(testimonial, index))}
+        </div>
+      )}
     </div>
   )
 }
@@ -784,7 +849,7 @@ function ScrollBannerSection({ isAuthenticated, onGalleryVisible, colors, themeC
 
 
 // Main Component
-export default function OriginalTemplate({ themeColor, isAuthenticated, user, onBookNow, onColorChange, onLanguageChange, onTemplateChange, currentTemplate, isTenantPage, tenantName }: OriginalTemplateProps) {
+export default function OriginalTemplate({ themeColor, isAuthenticated, user, onBookNow, onColorChange, onLanguageChange, onTemplateChange, currentTemplate, isTenantPage, tenantName, tenancyId }: OriginalTemplateProps) {
   // Use language hook for reactive translations
   const { language, setLanguage, t } = useLanguage()
   const router = useRouter()
@@ -1164,7 +1229,18 @@ export default function OriginalTemplate({ themeColor, isAuthenticated, user, on
             <p className="font-semibold mb-2" style={{ color: theme.accentText }}>{t('original.testimonials.subtitle')}</p>
             <h2 className="text-3xl font-bold" style={{ color: theme.textPrimary }}>{t('testimonials.title')}</h2>
           </div>
-          <TestimonialsCarousel colors={colors} theme={theme} />
+          <TestimonialsCarousel colors={colors} theme={theme} tenancyId={tenancyId} />
+          {isTenantPage && tenantName && (
+            <div className="text-center mt-8">
+              <Link 
+                href={`/${tenantName}/all-reviews`}
+                className="inline-flex items-center gap-2 px-6 py-3 rounded-lg font-medium transition-colors"
+                style={{ backgroundColor: theme.accent, color: '#fff' }}
+              >
+                View All Reviews
+              </Link>
+            </div>
+          )}
         </div>
       </section>
 

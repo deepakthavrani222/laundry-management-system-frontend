@@ -31,6 +31,7 @@ import {
   Target,
   MapPin,
   Image,
+  MessageSquare,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useState, useEffect, createContext, useContext } from 'react'
@@ -63,6 +64,7 @@ const navigation = [
   },
   { name: 'Logistics', href: '/admin/logistics', icon: Truck, permission: { module: 'logistics', action: 'view' } },
   { name: 'Support Tickets', href: '/admin/tickets', icon: Ticket, permission: { module: 'tickets', action: 'view' } },
+  { name: 'Reviews', href: '/admin/reviews', icon: MessageSquare, permission: { module: 'customers', action: 'view' } },
   { name: 'Refunds', href: '/admin/refunds', icon: RefreshCw, permission: { module: 'orders', action: 'cancel' } },
   { name: 'Payments', href: '/admin/payments', icon: CreditCard, permission: { module: 'performance', action: 'view' } },
   { name: 'Analytics', href: '/admin/analytics', icon: BarChart3, permission: { module: 'performance', action: 'view' } },

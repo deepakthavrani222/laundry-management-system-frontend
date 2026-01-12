@@ -25,6 +25,10 @@ interface Branch {
   }
   contact?: { phone?: string }
   phone?: string
+  rating?: {
+    average: number
+    count: number
+  }
 }
 
 interface Service {
@@ -164,6 +168,31 @@ export default function BookingModal({ isOpen, onClose, onLoginRequired, tenantB
     name: '', phone: '', addressLine1: '', landmark: '', city: '', pincode: ''
   })
 
+  // Fetch branch ratings
+  const fetchBranchRatings = async (branchList: Branch[]) => {
+    const branchesWithRatings = await Promise.all(
+      branchList.map(async (branch: Branch) => {
+        try {
+          const ratingRes = await fetch(`${API_URL}/public/tenancy/reviews/branch/${branch._id}/stats`)
+          const ratingData = await ratingRes.json()
+          if (ratingData.success) {
+            return {
+              ...branch,
+              rating: {
+                average: ratingData.data.avgOverall || 0,
+                count: ratingData.data.totalReviews || 0
+              }
+            }
+          }
+        } catch (e) {
+          // Ignore rating fetch errors
+        }
+        return branch
+      })
+    )
+    return branchesWithRatings
+  }
+
   // Fetch branches on mount OR use tenant branches
   useEffect(() => {
     if (isOpen) {
@@ -173,13 +202,15 @@ export default function BookingModal({ isOpen, onClose, onLoginRequired, tenantB
       }
       
       if (isTenantBooking && tenantBranches) {
-        // Use tenant's branches directly
-        setBranches(tenantBranches)
-        // If only one branch, auto-select it and skip to step 2
-        if (tenantBranches.length === 1) {
-          setSelectedBranch(tenantBranches[0])
-          setStep(2) // Skip branch selection
-        }
+        // Use tenant's branches and fetch ratings
+        fetchBranchRatings(tenantBranches).then(branchesWithRatings => {
+          setBranches(branchesWithRatings)
+          // If only one branch, auto-select it and skip to step 2
+          if (branchesWithRatings.length === 1) {
+            setSelectedBranch(branchesWithRatings[0])
+            setStep(2) // Skip branch selection
+          }
+        })
       } else {
         fetchBranches()
       }
@@ -316,7 +347,31 @@ export default function BookingModal({ isOpen, onClose, onLoginRequired, tenantB
       setLoading(true)
       const response = await fetch(`${API_URL}/services/branches`)
       const data = await response.json()
-      if (data.success) setBranches(data.data.branches || [])
+      if (data.success) {
+        const branchList = data.data.branches || []
+        // Fetch ratings for each branch
+        const branchesWithRatings = await Promise.all(
+          branchList.map(async (branch: Branch) => {
+            try {
+              const ratingRes = await fetch(`${API_URL}/public/tenancy/reviews/branch/${branch._id}/stats`)
+              const ratingData = await ratingRes.json()
+              if (ratingData.success) {
+                return {
+                  ...branch,
+                  rating: {
+                    average: ratingData.data.avgOverall || 0,
+                    count: ratingData.data.totalReviews || 0
+                  }
+                }
+              }
+            } catch (e) {
+              // Ignore rating fetch errors
+            }
+            return branch
+          })
+        )
+        setBranches(branchesWithRatings)
+      }
     } catch (error) {
       console.error('Failed to fetch branches:', error)
     } finally {
@@ -870,9 +925,20 @@ export default function BookingModal({ isOpen, onClose, onLoginRequired, tenantB
                             style={isSelected ? { borderColor: brandingColors.primaryColor, backgroundColor: getColorWithOpacity(brandingColors.primaryColor, 0.1) } : {}}
                           >
                             <div className="flex items-center justify-between">
-                              <div>
+                              <div className="flex-1">
                                 <p className="font-medium text-gray-800">{branch.name}</p>
                                 <p className="text-sm text-gray-500">{branch.address?.city || branch.address?.addressLine1 || 'Location available'}</p>
+                                {/* Branch Rating */}
+                                {branch.rating && branch.rating.count > 0 && (
+                                  <div className="flex items-center gap-1 mt-1">
+                                    <Star className="w-4 h-4 text-yellow-400 fill-yellow-400" />
+                                    <span className="text-sm font-medium text-gray-700">{branch.rating.average.toFixed(1)}</span>
+                                    <span className="text-xs text-gray-400">({branch.rating.count} reviews)</span>
+                                  </div>
+                                )}
+                                {branch.rating && branch.rating.count === 0 && (
+                                  <p className="text-xs text-gray-400 mt-1">No reviews yet</p>
+                                )}
                               </div>
                               <div 
                                 className={`w-6 h-6 rounded-full flex items-center justify-center transition-all duration-150 ${

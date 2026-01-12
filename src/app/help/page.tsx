@@ -274,45 +274,47 @@ export default function HelpPage() {
       
       {/* Hero Section */}
       <section className={`relative ${topPadding} pb-20 overflow-hidden min-h-[400px]`}>
-        {/* Background Image */}
-        <div 
-          className="absolute inset-0 bg-cover bg-center bg-no-repeat"
-          style={{ backgroundImage: "url('https://images.unsplash.com/photo-1626806787461-102c1bfaaea1?w=1920&q=80')" }}
-        >
-          <div className="absolute inset-0 bg-gradient-to-r from-slate-900/90 via-slate-900/70 to-transparent"></div>
-        </div>
-        
-        <div className="container mx-auto px-4 relative z-10 max-w-screen-2xl">
-          <div className="max-w-xl pt-8">
-            <div 
-              className="inline-flex items-center gap-2 backdrop-blur-sm px-4 py-2 rounded-full text-sm mb-4"
-              style={{ backgroundColor: `${theme.primaryHex}33`, color: theme.primaryHex }}
-            >
-              <Headphones className="w-4 h-4" />
-              <span>{t('help.hero.badge')}</span>
-            </div>
-            
-            <h1 className="text-4xl md:text-5xl font-bold text-white mb-4">
-              {t('help.hero.title')}
-            </h1>
-            
-            <p className="text-lg text-gray-300 mb-6">
-              {t('help.hero.subtitle')}
-            </p>
+        <div className="max-w-screen-2xl mx-auto relative h-full">
+          {/* Background Image - Contained */}
+          <div 
+            className="absolute inset-0 mx-0 lg:mx-8 rounded-none lg:rounded-2xl overflow-hidden bg-cover bg-center bg-no-repeat"
+            style={{ backgroundImage: "url('https://images.unsplash.com/photo-1626806787461-102c1bfaaea1?w=1920&q=80')" }}
+          >
+            <div className="absolute inset-0 bg-gradient-to-r from-slate-900/90 via-slate-900/70 to-transparent"></div>
+          </div>
+          
+          <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+            <div className="max-w-xl pt-8 lg:ml-8">
+              <div 
+                className="inline-flex items-center gap-2 backdrop-blur-sm px-4 py-2 rounded-full text-sm mb-4"
+                style={{ backgroundColor: `${theme.primaryHex}33`, color: theme.primaryHex }}
+              >
+                <Headphones className="w-4 h-4" />
+                <span>{t('help.hero.badge')}</span>
+              </div>
+              
+              <h1 className="text-4xl md:text-5xl font-bold text-white mb-4">
+                {t('help.hero.title')}
+              </h1>
+              
+              <p className="text-lg text-gray-300 mb-6">
+                {t('help.hero.subtitle')}
+              </p>
 
-            {/* Quick Stats */}
-            <div className="flex gap-8 mt-6">
-              <div>
-                <div className="text-2xl font-bold text-white">50K+</div>
-                <div className="text-gray-400 text-sm">{t('help.stats.customers')}</div>
-              </div>
-              <div>
-                <div className="text-2xl font-bold text-white">24/7</div>
-                <div className="text-gray-400 text-sm">{t('help.stats.support')}</div>
-              </div>
-              <div>
-                <div className="text-2xl font-bold text-white">98%</div>
-                <div className="text-gray-400 text-sm">{t('help.stats.resolution')}</div>
+              {/* Quick Stats */}
+              <div className="flex gap-8 mt-6">
+                <div>
+                  <div className="text-2xl font-bold text-white">50K+</div>
+                  <div className="text-gray-400 text-sm">{t('help.stats.customers')}</div>
+                </div>
+                <div>
+                  <div className="text-2xl font-bold text-white">24/7</div>
+                  <div className="text-gray-400 text-sm">{t('help.stats.support')}</div>
+                </div>
+                <div>
+                  <div className="text-2xl font-bold text-white">98%</div>
+                  <div className="text-gray-400 text-sm">{t('help.stats.resolution')}</div>
+                </div>
               </div>
             </div>
           </div>
@@ -321,7 +323,7 @@ export default function HelpPage() {
 
       {/* Quick Help Cards */}
       <section className={`py-16 relative z-20 ${isDark ? 'bg-gray-900' : 'bg-white'}`}>
-        <div className="container mx-auto px-4 max-w-screen-2xl">
+        <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-6xl mx-auto">
             {quickHelpCards.map((card, index) => (
               <Link key={index} href={card.link}>
@@ -362,7 +364,7 @@ export default function HelpPage() {
 
       {/* Contact Section */}
       <section className={`py-20 ${isDark ? 'bg-gray-900' : ''}`}>
-        <div className="container mx-auto px-4 max-w-screen-2xl">
+        <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 max-w-screen-2xl">
           <div className="text-center mb-12">
             <div 
               className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium mb-4"
@@ -469,7 +471,7 @@ export default function HelpPage() {
 
       {/* FAQ Section */}
       <section className={`py-20 ${sectionBgClass}`}>
-        <div className="container mx-auto px-4 max-w-screen-2xl">
+        <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 max-w-screen-2xl">
           <div className="text-center mb-12">
             <div 
               className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium mb-4"
@@ -539,7 +541,7 @@ export default function HelpPage() {
 
       {/* Footer */}
       <footer className="bg-gray-900 text-gray-400 py-12">
-        <div className="container mx-auto px-4 max-w-screen-2xl">
+        <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 max-w-screen-2xl">
           <div className="flex flex-col md:flex-row justify-between items-center gap-6">
             <div className="flex items-center gap-3">
               <div 

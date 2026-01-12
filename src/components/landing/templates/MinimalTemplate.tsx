@@ -648,75 +648,77 @@ export default function MinimalTemplate({ themeColor, isAuthenticated, onBookNow
 
       {/* Hero Section - Increased Height for Full Video */}
       <section className="relative h-[75vh] min-h-[500px] max-h-[700px] flex items-center overflow-hidden pt-16">
-        {/* Video Background - Full Width */}
-        <div className="absolute inset-0 z-0">
-          <video 
-            autoPlay 
-            muted 
-            loop 
-            playsInline
-            className="w-full h-full object-cover"
-          >
-            <source src="/images/landingpage2.mp4" type="video/mp4" />
-          </video>
-          {/* Light Overlay - Only on right side for text readability */}
-          <div 
-            className="absolute inset-0"
-            style={{ 
-              background: `linear-gradient(270deg, rgba(255,255,255,0.85) 0%, rgba(255,255,255,0.6) 35%, rgba(255,255,255,0.1) 60%, transparent 100%)`
-            }}
-          />
-        </div>
-
-        {/* Content - Right Side */}
-        <div className="container mx-auto px-4 relative z-10 pt-14 pb-8">
-          <div className="max-w-md ml-auto">
-            {/* Badge */}
-            <div 
-              className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium mb-3"
-              style={{ backgroundColor: `${theme.accent}15`, color: theme.accent }}
+        <div className="max-w-screen-2xl mx-auto w-full relative">
+          {/* Video Background - Contained */}
+          <div className="absolute inset-0 z-0 rounded-none lg:rounded-2xl overflow-hidden mx-0 lg:mx-8">
+            <video 
+              autoPlay 
+              muted 
+              loop 
+              playsInline
+              className="w-full h-full object-cover"
             >
-              <span className="relative flex h-1.5 w-1.5">
-                <span 
-                  className="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75"
-                  style={{ backgroundColor: theme.accent }}
-                />
-                <span 
-                  className="relative inline-flex rounded-full h-1.5 w-1.5"
-                  style={{ backgroundColor: theme.accent }}
-                />
-              </span>
-              {t('minimal.hero.badge')}
-            </div>
+              <source src="/images/landingpage2.mp4" type="video/mp4" />
+            </video>
+            {/* Light Overlay - Only on right side for text readability */}
+            <div 
+              className="absolute inset-0"
+              style={{ 
+                background: `linear-gradient(270deg, rgba(255,255,255,0.85) 0%, rgba(255,255,255,0.6) 35%, rgba(255,255,255,0.1) 60%, transparent 100%)`
+              }}
+            />
+          </div>
 
-            {/* Main Heading */}
-            <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold leading-tight mb-3 text-gray-900">
-              {t('minimal.hero.title')}
-            </h1>
-            
-            {/* Subheading */}
-            <p className="text-sm md:text-base mb-5 leading-relaxed max-w-sm text-gray-600">
-              {t('minimal.hero.subtitle')}
-            </p>
-            
-            {/* CTA Buttons */}
-            <div className="flex flex-wrap gap-2">
-              <Button 
-                onClick={onBookNow}
-                className="text-white px-5 py-2.5 text-sm rounded-full font-medium shadow-md hover:shadow-lg transition-all hover:-translate-y-0.5 hover:opacity-90"
-                style={{ backgroundColor: theme.accent }}
+          {/* Content - Right Side */}
+          <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 pt-14 pb-8 h-[75vh] min-h-[500px] max-h-[700px] flex items-center">
+            <div className="max-w-md ml-auto">
+              {/* Badge */}
+              <div 
+                className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium mb-3"
+                style={{ backgroundColor: `${theme.accent}15`, color: theme.accent }}
               >
-                {t('hero.schedulePickup')}
-                <ArrowRight className="w-4 h-4 ml-1.5" />
-              </Button>
-              <Link href="/pricing">
+                <span className="relative flex h-1.5 w-1.5">
+                  <span 
+                    className="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75"
+                    style={{ backgroundColor: theme.accent }}
+                  />
+                  <span 
+                    className="relative inline-flex rounded-full h-1.5 w-1.5"
+                    style={{ backgroundColor: theme.accent }}
+                  />
+                </span>
+                {t('minimal.hero.badge')}
+              </div>
+
+              {/* Main Heading */}
+              <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold leading-tight mb-3 text-gray-900">
+                {t('minimal.hero.title')}
+              </h1>
+              
+              {/* Subheading */}
+              <p className="text-sm md:text-base mb-5 leading-relaxed max-w-sm text-gray-600">
+                {t('minimal.hero.subtitle')}
+              </p>
+              
+              {/* CTA Buttons */}
+              <div className="flex flex-wrap gap-2">
                 <Button 
-                  variant="outline"
-                  className="px-5 py-2.5 text-sm rounded-full font-medium border-2 border-gray-400 hover:border-gray-600 bg-white/50 backdrop-blur-sm text-gray-800"
+                  onClick={onBookNow}
+                  className="text-white px-5 py-2.5 text-sm rounded-full font-medium shadow-md hover:shadow-lg transition-all hover:-translate-y-0.5 hover:opacity-90"
+                  style={{ backgroundColor: theme.accent }}
                 >
-                  {t('minimal.viewPricing')}
+                  {t('hero.schedulePickup')}
+                  <ArrowRight className="w-4 h-4 ml-1.5" />
                 </Button>
-              </Link>
+                <Link href="/pricing">
+                  <Button 
+                    variant="outline"
+                    className="px-5 py-2.5 text-sm rounded-full font-medium border-2 border-gray-400 hover:border-gray-600 bg-white/50 backdrop-blur-sm text-gray-800"
+                  >
+                    {t('minimal.viewPricing')}
+                  </Button>
+                </Link>
+              </div>
             </div>
           </div>
         </div>
@@ -724,7 +726,7 @@ export default function MinimalTemplate({ themeColor, isAuthenticated, onBookNow
 
       {/* Pricing Section - All Services */}
       <section className="py-20 transition-colors duration-300" style={{ backgroundColor: theme.pageBg }}>
-        <div className="container mx-auto px-4">
+        <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="max-w-6xl mx-auto">
             {/* Section Header */}
             <div className="text-center mb-12">
@@ -782,7 +784,7 @@ export default function MinimalTemplate({ themeColor, isAuthenticated, onBookNow
 
       {/* Why You'll Love Us - Rinse Style 3-Box Sliding Carousel */}
       <section className="py-20 overflow-hidden transition-colors duration-300" style={{ backgroundColor: theme.pageBg }}>
-        <div className="container mx-auto px-4">
+        <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <h2 className="text-4xl md:text-5xl font-bold mb-4" style={{ color: theme.textPrimary }}>
               {t('minimal.whyLove.title')}
@@ -969,7 +971,7 @@ export default function MinimalTemplate({ themeColor, isAuthenticated, onBookNow
 
       {/* Features Grid - Simple Icons */}
       <section className="py-16 transition-colors duration-300" style={{ backgroundColor: theme.sectionBg }}>
-        <div className="container mx-auto px-4">
+        <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8 max-w-6xl mx-auto">
             {whyLoveUs.map((item, idx) => (
               <div key={idx} className="text-center">
@@ -989,7 +991,7 @@ export default function MinimalTemplate({ themeColor, isAuthenticated, onBookNow
 
       {/* How It Works - Clean Steps */}
       <section className="py-20 transition-colors duration-300" style={{ backgroundColor: theme.pageBg }}>
-        <div className="container mx-auto px-4">
+        <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <h2 className="text-4xl md:text-5xl font-bold mb-4" style={{ color: theme.textPrimary }}>
               {t('minimal.howItWorks.title')}
@@ -1046,7 +1048,7 @@ export default function MinimalTemplate({ themeColor, isAuthenticated, onBookNow
 
       {/* Testimonials - Clean Cards */}
       <section className="py-20 transition-colors duration-300" style={{ backgroundColor: theme.sectionBg }}>
-        <div className="container mx-auto px-4">
+        <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <h2 className="text-4xl md:text-5xl font-bold mb-4" style={{ color: theme.textPrimary }}>
               {t('minimal.testimonials.title')}
@@ -1104,7 +1106,7 @@ export default function MinimalTemplate({ themeColor, isAuthenticated, onBookNow
 
       {/* The Guarantee Section */}
       <section className="py-20 transition-colors duration-300" style={{ backgroundColor: theme.pageBg }}>
-        <div className="container mx-auto px-4">
+        <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="max-w-4xl mx-auto">
             <div 
               className="rounded-3xl p-10 md:p-16 text-center transition-colors duration-300"
@@ -1172,7 +1174,7 @@ export default function MinimalTemplate({ themeColor, isAuthenticated, onBookNow
 
       {/* Footer */}
       <footer className="py-16 transition-colors duration-300" style={{ backgroundColor: theme.footerBg }}>
-        <div className="container mx-auto px-4">
+        <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid md:grid-cols-4 gap-12 mb-12">
             {/* Brand */}
             <div>

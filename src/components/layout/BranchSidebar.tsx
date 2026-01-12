@@ -13,7 +13,8 @@ import {
   ChevronLeft,
   ChevronRight,
   Leaf,
-  Sparkles
+  Sparkles,
+  MessageSquare
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useAuthStore } from '@/store/authStore'
@@ -25,6 +26,7 @@ const navigation = [
   { name: 'Services', href: '/branch/services', icon: Sparkles, module: 'services' },
   { name: 'Staff Management', href: '/branch/staff', icon: Users, module: 'staff' },
   { name: 'Inventory', href: '/branch/inventory', icon: Package2, module: 'inventory' },
+  { name: 'Reviews', href: '/branch/reviews', icon: MessageSquare, module: null },
   { name: 'Performance', href: '/branch/performance', icon: BarChart3, module: 'performance' },
   { name: 'Settings', href: '/branch/settings', icon: Settings, module: 'settings' },
 ]
