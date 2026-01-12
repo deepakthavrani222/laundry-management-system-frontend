@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import axios from 'axios';
+import { useAuthStore } from '@/store/authStore';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
 
@@ -30,6 +31,15 @@ interface Banner {
   };
 }
 
+// Helper to get auth headers
+const getAuthHeaders = () => {
+  const token = useAuthStore.getState().token;
+  return {
+    'Authorization': `Bearer ${token}`,
+    'Content-Type': 'application/json'
+  };
+};
+
 // Get all tenant banners
 export const useTenantBanners = () => {
   const [loading, setLoading] = useState(false);
@@ -48,6 +58,7 @@ export const useTenantBanners = () => {
     try {
       const response = await axios.get(`${API_URL}/admin/banners`, {
         params,
+        headers: getAuthHeaders(),
         withCredentials: true
       });
       return response.data;
@@ -72,6 +83,7 @@ export const useBanner = () => {
     setError(null);
     try {
       const response = await axios.get(`${API_URL}/admin/banners/${bannerId}`, {
+        headers: getAuthHeaders(),
         withCredentials: true
       });
       return response.data;
@@ -96,6 +108,7 @@ export const useCreateBanner = () => {
     setError(null);
     try {
       const response = await axios.post(`${API_URL}/admin/banners`, bannerData, {
+        headers: getAuthHeaders(),
         withCredentials: true
       });
       return response.data;
@@ -120,6 +133,7 @@ export const useUpdateBanner = () => {
     setError(null);
     try {
       const response = await axios.put(`${API_URL}/admin/banners/${bannerId}`, bannerData, {
+        headers: getAuthHeaders(),
         withCredentials: true
       });
       return response.data;
@@ -144,6 +158,7 @@ export const useDeleteBanner = () => {
     setError(null);
     try {
       const response = await axios.delete(`${API_URL}/admin/banners/${bannerId}`, {
+        headers: getAuthHeaders(),
         withCredentials: true
       });
       return response.data;
@@ -176,6 +191,7 @@ export const useToggleBannerStatus = () => {
       } else if (currentState === 'DRAFT') {
         // Submit for approval instead
         const response = await axios.post(`${API_URL}/admin/banners/${bannerId}/submit-approval`, {}, {
+          headers: getAuthHeaders(),
           withCredentials: true
         });
         return response.data;
@@ -185,7 +201,7 @@ export const useToggleBannerStatus = () => {
 
       const response = await axios.patch(`${API_URL}/admin/banners/${bannerId}/state`, 
         { newState },
-        { withCredentials: true }
+        { headers: getAuthHeaders(), withCredentials: true }
       );
       return response.data;
     } catch (err: any) {
@@ -209,6 +225,7 @@ export const useBannerAnalytics = () => {
     setError(null);
     try {
       const response = await axios.get(`${API_URL}/admin/banners/${bannerId}/analytics`, {
+        headers: getAuthHeaders(),
         withCredentials: true
       });
       return response.data;
@@ -237,10 +254,13 @@ export const useUploadBannerImage = () => {
     const formData = new FormData();
     formData.append('image', file);
 
+    const token = useAuthStore.getState().token;
+
     try {
       const response = await axios.post(`${API_URL}/admin/banners/upload-image`, formData, {
         headers: {
-          'Content-Type': 'multipart/form-data'
+          'Content-Type': 'multipart/form-data',
+          'Authorization': `Bearer ${token}`
         },
         withCredentials: true,
         onUploadProgress: (progressEvent) => {
