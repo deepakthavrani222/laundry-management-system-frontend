@@ -576,7 +576,7 @@ function TestimonialsCarousel({ colors, theme, tenancyId }: { colors: any; theme
     { id: 1, name: 'Divya K.', review: 'I gave them my silk saree and was honestly worried. But they handled it with such care. Impressive service!', rating: 5 },
     { id: 2, name: 'Rajat T.', review: 'Very smooth process — booked on the app, got a confirmation instantly, and pickup arrived right on time.', rating: 5 },
     { id: 3, name: 'Tanvi M.', review: 'Affordable prices and great quality. Clothes were perfectly ironed and smelled so fresh. 10/10!', rating: 5 },
-    { id: 4, name: 'Karan V.', review: "This is my third time using LaundryPro and I'm never going back. So easy and dependable!", rating: 5 },
+    { id: 4, name: 'Karan V.', review: "This is my third time using LaundryLobby and I'm never going back. So easy and dependable!", rating: 5 },
     { id: 5, name: 'Priya S.', review: 'Best laundry service in the city! My curtains came back looking brand new.', rating: 5 },
     { id: 6, name: 'Amit R.', review: 'The pickup and delivery is so convenient. Excellent quality every single time!', rating: 5 },
   ]
@@ -834,7 +834,7 @@ function ScrollBannerSection({ isAuthenticated, onGalleryVisible, colors, themeC
           </div>
           <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
             <div className="grid md:grid-cols-2 gap-12 items-center">
-              <div><h2 className="text-4xl md:text-5xl font-bold text-white leading-tight">The LaundryPro<br /><span className={accentLightTextClass}>Guarantee.</span></h2></div>
+              <div><h2 className="text-4xl md:text-5xl font-bold text-white leading-tight">The LaundryLobby<br /><span className={accentLightTextClass}>Guarantee.</span></h2></div>
               <div>
                 <div className="flex mb-4">{[...Array(5)].map((_, i) => <Star key={i} className="w-6 h-6 text-yellow-400 fill-yellow-400" />)}</div>
                 <p className="text-gray-300 text-lg leading-relaxed">Every order is backed by our industry-leading guarantee. If you're not satisfied with the cleaning of your clothes, we will re-clean them – free of charge.</p>
@@ -971,7 +971,7 @@ export default function OriginalTemplate({ themeColor, isAuthenticated, user, on
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-2">
               <div className="w-10 h-10 rounded-full flex items-center justify-center" style={{ backgroundColor: theme.accent }}><Sparkles className="w-6 h-6 text-white" /></div>
-              <span className="text-2xl font-bold" style={{ color: isDarkTheme ? '#ffffff' : theme.textPrimary }}>LaundryPro</span>
+              <span className="text-2xl font-bold" style={{ color: isDarkTheme ? '#ffffff' : theme.textPrimary }}>LaundryLobby</span>
             </div>
             <div className="flex items-center space-x-2 md:hidden">
               {/* Mobile Dark Mode Toggle */}
@@ -1251,7 +1251,7 @@ export default function OriginalTemplate({ themeColor, isAuthenticated, user, on
             <div>
               <div className="flex items-center gap-2 mb-4">
                 <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ backgroundColor: theme.accent }}><Sparkles className="w-5 h-5 text-white" /></div>
-                <span className="text-xl font-bold" style={{ color: theme.footerText }}>LaundryPro</span>
+                <span className="text-xl font-bold" style={{ color: theme.footerText }}>LaundryLobby</span>
               </div>
               <p className="text-sm" style={{ color: `${theme.footerText}99` }}>{t('footer.desc')}</p>
             </div>
@@ -1276,7 +1276,7 @@ export default function OriginalTemplate({ themeColor, isAuthenticated, user, on
               <h4 className="font-semibold mb-4" style={{ color: theme.footerText }}>{t('original.footer.contact')}</h4>
               <ul className="space-y-2 text-sm" style={{ color: `${theme.footerText}99` }}>
                 <li className="flex items-center gap-2"><Phone className="w-4 h-4" />+91 98765 43210</li>
-                <li className="flex items-center gap-2"><Mail className="w-4 h-4" />support@laundrypro.com</li>
+                <li className="flex items-center gap-2"><Mail className="w-4 h-4" />support@LaundryLobby.com</li>
               </ul>
               <div className="flex gap-3 mt-4">
                 <a href="#" className="w-8 h-8 rounded-full flex items-center justify-center hover:opacity-80 transition-colors" style={{ backgroundColor: `${theme.footerText}20`, color: theme.footerText }}><Instagram className="w-4 h-4" /></a>

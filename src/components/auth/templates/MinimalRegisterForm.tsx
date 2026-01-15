@@ -70,7 +70,7 @@ export default function MinimalRegisterForm({ referralCode }: { referralCode?: s
             <div className="w-14 h-14 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg shadow-indigo-500/30">
               <Zap className="w-8 h-8 text-white" />
             </div>
-            <span className="text-3xl font-light text-white tracking-wide">LaundryPro</span>
+            <span className="text-3xl font-light text-white tracking-wide">LaundryLobby</span>
           </div>
 
           {/* Heading */}

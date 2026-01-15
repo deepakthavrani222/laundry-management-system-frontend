@@ -5,6 +5,7 @@ import { useParams, useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { useAdminTicketDetail } from '@/hooks/useAdminTickets'
 import { useAuthStore } from '@/store/authStore'
+import toast from 'react-hot-toast'
 import { 
   ArrowLeft,
   Ticket,
@@ -89,14 +90,13 @@ export default function TicketDetailPage() {
       if (!response.ok) throw new Error('Failed to take ticket')
       await refetch()
     } catch (err: any) {
-      alert(`Failed: ${err.message}`)
+      toast.error(`Failed: ${err.message}`)
     } finally {
       setTaking(false)
     }
   }
 
   const handleCloseTicket = async () => {
-    if (!confirm('Are you sure you want to close this ticket?')) return
     setClosing(true)
     try {
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/admin/support/tickets/${ticketId}/status`, {
@@ -111,7 +111,7 @@ export default function TicketDetailPage() {
       if (!response.ok) throw new Error('Failed to close ticket')
       await refetch()
     } catch (err: any) {
-      alert(`Failed: ${err.message}`)
+      toast.error(`Failed: ${err.message}`)
     } finally {
       setClosing(false)
     }
@@ -144,7 +144,7 @@ export default function TicketDetailPage() {
       // Remove optimistic message on error
       setOptimisticMessages(prev => prev.filter(m => m._id !== optimisticMsg._id))
       setNewMessage(messageText) // Restore message
-      alert(`Failed to send: ${err.message}`)
+      toast.error(`Failed to send: ${err.message}`)
     } finally {
       setSending(false)
     }
@@ -152,7 +152,7 @@ export default function TicketDetailPage() {
 
   const handleResolve = async () => {
     if (!resolution.trim()) {
-      alert('Please enter resolution')
+      toast.error('Please enter resolution')
       return
     }
     
@@ -161,7 +161,7 @@ export default function TicketDetailPage() {
       setShowResolveForm(false)
       setResolution('')
     } catch (err: any) {
-      alert(`Failed: ${err.message}`)
+      toast.error(`Failed: ${err.message}`)
     }
   }
 

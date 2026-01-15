@@ -72,7 +72,7 @@ export default function FreshSpinRegisterForm({ referralCode }: { referralCode?:
                 <div className="w-12 h-12 bg-gradient-to-br from-violet-500 to-purple-600 rounded-2xl flex items-center justify-center shadow-lg shadow-violet-200">
                   <Sparkles className="w-6 h-6 text-white" />
                 </div>
-                <span className="text-2xl font-bold bg-gradient-to-r from-violet-600 to-purple-600 bg-clip-text text-transparent">LaundryPro</span>
+                <span className="text-2xl font-bold bg-gradient-to-r from-violet-600 to-purple-600 bg-clip-text text-transparent">LaundryLobby</span>
               </div>
               <h1 className="text-3xl font-bold text-gray-900 mb-2">Create Account</h1>
               <p className="text-gray-500">Join thousands of happy customers today</p>
@@ -155,7 +155,7 @@ export default function FreshSpinRegisterForm({ referralCode }: { referralCode?:
 
         {/* Footer */}
         <div className="p-6 lg:p-8 text-center text-sm text-gray-400">
-          © 2024 LaundryPro. All rights reserved.
+          © 2024 LaundryLobby. All rights reserved.
         </div>
       </div>
 
@@ -179,7 +179,7 @@ export default function FreshSpinRegisterForm({ referralCode }: { referralCode?:
               Start Your Fresh Laundry Journey Today
             </h2>
             <p className="text-lg text-white/80 mb-12">
-              Join LaundryPro and enjoy premium laundry services with free pickup and delivery.
+              Join LaundryLobby and enjoy premium laundry services with free pickup and delivery.
             </p>
 
             {/* Features */}

@@ -1022,7 +1022,7 @@ export default function FreshSpinTemplate({ themeColor, isAuthenticated, onBookN
                   >
                     <Mail className="w-4 h-4 text-white" />
                   </div>
-                  <span className="text-sm" style={{ color: theme.footerText }}>support@laundrypro.com</span>
+                  <span className="text-sm" style={{ color: theme.footerText }}>support@LaundryLobby.com</span>
                 </div>
               </div>
             </div>
@@ -1080,7 +1080,7 @@ export default function FreshSpinTemplate({ themeColor, isAuthenticated, onBookN
                 </li>
                 <li className="flex items-center gap-3">
                   <Mail className="w-5 h-5" />
-                  support@laundrypro.com
+                  support@LaundryLobby.com
                 </li>
                 <li className="flex items-center gap-3">
                   <MapPin className="w-5 h-5" />

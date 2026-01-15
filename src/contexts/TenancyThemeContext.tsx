@@ -22,7 +22,7 @@ interface TenancyThemeContextType {
 }
 
 const defaultTheme: TenancyTheme = {
-  name: 'LaundryPro',
+  name: 'LaundryLobby',
   subdomain: '',
   primaryColor: '#3B82F6',
   secondaryColor: '#1E40AF',

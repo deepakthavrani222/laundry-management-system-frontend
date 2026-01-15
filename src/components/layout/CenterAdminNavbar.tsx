@@ -154,7 +154,7 @@ export function CenterAdminNavbar({ onMenuClick }: CenterAdminNavbarProps) {
               <div className="w-8 h-8 bg-gradient-to-r from-green-500 to-emerald-600 rounded-full flex items-center justify-center">
                 <Building2 className="w-5 h-5 text-white" />
               </div>
-              <span className="text-lg lg:text-xl font-bold text-gray-800 truncate">LaundryPro</span>
+              <span className="text-lg lg:text-xl font-bold text-gray-800 truncate">LaundryLobby</span>
             </Link>
           </div>
 

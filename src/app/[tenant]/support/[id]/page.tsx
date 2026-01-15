@@ -9,6 +9,7 @@ import {
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import Link from 'next/link'
+import toast from 'react-hot-toast'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api'
 
@@ -119,7 +120,7 @@ export default function TenantTicketDetailPage() {
         const ticketData = await ticketRes.json()
         if (ticketData.success) setTicket(ticketData.data.ticket)
       }
-    } catch (err) { alert('Failed to send message') }
+    } catch (err) { toast.error('Failed to send message') }
     finally { setSending(false) }
   }
 
@@ -139,7 +140,7 @@ export default function TenantTicketDetailPage() {
         const ticketData = await ticketRes.json()
         if (ticketData.success) setTicket(ticketData.data.ticket)
       }
-    } catch (err) { alert('Failed to submit feedback') }
+    } catch (err) { toast.error('Failed to submit feedback') }
     finally { setSubmittingFeedback(false) }
   }
 

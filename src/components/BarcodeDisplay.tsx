@@ -252,7 +252,7 @@ export default function BarcodeDisplay({
         </head>
         <body>
           <div class="container">
-            <div class="title">LaundryPro Order</div>
+            <div class="title">LaundryLobby Order</div>
             <div class="order">#${displayOrderNumber}</div>
             <img src="${dataUrl}" alt="Barcode" />
             ${orderDetailsHtml}

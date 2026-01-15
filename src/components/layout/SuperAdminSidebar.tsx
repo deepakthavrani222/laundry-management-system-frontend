@@ -86,7 +86,7 @@ export default function SuperAdminSidebar({ mobileOpen = false, onMobileClose }:
             </div>
             <div>
               <h1 className="text-lg font-bold text-gray-900">Super Admin</h1>
-              <p className="text-xs text-gray-500">LaundryPro</p>
+              <p className="text-xs text-gray-500">LaundryLobby</p>
             </div>
           </div>
           

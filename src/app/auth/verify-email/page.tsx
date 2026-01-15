@@ -263,7 +263,7 @@ export default function VerifyEmailPage() {
             <div className="w-12 h-12 bg-gradient-to-r from-teal-500 to-cyan-600 rounded-full flex items-center justify-center">
               <Sparkles className="w-7 h-7 text-white" />
             </div>
-            <span className="text-3xl font-bold text-gray-800">LaundryPro</span>
+            <span className="text-3xl font-bold text-gray-800">LaundryLobby</span>
           </div>
         </div>
         
@@ -280,7 +280,7 @@ export default function VerifyEmailPage() {
               <p>If you continue to have issues, please contact our support team:</p>
               <div className="flex items-center">
                 <Mail className="w-4 h-4 text-teal-500 mr-2" />
-                support@laundrypro.com
+                support@LaundryLobby.com
               </div>
             </div>
           </div>

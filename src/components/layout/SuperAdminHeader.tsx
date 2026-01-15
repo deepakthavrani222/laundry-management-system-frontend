@@ -85,6 +85,20 @@ export default function SuperAdminHeader({ onMenuClick, sidebarCollapsed = false
     }
   }, [showNotifications])
 
+  // Auto mark as read when dropdown opens and notifications are loaded
+  useEffect(() => {
+    if (showNotifications && notifications.length > 0) {
+      const unreadIds = notifications.filter(n => !n.isRead).map(n => n._id)
+      if (unreadIds.length > 0) {
+        // Small delay to let user see the notifications first
+        const timer = setTimeout(() => {
+          handleMarkAsRead(unreadIds)
+        }, 1500)
+        return () => clearTimeout(timer)
+      }
+    }
+  }, [showNotifications, notifications])
+
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (notifRef.current && !notifRef.current.contains(event.target as Node)) {

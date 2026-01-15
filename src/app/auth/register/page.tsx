@@ -234,10 +234,10 @@ function OriginalRegisterForm({ referralCode }: { referralCode: string | null })
               <div className="w-14 h-14 bg-gradient-to-r from-teal-500 to-cyan-600 rounded-xl flex items-center justify-center shadow-lg">
                 <Sparkles className="w-8 h-8 text-white" />
               </div>
-              <span className="text-4xl font-bold text-gray-800" style={{ fontFamily: 'Poppins, sans-serif' }}>LaundryPro</span>
+              <span className="text-4xl font-bold text-gray-800" style={{ fontFamily: 'Poppins, sans-serif' }}>LaundryLobby</span>
             </div>
             <h1 className="text-4xl xl:text-5xl font-bold text-gray-800 mb-4" style={{ fontFamily: 'Poppins, sans-serif' }}>
-              Join LaundryPro
+              Join LaundryLobby
             </h1>
             <p className="text-xl text-gray-600" style={{ fontSize: '15px' }}>
               Create your account and experience premium laundry service. Thousands of happy customers trust us with their clothes.
@@ -297,7 +297,7 @@ function OriginalRegisterForm({ referralCode }: { referralCode: string | null })
                 <div className="w-12 h-12 bg-gradient-to-r from-teal-500 to-cyan-600 rounded-xl flex items-center justify-center">
                   <Sparkles className="w-7 h-7 text-white" />
                 </div>
-                <span className="text-3xl font-bold text-gray-800">LaundryPro</span>
+                <span className="text-3xl font-bold text-gray-800">LaundryLobby</span>
               </div>
               <h2 className="text-2xl font-bold text-gray-800">Create Account</h2>
             </div>

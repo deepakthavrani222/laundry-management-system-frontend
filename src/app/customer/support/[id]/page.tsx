@@ -18,6 +18,7 @@ import {
 import { Button } from '@/components/ui/button'
 import { api } from '@/lib/api'
 import Link from 'next/link'
+import toast from 'react-hot-toast'
 
 interface Message {
   _id: string
@@ -108,7 +109,7 @@ export default function TicketDetailPage() {
         fetchTicket()
       }
     } catch (err: any) {
-      alert(err.response?.data?.message || 'Failed to send message')
+      toast.error(err.response?.data?.message || 'Failed to send message')
     } finally {
       setSending(false)
     }
@@ -116,7 +117,7 @@ export default function TicketDetailPage() {
 
   const handleSubmitFeedback = async () => {
     if (feedbackRating === 0) {
-      alert('Please select a rating')
+      toast.error('Please select a rating')
       return
     }
     setSubmittingFeedback(true)
@@ -130,7 +131,7 @@ export default function TicketDetailPage() {
         fetchTicket()
       }
     } catch (err: any) {
-      alert(err.response?.data?.message || 'Failed to submit feedback')
+      toast.error(err.response?.data?.message || 'Failed to submit feedback')
     } finally {
       setSubmittingFeedback(false)
     }

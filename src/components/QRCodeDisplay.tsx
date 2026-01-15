@@ -135,7 +135,7 @@ export default function QRCodeDisplay({
           </head>
           <body>
             <div class="container">
-              <div class="title">LaundryPro Order</div>
+              <div class="title">LaundryLobby Order</div>
               <div class="order">#${displayOrderNumber}</div>
               <img src="${dataUrl}" alt="QR Code" />
               <div class="scan-text">Scan to view order details</div>

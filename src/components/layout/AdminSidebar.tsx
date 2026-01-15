@@ -32,45 +32,50 @@ import {
   MapPin,
   Image,
   MessageSquare,
+  Wallet,
+  Shield,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useState, useEffect, createContext, useContext } from 'react'
 import { useAuthStore } from '@/store/authStore'
 import { useAdminDashboard } from '@/hooks/useAdmin'
+import { useFeatures, FeatureKey } from '@/hooks/useFeatures'
 
-// Navigation items with permission requirements
+// Navigation items with permission requirements and feature requirements
 const navigation = [
-  { name: 'Dashboard', href: '/admin/dashboard', icon: Home, permission: null }, // Always visible
-  { name: 'Orders', href: '/admin/orders', icon: ShoppingBag, permission: { module: 'orders', action: 'view' } },
-  { name: 'Barcode Scanner', href: '/admin/scanner', icon: QrCode, permission: { module: 'orders', action: 'view' } },
-  { name: 'Customers', href: '/admin/customers', icon: Users, permission: { module: 'customers', action: 'view' } },
-  { name: 'Inventory', href: '/admin/inventory', icon: Package, permission: { module: 'inventory', action: 'view' } },
-  { name: 'Services', href: '/admin/services', icon: Sparkles, permission: { module: 'services', action: 'view' } },
-  { name: 'Branches', href: '/admin/branches', icon: MapPin, permission: null },
-  { name: 'Branch Admins', href: '/admin/branch-admins', icon: Users, permission: null },
+  { name: 'Dashboard', href: '/admin/dashboard', icon: Home, permission: null, feature: null },
+  { name: 'Orders', href: '/admin/orders', icon: ShoppingBag, permission: { module: 'orders', action: 'view' }, feature: 'orders' as FeatureKey },
+  { name: 'Barcode Scanner', href: '/admin/scanner', icon: QrCode, permission: { module: 'orders', action: 'view' }, feature: 'orders' as FeatureKey },
+  { name: 'Customers', href: '/admin/customers', icon: Users, permission: { module: 'customers', action: 'view' }, feature: 'customers' as FeatureKey },
+  { name: 'Inventory', href: '/admin/inventory', icon: Package, permission: { module: 'inventory', action: 'view' }, feature: 'inventory' as FeatureKey },
+  { name: 'Services', href: '/admin/services', icon: Sparkles, permission: { module: 'services', action: 'view' }, feature: 'services' as FeatureKey },
+  { name: 'Branches', href: '/admin/branches', icon: MapPin, permission: null, feature: 'branches' as FeatureKey },
+  { name: 'Branch Admins', href: '/admin/branch-admins', icon: Users, permission: null, feature: 'branch_admins' as FeatureKey },
   { 
     name: 'Programs', 
     icon: Gift, 
     permission: { module: 'coupons', action: 'view' },
+    feature: null, // Parent doesn't need feature, children do
     isExpandable: true,
     subItems: [
-      { name: 'Campaigns', href: '/admin/campaigns', icon: Target, permission: { module: 'coupons', action: 'view' } },
-      { name: 'Banners', href: '/admin/banners', icon: Image, permission: { module: 'coupons', action: 'view' } },
-      { name: 'Coupons', href: '/admin/coupons', icon: Tag, permission: { module: 'coupons', action: 'view' } },
-      { name: 'Discounts', href: '/admin/discounts', icon: Percent, permission: { module: 'coupons', action: 'view' } },
-      { name: 'Referrals', href: '/admin/referrals', icon: Users2, permission: { module: 'coupons', action: 'view' } },
-      { name: 'Loyalty', href: '/admin/loyalty', icon: Star, permission: { module: 'coupons', action: 'view' } },
+      { name: 'Campaigns', href: '/admin/campaigns', icon: Target, permission: { module: 'coupons', action: 'view' }, feature: 'campaigns' as FeatureKey },
+      { name: 'Banners', href: '/admin/banners', icon: Image, permission: { module: 'coupons', action: 'view' }, feature: 'banners' as FeatureKey },
+      { name: 'Coupons', href: '/admin/coupons', icon: Tag, permission: { module: 'coupons', action: 'view' }, feature: 'coupons' as FeatureKey },
+      { name: 'Discounts', href: '/admin/discounts', icon: Percent, permission: { module: 'coupons', action: 'view' }, feature: 'discounts' as FeatureKey },
+      { name: 'Referrals', href: '/admin/referrals', icon: Users2, permission: { module: 'coupons', action: 'view' }, feature: 'referral_program' as FeatureKey },
+      { name: 'Loyalty', href: '/admin/loyalty', icon: Star, permission: { module: 'coupons', action: 'view' }, feature: 'loyalty_points' as FeatureKey },
+      { name: 'Wallet', href: '/admin/wallet', icon: Wallet, permission: { module: 'coupons', action: 'view' }, feature: 'wallet' as FeatureKey },
     ]
   },
-  { name: 'Logistics', href: '/admin/logistics', icon: Truck, permission: { module: 'logistics', action: 'view' } },
-  { name: 'Support Tickets', href: '/admin/tickets', icon: Ticket, permission: { module: 'tickets', action: 'view' } },
-  { name: 'Reviews', href: '/admin/reviews', icon: MessageSquare, permission: { module: 'customers', action: 'view' } },
-  { name: 'Refunds', href: '/admin/refunds', icon: RefreshCw, permission: { module: 'orders', action: 'cancel' } },
-  { name: 'Payments', href: '/admin/payments', icon: CreditCard, permission: { module: 'performance', action: 'view' } },
-  { name: 'Analytics', href: '/admin/analytics', icon: BarChart3, permission: { module: 'performance', action: 'view' } },
-  { name: 'Branding', href: '/admin/branding', icon: Palette, permission: { module: 'settings', action: 'view' } },
-  { name: 'Settings', href: '/admin/settings', icon: Settings, permission: { module: 'settings', action: 'view' } },
-  { name: 'Help', href: '/admin/support', icon: HelpCircle, permission: null }, // Always visible
+  { name: 'Logistics', href: '/admin/logistics', icon: Truck, permission: { module: 'logistics', action: 'view' }, feature: 'logistics' as FeatureKey },
+  { name: 'Support Tickets', href: '/admin/tickets', icon: Ticket, permission: { module: 'tickets', action: 'view' }, feature: 'tickets' as FeatureKey },
+  { name: 'Reviews', href: '/admin/reviews', icon: MessageSquare, permission: { module: 'customers', action: 'view' }, feature: 'reviews' as FeatureKey },
+  { name: 'Refunds', href: '/admin/refunds', icon: RefreshCw, permission: { module: 'orders', action: 'cancel' }, feature: 'refunds' as FeatureKey },
+  { name: 'Payments', href: '/admin/payments', icon: CreditCard, permission: { module: 'performance', action: 'view' }, feature: 'payments' as FeatureKey },
+  { name: 'Analytics', href: '/admin/analytics', icon: BarChart3, permission: { module: 'performance', action: 'view' }, feature: 'advanced_analytics' as FeatureKey },
+  { name: 'Branding', href: '/admin/branding', icon: Palette, permission: { module: 'settings', action: 'view' }, feature: 'custom_branding' as FeatureKey },
+  { name: 'Settings', href: '/admin/settings', icon: Settings, permission: { module: 'settings', action: 'view' }, feature: null },
+  { name: 'Help', href: '/admin/support', icon: HelpCircle, permission: null, feature: null },
 ]
 
 // Helper to check if user has permission
@@ -90,6 +95,12 @@ const hasPermission = (user: any, permission: { module: string; action: string }
   const hasIt = user.permissions[permission.module]?.[permission.action] === true
   console.log(`🔐 Permission check: ${permission.module}.${permission.action} = ${hasIt}`, user.permissions)
   return hasIt
+}
+
+// Helper to check if feature is enabled for tenant's plan
+const checkFeature = (hasFeatureFn: (key: FeatureKey) => boolean, feature: FeatureKey | null) => {
+  if (!feature) return true // No feature restriction
+  return hasFeatureFn(feature)
 }
 
 // Context for sidebar state
@@ -169,6 +180,7 @@ export function AdminSidebar() {
   const { isCollapsed, setIsCollapsed, mobileOpen, setMobileOpen, expandedItems, toggleExpanded } = useAdminSidebar()
   const { user, logout } = useAuthStore()
   const { metrics, loading: metricsLoading } = useAdminDashboard()
+  const { hasFeature, planName, isTrialPeriod, trialEndsAt } = useFeatures()
 
   const toggleCollapse = () => {
     setIsCollapsed(!isCollapsed)
@@ -240,7 +252,7 @@ export function AdminSidebar() {
           {showText && isExpanded && (
             <div className="ml-6 mt-1 space-y-1">
               {item.subItems
-                .filter((subItem: any) => hasPermission(user, subItem.permission))
+                .filter((subItem: any) => hasPermission(user, subItem.permission) && checkFeature(hasFeature, subItem.feature))
                 .map((subItem: any) => {
                 const isSubActive = pathname === subItem.href || pathname.startsWith(subItem.href + '/')
                 const SubIcon = subItem.icon
@@ -314,7 +326,7 @@ export function AdminSidebar() {
               <Sparkles className="w-5 h-5 text-white" />
             </div>
             <div>
-              <h1 className="text-lg font-bold text-gray-900">LaundryPro</h1>
+              <h1 className="text-lg font-bold text-gray-900">LaundryLobby</h1>
             </div>
           </Link>
         )}
@@ -363,7 +375,7 @@ export function AdminSidebar() {
       {/* Navigation */}
       <nav className="flex-1 px-2 py-4 space-y-1 overflow-y-auto min-h-0">
         {navigation
-          .filter(item => hasPermission(user, item.permission))
+          .filter(item => hasPermission(user, item.permission) && checkFeature(hasFeature, item.feature))
           .map(item => renderNavItem(item, isMobile))}
       </nav>
 

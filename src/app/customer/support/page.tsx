@@ -393,7 +393,7 @@ export default function CustomerSupportPage() {
             </div>
             <div>
               <h3 className="font-semibold text-gray-800">Email Us</h3>
-              <p className="text-blue-600 font-medium">support@laundrypro.com</p>
+              <p className="text-blue-600 font-medium">support@LaundryLobby.com</p>
               <p className="text-xs text-gray-500 mt-1">We reply within 24 hours</p>
             </div>
           </div>

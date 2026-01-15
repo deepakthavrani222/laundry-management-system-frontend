@@ -81,11 +81,11 @@ export function getTemplateTheme(template: LandingPageTemplate) {
 export function getTemplateContent(template: LandingPageTemplate) {
   const content = {
     original: {
-      brandName: 'LaundryPro',
+      brandName: 'LaundryLobby',
       tagline: 'Premium laundry service at your doorstep',
       loginTitle: 'Welcome Back!',
       loginSubtitle: 'Sign in to manage your orders and enjoy hassle-free laundry.',
-      registerTitle: 'Join LaundryPro',
+      registerTitle: 'Join LaundryLobby',
       registerSubtitle: 'Create your account and experience premium laundry service.',
     },
     minimal: {

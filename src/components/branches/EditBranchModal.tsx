@@ -27,7 +27,7 @@ const geocodeAddress = async (address: string): Promise<{lat: number, lng: numbe
     const encodedAddress = encodeURIComponent(address)
     const response = await fetch(
       `https://nominatim.openstreetmap.org/search?format=json&q=${encodedAddress}&limit=1`,
-      { headers: { 'User-Agent': 'LaundryPro-Admin/1.0' } }
+      { headers: { 'User-Agent': 'LaundryLobby-Admin/1.0' } }
     )
     const data = await response.json()
     if (data && data.length > 0) {

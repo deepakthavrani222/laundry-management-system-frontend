@@ -134,7 +134,7 @@ export default function CustomerSidebar({
               </div>
             )}
             <div>
-              <h1 className="text-lg font-bold text-gray-900">{theme?.name || 'LaundryPro'}</h1>
+              <h1 className="text-lg font-bold text-gray-900">{theme?.name || 'LaundryLobby'}</h1>
             </div>
           </Link>
         )}

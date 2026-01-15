@@ -90,7 +90,7 @@
       "subtitle": "From everyday laundry to premium dry cleaning, we offer comprehensive garment care solutions."
     },
     "whyChoose": {
-      "title": "Why Choose LaundryPro?",
+      "title": "Why Choose LaundryLobby?",
       "freePickup": "Free Pickup & Delivery",
       "freePickupDesc": "Doorstep service at no extra cost",
       "fastDelivery": "24-48 Hour Delivery",
@@ -125,7 +125,7 @@
   "about": {
     "title": "Premium Laundry Services You Can Trust",
     "subtitle": "About Company",
-    "desc1": "At LaundryPro, we offer a seamless laundry and dry cleaning experience tailored to your busy lifestyle.",
+    "desc1": "At LaundryLobby, we offer a seamless laundry and dry cleaning experience tailored to your busy lifestyle.",
     "desc2": "With over 10 years of experience, we have served more than 50,000 happy customers across 20+ cities.",
     "feature1": "Free Pickup & Delivery",
     "feature2": "24-48 Hour Turnaround",
@@ -159,7 +159,7 @@
     "services": "Services",
     "quickLinks": "Quick Links",
     "contact": "Get in Touch",
-    "copyright": "© 2024 LaundryPro. All rights reserved."
+    "copyright": "© 2024 LaundryLobby. All rights reserved."
   },
   "theme": {
     "title": "Theme",
@@ -254,7 +254,7 @@
       "services": "Services"
     },
     "footer": {
-      "copyright": "© 2024 LaundryPro. All rights reserved."
+      "copyright": "© 2024 LaundryLobby. All rights reserved."
     }
   },
   "original": {
@@ -279,7 +279,7 @@
       "premiumDryCleanDesc": "Top-tier care for luxury items.",
       "sectionTitle": "Premium Laundry And Dry Clean Service in India",
       "sectionSubtitle": "Quality Cleaning with Great Savings!",
-      "sectionDesc": "At LaundryPro, we take care of all your clothing needs — from everyday home wear to formal office attire."
+      "sectionDesc": "At LaundryLobby, we take care of all your clothing needs — from everyday home wear to formal office attire."
     },
     "steps": {
       "orderOnline": "Order Online",
@@ -292,7 +292,7 @@
     },
     "cta": {
       "readyTitle": "Ready to Experience Premium Laundry Service?",
-      "joinCustomers": "Join over 50,000+ satisfied customers who trust LaundryPro.",
+      "joinCustomers": "Join over 50,000+ satisfied customers who trust LaundryLobby.",
       "freePickup": "Free pickup & delivery",
       "turnaround": "24-48 hours turnaround",
       "satisfaction": "100% satisfaction guaranteed",
@@ -305,7 +305,7 @@
       "scheduleFirstPickup": "Schedule your first pickup"
     },
     "guarantee": {
-      "title": "The LaundryPro",
+      "title": "The LaundryLobby",
       "titleHighlight": "Guarantee.",
       "desc": "Every order is backed by our industry-leading guarantee. If you're not satisfied with the cleaning of your clothes, we will re-clean them – free of charge."
     },
@@ -337,7 +337,7 @@
       "viewAll": "View full price list"
     },
     "whyLove": {
-      "title": "Why you'll love LaundryPro",
+      "title": "Why you'll love LaundryLobby",
       "freePickup": "Free Pickup & Delivery",
       "freePickupDesc": "We come to you. Schedule a time that works, and we handle the rest.",
       "turnaround": "24-48 Hour Turnaround",
@@ -354,7 +354,7 @@
       },
       "feature2": {
         "title": "Sustainable laundry and dry cleaning",
-        "desc": "With LaundryPro, you help the environment. We use eco-friendly detergents, save water with high-efficiency machines, and reduce chemical usage."
+        "desc": "With LaundryLobby, you help the environment. We use eco-friendly detergents, save water with high-efficiency machines, and reduce chemical usage."
       },
       "feature3": {
         "title": "World-class customer service",
@@ -382,7 +382,7 @@
       "title": "What our customers say"
     },
     "guarantee": {
-      "title": "The LaundryPro Guarantee",
+      "title": "The LaundryLobby Guarantee",
       "desc": "We stand behind our work. If you're not 100% satisfied with our service, we'll re-clean your items for free or give you a full refund.",
       "satisfaction": "Satisfaction Guaranteed",
       "damage": "Damage Protection",
@@ -409,7 +409,7 @@
       "aboutUs": "About Us",
       "contactUs": "Contact",
       "cities": "20+ Cities across India",
-      "copyright": "© 2024 LaundryPro. All rights reserved.",
+      "copyright": "© 2024 LaundryLobby. All rights reserved.",
       "privacy": "Privacy Policy",
       "terms": "Terms of Service"
     },

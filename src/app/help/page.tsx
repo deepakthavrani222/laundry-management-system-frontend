@@ -145,8 +145,8 @@ export default function HelpPage() {
   const faqCategories = {
     general: [
       {
-        question: "How does LaundryPro work?",
-        answer: "LaundryPro makes laundry simple! Just place an order online, schedule a pickup time, and our team will collect your clothes from your doorstep. We clean them professionally and deliver them back fresh and folded within 24-48 hours."
+        question: "How does LaundryLobby work?",
+        answer: "LaundryLobby makes laundry simple! Just place an order online, schedule a pickup time, and our team will collect your clothes from your doorstep. We clean them professionally and deliver them back fresh and folded within 24-48 hours."
       },
       {
         question: "What areas do you serve?",
@@ -433,8 +433,8 @@ export default function HelpPage() {
               </div>
               <h3 className={`text-xl font-semibold mb-2 ${textClass}`}>{t('help.contact.emailUs')}</h3>
               <p className={`mb-4 ${textMutedClass}`}>{t('help.contact.emailUsDesc')}</p>
-              <a href="mailto:support@laundrypro.com" className="font-semibold text-lg hover:opacity-80" style={{ color: theme.primaryHex }}>
-                support@laundrypro.com
+              <a href="mailto:support@LaundryLobby.com" className="font-semibold text-lg hover:opacity-80" style={{ color: theme.primaryHex }}>
+                support@LaundryLobby.com
               </a>
             </div>
 
@@ -550,7 +550,7 @@ export default function HelpPage() {
               >
                 <Sparkles className="w-6 h-6 text-white" />
               </div>
-              <span className="text-xl font-bold text-white">LaundryPro</span>
+              <span className="text-xl font-bold text-white">LaundryLobby</span>
             </div>
             <div className="flex flex-wrap justify-center gap-6 text-sm">
               <Link href="/" className="hover:text-white transition-colors">{t('nav.home')}</Link>

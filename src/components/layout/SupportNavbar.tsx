@@ -133,7 +133,7 @@ export function SupportNavbar() {
               <div className="w-8 h-8 bg-gradient-to-r from-purple-500 to-pink-600 rounded-full flex items-center justify-center">
                 <Headphones className="w-5 h-5 text-white" />
               </div>
-              <span className="text-xl font-bold text-gray-800">LaundryPro</span>
+              <span className="text-xl font-bold text-gray-800">LaundryLobby</span>
             </Link>
           </div>
 

@@ -54,7 +54,7 @@ export default function AdminHeader({ onMenuClick, sidebarCollapsed = false }: A
   const fetchNotifications = async () => {
     try {
       setLoading(true)
-      const response = await api.get('/admin/notifications?limit=10')
+      const response = await api.get('/notifications?limit=10')
       if (response.data.success) {
         setNotifications(response.data.data.notifications || [])
         setUnreadCount(response.data.data.unreadCount || 0)
@@ -68,7 +68,7 @@ export default function AdminHeader({ onMenuClick, sidebarCollapsed = false }: A
 
   const fetchUnreadCount = async () => {
     try {
-      const response = await api.get('/admin/notifications/unread-count')
+      const response = await api.get('/notifications/unread-count')
       if (response.data.success) {
         setUnreadCount(response.data.data.unreadCount || 0)
       }
@@ -90,9 +90,23 @@ export default function AdminHeader({ onMenuClick, sidebarCollapsed = false }: A
     }
   }, [showNotifDropdown])
 
+  // Auto mark as read when dropdown opens and notifications are loaded
+  useEffect(() => {
+    if (showNotifDropdown && notifications.length > 0) {
+      const unreadIds = notifications.filter(n => !n.isRead).map(n => n._id)
+      if (unreadIds.length > 0) {
+        // Small delay to let user see the notifications first
+        const timer = setTimeout(() => {
+          handleMarkAsRead(unreadIds)
+        }, 1500)
+        return () => clearTimeout(timer)
+      }
+    }
+  }, [showNotifDropdown, notifications])
+
   const handleMarkAsRead = async (notificationIds: string[]) => {
     try {
-      await api.put('/admin/notifications/mark-read', { notificationIds })
+      await api.put('/notifications/read', { notificationIds })
       setNotifications(prev => 
         prev.map(n => notificationIds.includes(n._id) ? { ...n, isRead: true } : n)
       )
@@ -104,7 +118,7 @@ export default function AdminHeader({ onMenuClick, sidebarCollapsed = false }: A
 
   const handleMarkAllAsRead = async () => {
     try {
-      await api.put('/admin/notifications/mark-all-read')
+      await api.put('/notifications/read-all')
       setNotifications(prev => prev.map(n => ({ ...n, isRead: true })))
       setUnreadCount(0)
       toast.success('All notifications marked as read')

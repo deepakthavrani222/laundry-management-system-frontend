@@ -1060,19 +1060,19 @@ export default function MinimalTemplate({ themeColor, isAuthenticated, onBookNow
               { 
                 name: 'Priya Sharma', 
                 role: 'Fashion Designer',
-                review: "I've been using LaundryPro for 6 months now. The quality is consistently excellent, and the convenience is unmatched. My designer pieces always come back perfect!",
+                review: "I've been using LaundryLobby for 6 months now. The quality is consistently excellent, and the convenience is unmatched. My designer pieces always come back perfect!",
                 image: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=200&h=200&fit=crop&crop=face'
               },
               { 
                 name: 'Rahul Verma', 
                 role: 'Business Executive',
-                review: "As a busy professional, I don't have time for laundry. LaundryPro has been a lifesaver. Pickup and delivery is always on time, and my shirts look brand new.",
+                review: "As a busy professional, I don't have time for laundry. LaundryLobby has been a lifesaver. Pickup and delivery is always on time, and my shirts look brand new.",
                 image: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&h=200&fit=crop&crop=face'
               },
               { 
                 name: 'Anita Desai', 
                 role: 'Working Mom',
-                review: "With two kids and a full-time job, laundry was my biggest headache. LaundryPro changed that. Now I have more time for what matters - my family.",
+                review: "With two kids and a full-time job, laundry was my biggest headache. LaundryLobby changed that. Now I have more time for what matters - my family.",
                 image: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=200&h=200&fit=crop&crop=face'
               },
             ].map((item, idx) => (
@@ -1185,7 +1185,7 @@ export default function MinimalTemplate({ themeColor, isAuthenticated, onBookNow
                 >
                   <Sparkles className="w-5 h-5 text-white" />
                 </div>
-                <span className="text-xl font-bold" style={{ color: theme.footerText }}>LaundryPro</span>
+                <span className="text-xl font-bold" style={{ color: theme.footerText }}>LaundryLobby</span>
               </div>
               <p className="mb-6" style={{ color: `${theme.footerText}99` }}>
                 {t('minimal.footer.desc')}
@@ -1236,7 +1236,7 @@ export default function MinimalTemplate({ themeColor, isAuthenticated, onBookNow
                 </li>
                 <li className="flex items-center gap-3">
                   <Mail className="w-5 h-5" style={{ color: theme.accent }} />
-                  support@laundrypro.com
+                  support@LaundryLobby.com
                 </li>
                 <li className="flex items-center gap-3">
                   <MapPin className="w-5 h-5" style={{ color: theme.accent }} />

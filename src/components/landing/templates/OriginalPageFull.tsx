@@ -72,7 +72,7 @@ function HeroCarousel({
       id: 1,
       title: isAuthenticated
         ? `Welcome back, ${user?.name}!`
-        : 'Welcome to LaundryPro',
+        : 'Welcome to LaundryLobby',
       subtitle: "India's #1 Laundry Service",
       description: isAuthenticated
         ? "Ready to schedule your next laundry pickup? We're here to make your life easier!"
@@ -336,7 +336,7 @@ function TestimonialsCarousel() {
     {
       id: 4,
       name: 'Karan V.',
-      review: "This is my third time using LaundryPro and I'm never going back to hand washing or dry cleaning shops. So easy and dependable!",
+      review: "This is my third time using LaundryLobby and I'm never going back to hand washing or dry cleaning shops. So easy and dependable!",
       rating: 5
     },
     {
@@ -719,7 +719,7 @@ function ScrollBannerSection({ isAuthenticated, onGalleryVisible }: { isAuthenti
             <div className="grid md:grid-cols-2 gap-12 items-center">
               <div>
                 <h2 className="text-4xl md:text-5xl font-bold text-white leading-tight">
-                  The LaundryPro<br />
+                  The LaundryLobby<br />
                   <span className="text-teal-400">Guarantee.</span>
                 </h2>
               </div>
@@ -796,7 +796,7 @@ export default function HomePage() {
               <div className="w-10 h-10 bg-teal-500 rounded-full flex items-center justify-center">
                 <Sparkles className="w-6 h-6 text-white" />
               </div>
-              <span className={`text-2xl font-bold transition-colors duration-500 ${isDarkTheme ? 'text-white' : 'text-gray-800'}`}>LaundryPro</span>
+              <span className={`text-2xl font-bold transition-colors duration-500 ${isDarkTheme ? 'text-white' : 'text-gray-800'}`}>LaundryLobby</span>
             </div>
             
             {/* Mobile Menu Button */}
@@ -945,7 +945,7 @@ export default function HomePage() {
               Laundry & Dry Cleaning
             </h2>
             <p className="text-gray-800 font-semibold max-w-3xl mx-auto">
-              At LaundryPro, we offer a seamless laundry and dry cleaning experience tailored 
+              At LaundryLobby, we offer a seamless laundry and dry cleaning experience tailored 
               to your busy lifestyle. From pickup to delivery, every step is handled with 
               professionalism and care.
             </p>
@@ -1108,7 +1108,7 @@ export default function HomePage() {
                 <h3 className="text-3xl font-bold text-white mb-4">Ready to Experience Premium Laundry Service?</h3>
                 
                 <p className="text-gray-200 text-lg mb-4">
-                  Join over 50,000+ satisfied customers who trust LaundryPro with their laundry needs every day.
+                  Join over 50,000+ satisfied customers who trust LaundryLobby with their laundry needs every day.
                 </p>
                 
                 <ul className="space-y-2 mb-6">
@@ -1166,7 +1166,7 @@ export default function HomePage() {
             <p className="text-teal-500 font-semibold mb-2">Premium Laundry And Dry Clean Service in India</p>
             <h2 className="text-4xl font-bold text-gray-800 mb-4">Quality Cleaning with Great Savings!</h2>
             <p className="text-gray-800 font-semibold max-w-4xl mx-auto">
-              At LaundryPro, we take care of all your clothing needs — from everyday home wear to formal office attire — ensuring 
+              At LaundryLobby, we take care of all your clothing needs — from everyday home wear to formal office attire — ensuring 
               each piece is cleaned with expert care. Our services go beyond garments, offering shoe cleaning, curtain cleaning, 
               carpet cleaning, and more to provide complete home care solutions.
             </p>
@@ -1381,7 +1381,7 @@ export default function HomePage() {
         <div className="container mx-auto px-4 text-center">
           <h2 className="text-4xl font-bold text-gray-800 mb-4">Ready to Experience Premium Care?</h2>
           <p className="text-xl text-gray-800 font-semibold mb-8 max-w-2xl mx-auto">
-            Join thousands of satisfied customers who trust LaundryPro for their laundry and dry cleaning needs.
+            Join thousands of satisfied customers who trust LaundryLobby for their laundry and dry cleaning needs.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             {isAuthenticated ? (
@@ -1421,7 +1421,7 @@ export default function HomePage() {
                 <div className="w-10 h-10 bg-gradient-to-r from-teal-500 to-cyan-600 rounded-full flex items-center justify-center">
                   <Sparkles className="w-6 h-6 text-white" />
                 </div>
-                <span className="text-2xl font-bold">LaundryPro</span>
+                <span className="text-2xl font-bold">LaundryLobby</span>
               </div>
               <p className="text-gray-400 mb-4">Premium laundry and dry cleaning services at your doorstep across India.</p>
               <div className="flex space-x-4">
@@ -1466,7 +1466,7 @@ export default function HomePage() {
                 </div>
                 <div className="flex items-center space-x-2">
                   <Mail className="w-4 h-4" />
-                  <span>support@laundrypro.com</span>
+                  <span>support@LaundryLobby.com</span>
                 </div>
                 <div className="flex items-center space-x-2">
                   <MapPin className="w-4 h-4" />
@@ -1477,7 +1477,7 @@ export default function HomePage() {
           </div>
           
           <div className="border-t border-gray-800 pt-8 text-center text-gray-400">
-            <p>&copy; 2024 LaundryPro. All rights reserved. | Privacy Policy | Terms of Service</p>
+            <p>&copy; 2024 LaundryLobby. All rights reserved. | Privacy Policy | Terms of Service</p>
           </div>
         </div>
       </footer>

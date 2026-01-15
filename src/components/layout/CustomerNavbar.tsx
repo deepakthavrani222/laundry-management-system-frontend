@@ -57,7 +57,7 @@ export function CustomerNavbar() {
               <div className="w-8 h-8 bg-gradient-to-r from-teal-500 to-cyan-600 rounded-full flex items-center justify-center">
                 <Sparkles className="w-5 h-5 text-white" />
               </div>
-              <span className="text-xl font-bold text-gray-800">LaundryPro</span>
+              <span className="text-xl font-bold text-gray-800">LaundryLobby</span>
             </Link>
           </div>
 

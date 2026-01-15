@@ -5,6 +5,7 @@ import { useBranding, BrandingData, LandingPageTemplate } from '@/hooks/useBrand
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import toast from 'react-hot-toast';
 import { 
   Palette, 
   Upload, 
@@ -72,11 +73,11 @@ export default function BrandingPage() {
     const file = e.target.files?.[0];
     if (file) {
       if (file.size > 2 * 1024 * 1024) {
-        alert('File size must be less than 2MB');
+        toast.error('File size must be less than 2MB');
         return;
       }
       if (!['image/png', 'image/jpeg', 'image/svg+xml'].includes(file.type)) {
-        alert('Only PNG, JPG, and SVG files are allowed');
+        toast.error('Only PNG, JPG, and SVG files are allowed');
         return;
       }
       await uploadLogo(file);

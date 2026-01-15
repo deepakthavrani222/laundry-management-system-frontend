@@ -67,7 +67,7 @@ export default function FreshSpinLoginForm() {
                 <div className="w-12 h-12 bg-gradient-to-br from-violet-500 to-purple-600 rounded-2xl flex items-center justify-center shadow-lg shadow-violet-200">
                   <Sparkles className="w-6 h-6 text-white" />
                 </div>
-                <span className="text-2xl font-bold bg-gradient-to-r from-violet-600 to-purple-600 bg-clip-text text-transparent">LaundryPro</span>
+                <span className="text-2xl font-bold bg-gradient-to-r from-violet-600 to-purple-600 bg-clip-text text-transparent">LaundryLobby</span>
               </div>
               <h1 className="text-3xl font-bold text-gray-900 mb-2">Welcome back!</h1>
               <p className="text-gray-500">Enter your credentials to access your account</p>
@@ -158,7 +158,7 @@ export default function FreshSpinLoginForm() {
 
         {/* Footer */}
         <div className="p-6 lg:p-8 text-center text-sm text-gray-400">
-          © 2024 LaundryPro. All rights reserved.
+          © 2024 LaundryLobby. All rights reserved.
         </div>
       </div>
 

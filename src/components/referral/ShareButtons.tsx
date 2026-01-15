@@ -23,7 +23,7 @@ export default function ShareButtons({ code, link }: ShareButtonsProps) {
   const handleShare = async (platform: string) => {
     await trackShare(platform);
     
-    const message = `Join me on LaundryPro and get amazing discounts! Use my referral code: ${code}`;
+    const message = `Join me on LaundryLobby and get amazing discounts! Use my referral code: ${code}`;
     const encodedMessage = encodeURIComponent(message);
     const encodedLink = encodeURIComponent(link);
 
@@ -32,7 +32,7 @@ export default function ShareButtons({ code, link }: ShareButtonsProps) {
         window.open(`https://wa.me/?text=${encodedMessage}%20${encodedLink}`, '_blank');
         break;
       case 'EMAIL':
-        window.open(`mailto:?subject=Join LaundryPro&body=${encodedMessage}%20${encodedLink}`, '_blank');
+        window.open(`mailto:?subject=Join LaundryLobby&body=${encodedMessage}%20${encodedLink}`, '_blank');
         break;
       case 'SMS':
         window.open(`sms:?body=${encodedMessage}%20${encodedLink}`, '_blank');

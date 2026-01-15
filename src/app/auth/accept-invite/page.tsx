@@ -114,7 +114,7 @@ function AcceptInviteContent() {
         <CardHeader className="text-center">
           <CardTitle className="text-2xl">Set Up Your Account</CardTitle>
           <CardDescription>
-            Create a password to activate your LaundryPro admin account
+            Create a password to activate your LaundryLobby admin account
           </CardDescription>
         </CardHeader>
         <CardContent>

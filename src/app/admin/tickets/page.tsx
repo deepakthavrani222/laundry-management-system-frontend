@@ -19,6 +19,7 @@ import {
 } from 'lucide-react'
 import Link from 'next/link'
 import { useAdminTickets } from '@/hooks/useAdminTickets'
+import toast from 'react-hot-toast'
 
 const ITEMS_PER_PAGE = 10
 
@@ -85,33 +86,33 @@ export default function AdminTicketsPage() {
   const handleTakeTicket = async (ticketId: string) => {
     try {
       await takeTicket(ticketId)
-      alert('Ticket assigned to you!')
+      toast.success('Ticket assigned to you!')
     } catch (error: any) {
-      alert(`Failed: ${error.message}`)
+      toast.error(`Failed: ${error.message}`)
     }
   }
 
   const handleResolve = async () => {
     if (!resolution.trim()) {
-      alert('Please enter a resolution')
+      toast.error('Please enter a resolution')
       return
     }
     try {
       await resolveTicket(selectedTicket, resolution)
       setShowResolveModal(false)
       setResolution('')
-      alert('Ticket resolved successfully!')
+      toast.success('Ticket resolved successfully!')
     } catch (error: any) {
-      alert(`Failed: ${error.message}`)
+      toast.error(`Failed: ${error.message}`)
     }
   }
 
   const handleCloseTicket = async (ticketId: string) => {
     try {
       await updateStatus(ticketId, 'closed')
-      alert('Ticket closed!')
+      toast.success('Ticket closed!')
     } catch (error: any) {
-      alert(`Failed: ${error.message}`)
+      toast.error(`Failed: ${error.message}`)
     }
   }
 

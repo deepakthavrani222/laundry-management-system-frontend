@@ -742,7 +742,7 @@ export default function LaundryMasterTemplate({ themeColor, isAuthenticated, onB
               >
                 <Sparkles className="w-5 h-5" style={{ color: theme.accent }} />
               </div>
-              <span className="text-xl font-bold" style={{ color: theme.textPrimary }}>LaundryPro</span>
+              <span className="text-xl font-bold" style={{ color: theme.textPrimary }}>LaundryLobby</span>
             </div>
 
             {/* Navigation - Center */}
@@ -1245,7 +1245,7 @@ export default function LaundryMasterTemplate({ themeColor, isAuthenticated, onB
                   >
                     <Mail className="w-4 h-4 text-white" />
                   </div>
-                  <span className="text-sm text-gray-200">support@laundrypro.com</span>
+                  <span className="text-sm text-gray-200">support@LaundryLobby.com</span>
                 </div>
               </div>
             </div>
@@ -1266,7 +1266,7 @@ export default function LaundryMasterTemplate({ themeColor, isAuthenticated, onB
                 >
                   <Sparkles className="w-6 h-6 text-white" />
                 </div>
-                <span className="text-2xl font-bold">LaundryPro</span>
+                <span className="text-2xl font-bold">LaundryLobby</span>
               </div>
               <p className="text-gray-400 mb-6">
                 {t('footer.desc')}
@@ -1308,7 +1308,7 @@ export default function LaundryMasterTemplate({ themeColor, isAuthenticated, onB
                 </li>
                 <li className="flex items-center gap-3">
                   <Mail className="w-5 h-5" style={{ color: theme.accentText }} />
-                  support@laundrypro.com
+                  support@LaundryLobby.com
                 </li>
                 <li className="flex items-center gap-3">
                   <MapPin className="w-5 h-5" style={{ color: theme.accentText }} />

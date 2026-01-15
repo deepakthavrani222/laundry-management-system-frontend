@@ -79,7 +79,7 @@ export default function TemplateHeader() {
   const effectiveIsTenantPage = isTenantPage || isOnTenantRoute
   
   // Get display name and logo from tenant or default
-  const displayName = tenant?.name || 'LaundryPro'
+  const displayName = tenant?.name || 'LaundryLobby'
   const logoUrl = tenant?.logo
   
   // Use tenant template if on tenant page, otherwise use localStorage

@@ -98,7 +98,7 @@ export function SupportSidebar() {
               <Headphones className="w-5 h-5 text-white" />
             </div>
             <div>
-              <h1 className="text-lg font-bold text-gray-900">LaundryPro</h1>
+              <h1 className="text-lg font-bold text-gray-900">LaundryLobby</h1>
             </div>
           </Link>
         )}
