@@ -56,11 +56,25 @@ export function useFeatures() {
   
   // Get features from user's tenancy subscription
   const features = useMemo(() => {
-    // Features can come from user.tenancy.subscription.features or user.subscription.features
+    // Priority order:
+    // 1. user.features (from /permissions/sync endpoint - most up-to-date)
+    // 2. user.tenancy.subscription.features
+    // 3. user.subscription.features
+    const directFeatures = user?.features;
     const tenancyFeatures = user?.tenancy?.subscription?.features;
     const userFeatures = user?.subscription?.features;
-    return tenancyFeatures || userFeatures || {};
-  }, [user]);
+    
+    const result = directFeatures || tenancyFeatures || userFeatures || {};
+    
+    // Debug log to see what features are loaded
+    console.log('🎯 Features recomputed:', {
+      enabledFeatures: Object.keys(result).filter(k => result[k]),
+      totalFeatures: Object.keys(result).length,
+      source: directFeatures ? 'user.features' : tenancyFeatures ? 'tenancy.subscription.features' : 'subscription.features'
+    });
+    
+    return result;
+  }, [user, user?.features, user?.tenancy?.subscription?.features, user?.subscription?.features]); // Add all dependencies
 
   /**
    * Check if a boolean feature is enabled

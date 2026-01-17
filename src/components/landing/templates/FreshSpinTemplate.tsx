@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button'
 import Link from 'next/link'
 import { 
   Phone, Mail, Clock, Truck, Sparkles, CheckCircle, Shield, Award, Zap, Star,
-  Instagram, Facebook, Twitter, Linkedin, MapPin, ChevronLeft, ChevronRight, Package, Shirt, Waves,
+  Instagram, Facebook, Twitter, Linkedin, Youtube, MapPin, ChevronLeft, ChevronRight, Package, Shirt, Waves,
   User, LogOut, ShoppingBag, ChevronDown, Settings, Sun, Moon, X
 } from 'lucide-react'
 import { useState, useEffect } from 'react'
@@ -24,6 +24,21 @@ interface FreshSpinTemplateProps {
   onTemplateChange?: (template: string) => void
   currentTemplate?: string
   isTenantPage?: boolean
+  user?: any
+  tenantName?: string
+  tenantLogo?: string
+  tenancyId?: string
+  tenantBusinessName?: string
+  tenantTagline?: string
+  tenantSlogan?: string
+  tenantSocialMedia?: {
+    facebook?: string
+    instagram?: string
+    twitter?: string
+    linkedin?: string
+    youtube?: string
+    whatsapp?: string
+  }
 }
 
 type SchemeMode = 'light' | 'dark' | 'auto'
@@ -231,7 +246,7 @@ const getThemeColors = (colorName: ThemeColor, scheme: SchemeMode): ThemeColors 
 }
 
 // Hero Carousel with Infinite Smooth Sliding Animation
-function HeroCarousel({ onBookNow, t, theme }: { onBookNow: () => void; t: (key: string) => string; theme: ThemeColors }) {
+function HeroCarousel({ onBookNow, t, theme, tenantTagline }: { onBookNow: () => void; t: (key: string) => string; theme: ThemeColors; tenantTagline?: string }) {
   const [currentSlide, setCurrentSlide] = useState(0)
   const [isTransitioning, setIsTransitioning] = useState(false)
   const [translateX, setTranslateX] = useState(0)
@@ -354,6 +369,15 @@ function HeroCarousel({ onBookNow, t, theme }: { onBookNow: () => void; t: (key:
         <h1 className="text-4xl md:text-6xl font-bold mb-8 font-serif leading-tight" key={`title-${actualSlideIndex}`}>
           {slides[actualSlideIndex].title}
         </h1>
+        
+        {/* Tagline Display */}
+        {tenantTagline && (
+          <p className="text-2xl md:text-3xl font-semibold mb-6 flex items-center justify-center gap-2 text-white animate-fade-in">
+            <Sparkles className="w-6 h-6 md:w-8 md:h-8" />
+            {tenantTagline}
+          </p>
+        )}
+        
         <Button 
           size="lg" 
           className="bg-white text-gray-900 hover:bg-gray-100 px-10 py-6 text-lg rounded-full font-semibold"
@@ -585,7 +609,24 @@ function SettingsPanel({
   )
 }
 
-export default function FreshSpinTemplate({ themeColor, isAuthenticated, onBookNow, onColorChange, onLanguageChange, onTemplateChange, currentTemplate, isTenantPage = false }: FreshSpinTemplateProps) {
+export default function FreshSpinTemplate({ 
+  themeColor, 
+  isAuthenticated, 
+  onBookNow, 
+  onColorChange, 
+  onLanguageChange, 
+  onTemplateChange, 
+  currentTemplate, 
+  isTenantPage = false,
+  user,
+  tenantName,
+  tenantLogo,
+  tenancyId,
+  tenantBusinessName,
+  tenantTagline,
+  tenantSlogan,
+  tenantSocialMedia,
+}: FreshSpinTemplateProps) {
   // Use language hook for reactive translations
   const { language, t } = useLanguage()
   const [scheme, setScheme] = useState<SchemeMode>('light')
@@ -653,7 +694,7 @@ export default function FreshSpinTemplate({ themeColor, isAuthenticated, onBookN
       {/* Hero Banner with Carousel */}
       <div className="pt-20">
         <div className="max-w-screen-2xl mx-auto w-full relative">
-          <HeroCarousel onBookNow={onBookNow} t={t} theme={theme} />
+          <HeroCarousel onBookNow={onBookNow} t={t} theme={theme} tenantTagline={tenantTagline} />
         </div>
       </div>
 
@@ -1037,17 +1078,79 @@ export default function FreshSpinTemplate({ themeColor, isAuthenticated, onBookN
             {/* About */}
             <div>
               <h3 className="text-xl font-bold mb-6 pb-4 border-b-2 border-b-transparent relative" style={{ color: theme.footerText }}>
-                {t('about.subtitle')}
+                {tenantBusinessName || tenantName || t('about.subtitle')}
                 <span className="absolute bottom-0 left-0 w-16 h-0.5" style={{ backgroundColor: theme.accent }}></span>
               </h3>
               <p className="mb-6" style={{ color: `${theme.footerText}99` }}>
-                {t('footer.desc')}
+                {tenantSlogan || t('footer.desc')}
               </p>
               <div className="flex gap-3">
-                <a href="#" className="w-10 h-10 rounded-full flex items-center justify-center hover:opacity-80 transition-opacity" style={{ backgroundColor: `${theme.footerText}20`, color: theme.footerText }}><Facebook className="w-5 h-5" /></a>
-                <a href="#" className="w-10 h-10 rounded-full flex items-center justify-center hover:opacity-80 transition-opacity" style={{ backgroundColor: `${theme.footerText}20`, color: theme.footerText }}><Twitter className="w-5 h-5" /></a>
-                <a href="#" className="w-10 h-10 rounded-full flex items-center justify-center hover:opacity-80 transition-opacity" style={{ backgroundColor: `${theme.footerText}20`, color: theme.footerText }}><Linkedin className="w-5 h-5" /></a>
-                <a href="#" className="w-10 h-10 rounded-full flex items-center justify-center hover:opacity-80 transition-opacity" style={{ backgroundColor: `${theme.footerText}20`, color: theme.footerText }}><Instagram className="w-5 h-5" /></a>
+                {tenantSocialMedia?.facebook && (
+                  <a 
+                    href={tenantSocialMedia.facebook} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="w-10 h-10 rounded-full flex items-center justify-center hover:opacity-80 transition-opacity" 
+                    style={{ backgroundColor: `${theme.footerText}20`, color: theme.footerText }}
+                  >
+                    <Facebook className="w-5 h-5" />
+                  </a>
+                )}
+                {tenantSocialMedia?.twitter && (
+                  <a 
+                    href={tenantSocialMedia.twitter} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="w-10 h-10 rounded-full flex items-center justify-center hover:opacity-80 transition-opacity" 
+                    style={{ backgroundColor: `${theme.footerText}20`, color: theme.footerText }}
+                  >
+                    <Twitter className="w-5 h-5" />
+                  </a>
+                )}
+                {tenantSocialMedia?.linkedin && (
+                  <a 
+                    href={tenantSocialMedia.linkedin} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="w-10 h-10 rounded-full flex items-center justify-center hover:opacity-80 transition-opacity" 
+                    style={{ backgroundColor: `${theme.footerText}20`, color: theme.footerText }}
+                  >
+                    <Linkedin className="w-5 h-5" />
+                  </a>
+                )}
+                {tenantSocialMedia?.instagram && (
+                  <a 
+                    href={tenantSocialMedia.instagram} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="w-10 h-10 rounded-full flex items-center justify-center hover:opacity-80 transition-opacity" 
+                    style={{ backgroundColor: `${theme.footerText}20`, color: theme.footerText }}
+                  >
+                    <Instagram className="w-5 h-5" />
+                  </a>
+                )}
+                {tenantSocialMedia?.youtube && (
+                  <a 
+                    href={tenantSocialMedia.youtube} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="w-10 h-10 rounded-full flex items-center justify-center hover:opacity-80 transition-opacity" 
+                    style={{ backgroundColor: `${theme.footerText}20`, color: theme.footerText }}
+                  >
+                    <Youtube className="w-5 h-5" />
+                  </a>
+                )}
+                {tenantSocialMedia?.whatsapp && (
+                  <a 
+                    href={`https://wa.me/${tenantSocialMedia.whatsapp.replace(/\D/g, '')}`} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="w-10 h-10 rounded-full flex items-center justify-center hover:opacity-80 transition-opacity" 
+                    style={{ backgroundColor: '#25D366', color: '#ffffff' }}
+                  >
+                    <Phone className="w-5 h-5" />
+                  </a>
+                )}
               </div>
             </div>
 

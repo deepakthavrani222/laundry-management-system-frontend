@@ -6,6 +6,18 @@ interface TenantBranding {
   name: string
   slug: string
   logo?: string
+  secondaryLogo?: string
+  businessName?: string
+  tagline?: string
+  slogan?: string
+  socialMedia?: {
+    facebook?: string
+    instagram?: string
+    twitter?: string
+    linkedin?: string
+    youtube?: string
+    whatsapp?: string
+  }
   primaryColor?: string
   secondaryColor?: string
   accentColor?: string

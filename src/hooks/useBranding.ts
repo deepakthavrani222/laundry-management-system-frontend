@@ -7,6 +7,18 @@ export type LandingPageTemplate = 'original' | 'minimal' | 'freshspin' | 'starte
 export interface BrandingData {
   logo?: string;
   logoUrl?: string;
+  businessName?: string;
+  tagline?: string;
+  slogan?: string;
+  secondaryLogo?: string;
+  socialMedia?: {
+    facebook?: string;
+    instagram?: string;
+    twitter?: string;
+    linkedin?: string;
+    youtube?: string;
+    whatsapp?: string;
+  };
   primaryColor: string;
   secondaryColor: string;
   accentColor: string;
@@ -17,8 +29,20 @@ export interface BrandingData {
 
 export interface TenancyBranding {
   branding: {
+    businessName?: string;
+    tagline?: string;
+    slogan?: string;
     logo?: { url?: string; publicId?: string };
+    secondaryLogo?: { url?: string; publicId?: string };
     favicon?: { url?: string; publicId?: string };
+    socialMedia?: {
+      facebook?: string;
+      instagram?: string;
+      twitter?: string;
+      linkedin?: string;
+      youtube?: string;
+      whatsapp?: string;
+    };
     theme?: {
       primaryColor?: string;
       secondaryColor?: string;
@@ -63,6 +87,10 @@ export function useBranding() {
       // Transform frontend format to backend format
       const payload = {
         branding: {
+          businessName: data.businessName,
+          tagline: data.tagline,
+          slogan: data.slogan,
+          socialMedia: data.socialMedia,
           theme: {
             primaryColor: data.primaryColor,
             secondaryColor: data.secondaryColor,
@@ -123,6 +151,42 @@ export function useBranding() {
     }
   };
 
+  const uploadSecondaryLogo = async (file: File): Promise<string | null> => {
+    try {
+      setSaving(true);
+      setError(null);
+      
+      const reader = new FileReader();
+      const base64Promise = new Promise<string>((resolve, reject) => {
+        reader.onload = () => resolve(reader.result as string);
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+      
+      const base64 = await base64Promise;
+      
+      await api.put('/admin/tenancy/branding', {
+        branding: {
+          secondaryLogo: {
+            url: base64,
+            publicId: `secondary_logo_${Date.now()}`
+          }
+        }
+      });
+      
+      await fetchBranding();
+      toast.success('Secondary logo uploaded successfully');
+      return base64;
+    } catch (err: any) {
+      const message = err.response?.data?.message || 'Failed to upload secondary logo';
+      setError(message);
+      toast.error(message);
+      return null;
+    } finally {
+      setSaving(false);
+    }
+  };
+
   const removeLogo = async (): Promise<boolean> => {
     try {
       setSaving(true);
@@ -152,6 +216,7 @@ export function useBranding() {
     error,
     updateBranding,
     uploadLogo,
+    uploadSecondaryLogo,
     removeLogo,
     refetch: fetchBranding,
   };

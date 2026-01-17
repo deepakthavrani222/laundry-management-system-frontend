@@ -13,6 +13,22 @@ interface User {
   isVIP?: boolean
   assignedBranch?: string
   permissions?: Record<string, Record<string, boolean>>
+  features?: Record<string, boolean | number> // Features from tenancy subscription
+  tenancy?: {
+    _id?: string
+    subscription?: {
+      plan?: string
+      status?: string
+      features?: Record<string, boolean | number>
+      trialEndsAt?: string
+    }
+  }
+  subscription?: {
+    plan?: string
+    status?: string
+    features?: Record<string, boolean | number>
+    trialEndsAt?: string
+  }
 }
 
 interface AuthState {
@@ -34,7 +50,7 @@ export const useAuthStore = create<AuthState>()(
       isAuthenticated: false,
       _hasHydrated: false,
       setAuth: (user, token) => {
-        console.log('🔥 Setting auth in store:', { user, token: token ? 'present' : 'none' })
+        // console.log('🔥 Setting auth in store:', { user, token: token ? 'present' : 'none' })
         // Token is now stored in HTTP-only cookie by backend
         // We keep token in state for backward compatibility but cookie is primary
         set({ user, token, isAuthenticated: true })
@@ -54,7 +70,7 @@ export const useAuthStore = create<AuthState>()(
       name: 'laundry-auth',
       storage: createJSONStorage(() => localStorage),
       onRehydrateStorage: () => (state) => {
-        console.log('🔥 Auth store rehydrated:', state)
+        // console.log('🔥 Auth store rehydrated:', state)
         state?.setHasHydrated(true)
       }
     }

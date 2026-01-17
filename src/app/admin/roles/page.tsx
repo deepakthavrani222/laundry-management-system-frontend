@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { createPortal } from 'react-dom'
 import { Button } from '@/components/ui/button'
 import { api } from '@/lib/api'
 import { 
@@ -430,8 +431,8 @@ export default function AdminRolesPage() {
       )}
 
       {/* Create/Edit Role Modal */}
-      {showModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+      {showModal && typeof window !== 'undefined' && createPortal(
+        <div className="fixed top-0 left-0 right-0 bottom-0 bg-black/80 flex items-center justify-center p-4" style={{ zIndex: 999999 }}>
           <div className="bg-white rounded-xl w-full max-w-3xl max-h-[90vh] overflow-hidden flex flex-col">
             <div className="sticky top-0 bg-white border-b p-4 flex items-center justify-between">
               <h3 className="text-lg font-semibold">{editingRole ? 'Edit Role' : 'Create New Role'}</h3>
@@ -512,12 +513,13 @@ export default function AdminRolesPage() {
               </Button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* Assign Role Modal */}
-      {showAssignModal && selectedUser && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+      {showAssignModal && selectedUser && typeof window !== 'undefined' && createPortal(
+        <div className="fixed top-0 left-0 right-0 bottom-0 bg-black/80 flex items-center justify-center p-4" style={{ zIndex: 999999 }}>
           <div className="bg-white rounded-xl w-full max-w-md">
             <div className="border-b p-4 flex items-center justify-between">
               <h3 className="text-lg font-semibold">Assign Role</h3>
@@ -566,7 +568,8 @@ export default function AdminRolesPage() {
               </Button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   )

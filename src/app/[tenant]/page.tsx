@@ -228,7 +228,13 @@ export default function TenantLandingPage() {
     // Tenant branding data
     tenantName: tenantData.name,
     tenantLogo: tenantData.branding?.logo?.url,
+    tenantSecondaryLogo: tenantData.branding?.secondaryLogo?.url,
     tenantContact: tenantData.contact,
+    // Business identity
+    tenantBusinessName: tenantData.branding?.businessName,
+    tenantTagline: tenantData.branding?.tagline,
+    tenantSlogan: tenantData.branding?.slogan,
+    tenantSocialMedia: tenantData.branding?.socialMedia,
     // Mark as tenant page to hide color/template selectors
     isTenantPage: true,
     // Hide footer - we'll render it separately with banner
@@ -258,6 +264,11 @@ export default function TenantLandingPage() {
         name: tenantData.name,
         slug: tenantData.slug,
         logo: tenantData.branding?.logo?.url,
+        secondaryLogo: tenantData.branding?.secondaryLogo?.url,
+        businessName: tenantData.branding?.businessName,
+        tagline: tenantData.branding?.tagline,
+        slogan: tenantData.branding?.slogan,
+        socialMedia: tenantData.branding?.socialMedia,
         primaryColor: tenantData.branding?.theme?.primaryColor,
         secondaryColor: tenantData.branding?.theme?.secondaryColor,
         accentColor: tenantData.branding?.theme?.accentColor,

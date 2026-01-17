@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button'
 import Link from 'next/link'
 import { 
   Phone, Mail, Clock, Truck, Sparkles, CheckCircle, Shield, Award, Zap, Star,
-  Instagram, Facebook, Twitter, MapPin, ChevronLeft, ChevronRight, Package, Shirt,
+  Instagram, Facebook, Twitter, Linkedin, Youtube, MapPin, ChevronLeft, ChevronRight, Package, Shirt,
   Users, Building2, ArrowRight, Play, User, LogOut, ShoppingBag, ChevronDown,
   Settings, Sun, Moon, Monitor, RotateCcw, X
 } from 'lucide-react'
@@ -25,6 +25,20 @@ interface LaundryMasterTemplateProps {
   currentTemplate?: string
   isTenantPage?: boolean
   tenantName?: string
+  user?: any
+  tenantLogo?: string
+  tenancyId?: string
+  tenantBusinessName?: string
+  tenantTagline?: string
+  tenantSlogan?: string
+  tenantSocialMedia?: {
+    facebook?: string
+    instagram?: string
+    twitter?: string
+    linkedin?: string
+    youtube?: string
+    whatsapp?: string
+  }
 }
 
 // Professional Color Palettes - Harmonious combinations
@@ -637,7 +651,24 @@ function SettingsPanel({
   )
 }
 
-export default function LaundryMasterTemplate({ themeColor, isAuthenticated, onBookNow, onColorChange, onLanguageChange, onTemplateChange, currentTemplate, isTenantPage, tenantName }: LaundryMasterTemplateProps) {
+export default function LaundryMasterTemplate({ 
+  themeColor, 
+  isAuthenticated, 
+  onBookNow, 
+  onColorChange, 
+  onLanguageChange, 
+  onTemplateChange, 
+  currentTemplate, 
+  isTenantPage, 
+  tenantName,
+  user,
+  tenantLogo,
+  tenancyId,
+  tenantBusinessName,
+  tenantTagline,
+  tenantSlogan,
+  tenantSocialMedia,
+}: LaundryMasterTemplateProps) {
   // Use language hook for reactive translations
   const { language, t } = useLanguage()
   const colors = colorClasses[themeColor]
@@ -866,6 +897,14 @@ export default function LaundryMasterTemplate({ themeColor, isAuthenticated, onB
                     <h1 className="text-3xl md:text-5xl font-bold text-white mb-4 leading-tight italic" style={{ fontFamily: 'Georgia, serif' }}>
                       {t('hero.title')}
                     </h1>
+                    
+                    {/* Tagline Display */}
+                    {tenantTagline && (
+                      <p className="text-xl md:text-2xl font-semibold mb-4 flex items-center gap-2 text-white">
+                        <Sparkles className="w-6 h-6" />
+                        {tenantTagline}
+                      </p>
+                    )}
                     
                     <p className="text-base md:text-lg text-white/90 mb-6 max-w-xl">
                       {t('hero.subtitle')}
@@ -1266,15 +1305,75 @@ export default function LaundryMasterTemplate({ themeColor, isAuthenticated, onB
                 >
                   <Sparkles className="w-6 h-6 text-white" />
                 </div>
-                <span className="text-2xl font-bold">LaundryLobby</span>
+                <span className="text-2xl font-bold">
+                  {tenantBusinessName || tenantName || 'LaundryLobby'}
+                </span>
               </div>
               <p className="text-gray-400 mb-6">
-                {t('footer.desc')}
+                {tenantSlogan || t('footer.desc')}
               </p>
               <div className="flex gap-3">
-                <a href="#" className="w-10 h-10 bg-gray-800 rounded-full flex items-center justify-center hover:opacity-80 transition-colors"><Twitter className="w-5 h-5" /></a>
-                <a href="#" className="w-10 h-10 bg-gray-800 rounded-full flex items-center justify-center hover:opacity-80 transition-colors"><Facebook className="w-5 h-5" /></a>
-                <a href="#" className="w-10 h-10 bg-gray-800 rounded-full flex items-center justify-center hover:opacity-80 transition-colors"><Instagram className="w-5 h-5" /></a>
+                {tenantSocialMedia?.twitter && (
+                  <a 
+                    href={tenantSocialMedia.twitter} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="w-10 h-10 bg-gray-800 rounded-full flex items-center justify-center hover:opacity-80 transition-colors"
+                  >
+                    <Twitter className="w-5 h-5" />
+                  </a>
+                )}
+                {tenantSocialMedia?.facebook && (
+                  <a 
+                    href={tenantSocialMedia.facebook} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="w-10 h-10 bg-gray-800 rounded-full flex items-center justify-center hover:opacity-80 transition-colors"
+                  >
+                    <Facebook className="w-5 h-5" />
+                  </a>
+                )}
+                {tenantSocialMedia?.instagram && (
+                  <a 
+                    href={tenantSocialMedia.instagram} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="w-10 h-10 bg-gray-800 rounded-full flex items-center justify-center hover:opacity-80 transition-colors"
+                  >
+                    <Instagram className="w-5 h-5" />
+                  </a>
+                )}
+                {tenantSocialMedia?.linkedin && (
+                  <a 
+                    href={tenantSocialMedia.linkedin} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="w-10 h-10 bg-gray-800 rounded-full flex items-center justify-center hover:opacity-80 transition-colors"
+                  >
+                    <Linkedin className="w-5 h-5" />
+                  </a>
+                )}
+                {tenantSocialMedia?.youtube && (
+                  <a 
+                    href={tenantSocialMedia.youtube} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="w-10 h-10 bg-gray-800 rounded-full flex items-center justify-center hover:opacity-80 transition-colors"
+                  >
+                    <Youtube className="w-5 h-5" />
+                  </a>
+                )}
+                {tenantSocialMedia?.whatsapp && (
+                  <a 
+                    href={`https://wa.me/${tenantSocialMedia.whatsapp.replace(/\D/g, '')}`} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="w-10 h-10 rounded-full flex items-center justify-center hover:opacity-80 transition-colors"
+                    style={{ backgroundColor: '#25D366' }}
+                  >
+                    <Phone className="w-5 h-5 text-white" />
+                  </a>
+                )}
               </div>
             </div>
 

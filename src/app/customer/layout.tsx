@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import CustomerSidebar from '@/components/layout/CustomerSidebar'
 import CustomerHeader from '@/components/layout/CustomerHeader'
+import NotificationContainer from '@/components/customer/NotificationContainer'
 
 export default function CustomerLayout({
   children,
@@ -57,6 +58,9 @@ export default function CustomerLayout({
 
   return (
     <div className="min-h-screen bg-gray-50">
+      {/* Real-time notification toasts */}
+      <NotificationContainer />
+      
       {/* Sidebar */}
       <CustomerSidebar 
         mobileOpen={mobileMenuOpen} 

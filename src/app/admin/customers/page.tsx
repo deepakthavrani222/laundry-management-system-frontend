@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { createPortal } from 'react-dom'
 import { useSearchParams, useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { usePermissions } from '@/hooks/usePermissions'
@@ -27,7 +28,15 @@ import {
   ChevronLeft,
   ChevronRight,
   ChevronsLeft,
-  ChevronsRight
+  ChevronsRight,
+  Gift,
+  Wallet,
+  Star,
+  TrendingUp,
+  Package,
+  CheckCircle,
+  XCircle,
+  Loader
 } from 'lucide-react'
 import { useAdminCustomers } from '@/hooks/useAdmin'
 import toast from 'react-hot-toast'
@@ -51,6 +60,52 @@ interface Customer {
   }>
 }
 
+interface CustomerDetails extends Customer {
+  orderStats: {
+    total: number
+    completed: number
+    pending: number
+    cancelled: number
+    totalSpent: number
+    lastOrderDate: string | null
+  }
+  recentOrders: Array<{
+    _id: string
+    orderNumber: string
+    status: string
+    total: number
+    date: string
+    serviceCount: number
+  }>
+  addresses: Array<{
+    _id: string
+    addressLine1: string
+    addressLine2?: string
+    city: string
+    state: string
+    pincode: string
+    isDefault: boolean
+  }>
+  loyalty: {
+    points: number
+    tier: string
+    programName: string
+    pointsValue: number
+  } | null
+  referral: {
+    code: string | null
+    referredCount: number
+    totalEarnings: number
+  }
+  wallet: {
+    balance: number
+  }
+  favoriteServices: Array<{
+    name: string
+    orderCount: number
+  }>
+}
+
 export default function AdminCustomersPage() {
   const { canUpdate, hasPermission } = usePermissions('customers')
   const canExportReports = hasPermission('reports', 'export')
@@ -70,7 +125,9 @@ export default function AdminCustomersPage() {
   const [goToPage, setGoToPage] = useState('')
   const [loadingAction, setLoadingAction] = useState<string | null>(null)
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null)
+  const [customerDetails, setCustomerDetails] = useState<CustomerDetails | null>(null)
   const [showProfileModal, setShowProfileModal] = useState(false)
+  const [loadingDetails, setLoadingDetails] = useState(false)
 
   const { customers, pagination, loading, error, toggleStatus, updateVIPStatus, refetch } = useAdminCustomers(filters)
 
@@ -152,9 +209,22 @@ export default function AdminCustomersPage() {
     }
   }
 
-  const handleViewProfile = (customer: Customer) => {
+  const handleViewProfile = async (customer: Customer) => {
     setSelectedCustomer(customer)
     setShowProfileModal(true)
+    setLoadingDetails(true)
+    setCustomerDetails(null)
+    
+    try {
+      // Use adminApi to fetch customer details (handles auth properly)
+      const { adminApi } = await import('@/lib/adminApi')
+      const response = await adminApi.getCustomerDetails(customer._id)
+      setCustomerDetails(response.data.customer)
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to load customer details')
+    } finally {
+      setLoadingDetails(false)
+    }
   }
 
   const handleExport = () => {
@@ -549,14 +619,17 @@ export default function AdminCustomersPage() {
       </div>
 
       {/* View Profile Modal */}
-      {showProfileModal && selectedCustomer && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+      {showProfileModal && selectedCustomer && typeof window !== 'undefined' && createPortal(
+        <div className="fixed top-0 left-0 right-0 bottom-0 bg-black/80 flex items-center justify-center p-4" style={{ zIndex: 999999 }}>
+          <div className="bg-white rounded-xl w-full max-w-5xl max-h-[90vh] overflow-y-auto">
             {/* Modal Header */}
-            <div className="flex items-center justify-between p-6 border-b border-gray-200">
+            <div className="flex items-center justify-between p-6 border-b border-gray-200 sticky top-0 bg-white z-10">
               <h3 className="text-xl font-semibold text-gray-800">Customer Profile</h3>
               <button 
-                onClick={() => setShowProfileModal(false)}
+                onClick={() => {
+                  setShowProfileModal(false)
+                  setCustomerDetails(null)
+                }}
                 className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
               >
                 <X className="w-5 h-5 text-gray-500" />
@@ -590,107 +663,307 @@ export default function AdminCustomersPage() {
                 </div>
               </div>
 
-              {/* Contact Information */}
-              <div>
-                <h5 className="text-lg font-semibold text-gray-800 mb-3">Contact Information</h5>
-                <div className="bg-gray-50 rounded-lg p-4 space-y-3">
-                  <div className="flex items-center gap-3">
-                    <Mail className="w-5 h-5 text-gray-400" />
-                    <div>
-                      <p className="text-sm text-gray-500">Email</p>
-                      <p className="font-medium">{selectedCustomer.email}</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <Phone className="w-5 h-5 text-gray-400" />
-                    <div>
-                      <p className="text-sm text-gray-500">Phone</p>
-                      <p className="font-medium">{selectedCustomer.phone}</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <Calendar className="w-5 h-5 text-gray-400" />
-                    <div>
-                      <p className="text-sm text-gray-500">Member Since</p>
-                      <p className="font-medium">{new Date(selectedCustomer.createdAt).toLocaleDateString('en-IN', { 
-                        year: 'numeric', 
-                        month: 'long', 
-                        day: 'numeric' 
-                      })}</p>
-                    </div>
-                  </div>
+              {loadingDetails ? (
+                <div className="flex items-center justify-center py-12">
+                  <Loader2 className="w-8 h-8 text-blue-600 animate-spin" />
+                  <span className="ml-3 text-gray-600">Loading customer details...</span>
                 </div>
-              </div>
-
-              {/* Order Statistics */}
-              <div>
-                <h5 className="text-lg font-semibold text-gray-800 mb-3">Order Statistics</h5>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="bg-blue-50 rounded-lg p-4 text-center">
-                    <ShoppingBag className="w-8 h-8 text-blue-500 mx-auto mb-2" />
-                    <p className="text-2xl font-bold text-blue-600">{selectedCustomer.stats?.totalOrders || 0}</p>
-                    <p className="text-sm text-gray-500">Total Orders</p>
+              ) : customerDetails ? (
+                <>
+                  {/* Contact Information */}
+                  <div>
+                    <h5 className="text-lg font-semibold text-gray-800 mb-3">Contact Information</h5>
+                    <div className="bg-gray-50 rounded-lg p-4 space-y-3">
+                      <div className="flex items-center gap-3">
+                        <Mail className="w-5 h-5 text-gray-400" />
+                        <div>
+                          <p className="text-sm text-gray-500">Email</p>
+                          <p className="font-medium">{customerDetails.email}</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <Phone className="w-5 h-5 text-gray-400" />
+                        <div>
+                          <p className="text-sm text-gray-500">Phone</p>
+                          <p className="font-medium">{customerDetails.phone}</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <Calendar className="w-5 h-5 text-gray-400" />
+                        <div>
+                          <p className="text-sm text-gray-500">Member Since</p>
+                          <p className="font-medium">{new Date(customerDetails.createdAt).toLocaleDateString('en-IN', { 
+                            year: 'numeric', 
+                            month: 'long', 
+                            day: 'numeric' 
+                          })}</p>
+                        </div>
+                      </div>
+                    </div>
                   </div>
-                  <div className="bg-green-50 rounded-lg p-4 text-center">
-                    <IndianRupee className="w-8 h-8 text-green-500 mx-auto mb-2" />
-                    <p className="text-2xl font-bold text-green-600">₹{selectedCustomer.stats?.totalSpent?.toLocaleString() || '0'}</p>
-                    <p className="text-sm text-gray-500">Total Spent</p>
-                  </div>
-                </div>
-              </div>
 
-              {/* Quick Actions */}
-              <div>
-                <h5 className="text-lg font-semibold text-gray-800 mb-3">Quick Actions</h5>
-                <div className="flex flex-wrap gap-3">
-                  {canUpdate && (
-                    <Button 
-                      variant="outline"
-                      className={selectedCustomer.isActive ? "text-red-600 border-red-600 hover:bg-red-50" : "text-green-600 border-green-600 hover:bg-green-50"}
-                      onClick={() => {
-                        handleToggleStatus(selectedCustomer._id, selectedCustomer.name, selectedCustomer.isActive)
-                        setShowProfileModal(false)
-                      }}
-                    >
-                      {selectedCustomer.isActive ? (
-                        <>
-                          <UserX className="w-4 h-4 mr-2" />
-                          Deactivate Account
-                        </>
-                      ) : (
-                        <>
-                          <UserCheck className="w-4 h-4 mr-2" />
-                          Activate Account
-                        </>
+                  {/* Order Statistics */}
+                  <div>
+                    <h5 className="text-lg font-semibold text-gray-800 mb-3">Order Statistics</h5>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                      <div className="bg-blue-50 rounded-lg p-4 text-center">
+                        <ShoppingBag className="w-8 h-8 text-blue-500 mx-auto mb-2" />
+                        <p className="text-2xl font-bold text-blue-600">{customerDetails.orderStats.total}</p>
+                        <p className="text-sm text-gray-500">Total Orders</p>
+                      </div>
+                      <div className="bg-green-50 rounded-lg p-4 text-center">
+                        <CheckCircle className="w-8 h-8 text-green-500 mx-auto mb-2" />
+                        <p className="text-2xl font-bold text-green-600">{customerDetails.orderStats.completed}</p>
+                        <p className="text-sm text-gray-500">Completed</p>
+                      </div>
+                      <div className="bg-yellow-50 rounded-lg p-4 text-center">
+                        <Loader className="w-8 h-8 text-yellow-500 mx-auto mb-2" />
+                        <p className="text-2xl font-bold text-yellow-600">{customerDetails.orderStats.pending}</p>
+                        <p className="text-sm text-gray-500">Pending</p>
+                      </div>
+                      <div className="bg-red-50 rounded-lg p-4 text-center">
+                        <XCircle className="w-8 h-8 text-red-500 mx-auto mb-2" />
+                        <p className="text-2xl font-bold text-red-600">{customerDetails.orderStats.cancelled}</p>
+                        <p className="text-sm text-gray-500">Cancelled</p>
+                      </div>
+                    </div>
+                    <div className="mt-4 grid grid-cols-2 gap-4">
+                      <div className="bg-purple-50 rounded-lg p-4">
+                        <div className="flex items-center gap-2 mb-1">
+                          <IndianRupee className="w-5 h-5 text-purple-500" />
+                          <p className="text-sm text-gray-500">Total Spent</p>
+                        </div>
+                        <p className="text-2xl font-bold text-purple-600">₹{customerDetails.orderStats.totalSpent.toLocaleString()}</p>
+                      </div>
+                      <div className="bg-indigo-50 rounded-lg p-4">
+                        <div className="flex items-center gap-2 mb-1">
+                          <Clock className="w-5 h-5 text-indigo-500" />
+                          <p className="text-sm text-gray-500">Last Order</p>
+                        </div>
+                        <p className="text-lg font-bold text-indigo-600">
+                          {customerDetails.orderStats.lastOrderDate 
+                            ? new Date(customerDetails.orderStats.lastOrderDate).toLocaleDateString('en-IN')
+                            : 'Never'}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Loyalty & Wallet */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {/* Loyalty Points */}
+                    {customerDetails.loyalty && (
+                      <div>
+                        <h5 className="text-lg font-semibold text-gray-800 mb-3">Loyalty & Rewards</h5>
+                        <div className="bg-gradient-to-br from-amber-50 to-yellow-50 rounded-lg p-4 border border-amber-200">
+                          <div className="flex items-center gap-2 mb-3">
+                            <Star className="w-6 h-6 text-amber-500" />
+                            <span className="font-semibold text-amber-900">{customerDetails.loyalty.programName}</span>
+                          </div>
+                          <div className="space-y-2">
+                            <div className="flex justify-between items-center">
+                              <span className="text-sm text-gray-600">Points Balance</span>
+                              <span className="text-2xl font-bold text-amber-600">{customerDetails.loyalty.points}</span>
+                            </div>
+                            <div className="flex justify-between items-center">
+                              <span className="text-sm text-gray-600">Tier</span>
+                              <span className="px-3 py-1 bg-amber-100 text-amber-800 rounded-full text-sm font-medium">
+                                {customerDetails.loyalty.tier}
+                              </span>
+                            </div>
+                            <div className="flex justify-between items-center">
+                              <span className="text-sm text-gray-600">Points Value</span>
+                              <span className="text-sm font-medium text-gray-800">₹{customerDetails.loyalty.pointsValue}/point</span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Wallet Balance */}
+                    <div>
+                      <h5 className="text-lg font-semibold text-gray-800 mb-3">Wallet</h5>
+                      <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-lg p-4 border border-green-200">
+                        <div className="flex items-center gap-2 mb-3">
+                          <Wallet className="w-6 h-6 text-green-500" />
+                          <span className="font-semibold text-green-900">Wallet Balance</span>
+                        </div>
+                        <p className="text-3xl font-bold text-green-600">₹{customerDetails.wallet.balance.toLocaleString()}</p>
+                        <p className="text-sm text-gray-600 mt-2">Available for orders</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Referral Information */}
+                  {customerDetails.referral.code && (
+                    <div>
+                      <h5 className="text-lg font-semibold text-gray-800 mb-3">Referral Program</h5>
+                      <div className="bg-gradient-to-br from-purple-50 to-pink-50 rounded-lg p-4 border border-purple-200">
+                        <div className="flex items-center gap-2 mb-3">
+                          <Gift className="w-6 h-6 text-purple-500" />
+                          <span className="font-semibold text-purple-900">Referral Stats</span>
+                        </div>
+                        <div className="grid grid-cols-3 gap-4">
+                          <div>
+                            <p className="text-sm text-gray-600">Referral Code</p>
+                            <p className="text-lg font-bold text-purple-600">{customerDetails.referral.code}</p>
+                          </div>
+                          <div>
+                            <p className="text-sm text-gray-600">Referred Customers</p>
+                            <p className="text-lg font-bold text-purple-600">{customerDetails.referral.referredCount}</p>
+                          </div>
+                          <div>
+                            <p className="text-sm text-gray-600">Total Earnings</p>
+                            <p className="text-lg font-bold text-purple-600">₹{customerDetails.referral.totalEarnings}</p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Recent Orders */}
+                  {customerDetails.recentOrders.length > 0 && (
+                    <div>
+                      <h5 className="text-lg font-semibold text-gray-800 mb-3">Recent Orders</h5>
+                      <div className="space-y-3">
+                        {customerDetails.recentOrders.map((order) => (
+                          <div key={order._id} className="bg-gray-50 rounded-lg p-4 flex items-center justify-between">
+                            <div className="flex items-center gap-3">
+                              <Package className="w-5 h-5 text-gray-400" />
+                              <div>
+                                <p className="font-medium text-gray-800">#{order.orderNumber}</p>
+                                <p className="text-sm text-gray-500">
+                                  {new Date(order.date).toLocaleDateString('en-IN')} • {order.serviceCount} service(s)
+                                </p>
+                              </div>
+                            </div>
+                            <div className="text-right">
+                              <p className="font-bold text-gray-800">₹{order.total.toLocaleString()}</p>
+                              <span className={`text-xs px-2 py-1 rounded-full ${
+                                order.status === 'delivered' ? 'bg-green-100 text-green-800' :
+                                order.status === 'cancelled' ? 'bg-red-100 text-red-800' :
+                                'bg-blue-100 text-blue-800'
+                              }`}>
+                                {order.status}
+                              </span>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Favorite Services */}
+                  {customerDetails.favoriteServices.length > 0 && (
+                    <div>
+                      <h5 className="text-lg font-semibold text-gray-800 mb-3">Favorite Services</h5>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        {customerDetails.favoriteServices.map((service, index) => (
+                          <div key={index} className="bg-blue-50 rounded-lg p-3 flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                              <TrendingUp className="w-5 h-5 text-blue-500" />
+                              <span className="font-medium text-gray-800">{service.name}</span>
+                            </div>
+                            <span className="text-sm font-bold text-blue-600">{service.orderCount}x</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Saved Addresses */}
+                  {customerDetails.addresses.length > 0 && (
+                    <div>
+                      <h5 className="text-lg font-semibold text-gray-800 mb-3">Saved Addresses</h5>
+                      <div className="space-y-3">
+                        {customerDetails.addresses.map((address) => (
+                          <div key={address._id} className="bg-gray-50 rounded-lg p-4">
+                            <div className="flex items-start gap-3">
+                              <MapPin className="w-5 h-5 text-gray-400 mt-1" />
+                              <div className="flex-1">
+                                <div className="flex items-center gap-2 mb-1">
+                                  <p className="font-medium text-gray-800">{address.addressLine1}</p>
+                                  {address.isDefault && (
+                                    <span className="text-xs px-2 py-0.5 bg-blue-100 text-blue-800 rounded-full">Default</span>
+                                  )}
+                                </div>
+                                {address.addressLine2 && (
+                                  <p className="text-sm text-gray-600">{address.addressLine2}</p>
+                                )}
+                                <p className="text-sm text-gray-600">
+                                  {address.city}, {address.state} - {address.pincode}
+                                </p>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Quick Actions */}
+                  <div>
+                    <h5 className="text-lg font-semibold text-gray-800 mb-3">Quick Actions</h5>
+                    <div className="flex flex-wrap gap-3">
+                      {canUpdate && (
+                        <Button 
+                          variant="outline"
+                          className={selectedCustomer.isActive ? "text-red-600 border-red-600 hover:bg-red-50" : "text-green-600 border-green-600 hover:bg-green-50"}
+                          onClick={() => {
+                            handleToggleStatus(selectedCustomer._id, selectedCustomer.name, selectedCustomer.isActive)
+                            setShowProfileModal(false)
+                          }}
+                        >
+                          {selectedCustomer.isActive ? (
+                            <>
+                              <UserX className="w-4 h-4 mr-2" />
+                              Deactivate Account
+                            </>
+                          ) : (
+                            <>
+                              <UserCheck className="w-4 h-4 mr-2" />
+                              Activate Account
+                            </>
+                          )}
+                        </Button>
                       )}
-                    </Button>
-                  )}
-                  
-                  {canUpdate && (
-                    <Button 
-                      variant="outline"
-                      className={selectedCustomer.isVIP ? "text-gray-600 border-gray-600 hover:bg-gray-50" : "text-yellow-600 border-yellow-600 hover:bg-yellow-50"}
-                      onClick={() => {
-                        handleToggleVIP(selectedCustomer._id, selectedCustomer.name, selectedCustomer.isVIP)
-                        setShowProfileModal(false)
-                      }}
-                    >
-                      <Crown className="w-4 h-4 mr-2" />
-                      {selectedCustomer.isVIP ? 'Remove VIP Status' : 'Make VIP Customer'}
-                    </Button>
-                  )}
+                      
+                      {canUpdate && (
+                        <Button 
+                          variant="outline"
+                          className={selectedCustomer.isVIP ? "text-gray-600 border-gray-600 hover:bg-gray-50" : "text-yellow-600 border-yellow-600 hover:bg-yellow-50"}
+                          onClick={() => {
+                            handleToggleVIP(selectedCustomer._id, selectedCustomer.name, selectedCustomer.isVIP)
+                            setShowProfileModal(false)
+                          }}
+                        >
+                          <Crown className="w-4 h-4 mr-2" />
+                          {selectedCustomer.isVIP ? 'Remove VIP Status' : 'Make VIP Customer'}
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                </>
+              ) : (
+                <div className="text-center py-12">
+                  <AlertCircle className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                  <p className="text-gray-600">Failed to load customer details</p>
                 </div>
-              </div>
+              )}
             </div>
 
             {/* Modal Footer */}
-            <div className="flex justify-end gap-3 p-6 border-t border-gray-200">
-              <Button variant="outline" onClick={() => setShowProfileModal(false)}>
+            <div className="flex justify-end gap-3 p-6 border-t border-gray-200 sticky bottom-0 bg-white">
+              <Button variant="outline" onClick={() => {
+                setShowProfileModal(false)
+                setCustomerDetails(null)
+              }}>
                 Close
               </Button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   )

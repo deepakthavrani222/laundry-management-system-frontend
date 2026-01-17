@@ -6,16 +6,58 @@ import {
   useAdminSidebar,
 } from '@/components/layout/AdminSidebar'
 import AdminHeader from '@/components/layout/AdminHeader'
+import NotificationContainer from '@/components/NotificationContainer'
+import RefreshPrompt from '@/components/RefreshPrompt'
 import { useAuthStore } from '@/store/authStore'
+import { useRefreshPromptStore } from '@/store/refreshPromptStore'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import { cn } from '@/lib/utils'
+import { usePermissionSync } from '@/hooks/usePermissionSync'
 
 function AdminLayoutContent({ children }: { children: React.ReactNode }) {
   const { isCollapsed, setMobileOpen } = useAdminSidebar()
+  const { setAuth, user, _hasHydrated } = useAuthStore() // Add _hasHydrated to check if store is ready
+  const { showPrompt, setShowPrompt } = useRefreshPromptStore() // Add refresh prompt store
+  
+  // Enable real-time permission sync
+  usePermissionSync({
+    autoReload: false, // Show refresh prompt instead of auto-reload (user wants manual control)
+    onPermissionsUpdated: () => {
+      console.log('🔄 Permissions updated, showing refresh prompt')
+    },
+    onRoleChanged: (oldRole, newRole) => {
+      console.log(`👤 Role changed: ${oldRole} → ${newRole}`)
+    }
+  })
+
+  // DISABLED: Sync permissions on page load
+  // This was causing "Invalid token" errors on dashboard load
+  // Permission sync now happens only via WebSocket events when SuperAdmin changes features
+  // If you need to sync on load, user can manually refresh after seeing the refresh prompt
+  
+  // useEffect(() => {
+  //   const syncOnLoad = async () => {
+  //     // ... sync logic
+  //   };
+  //   if (_hasHydrated && user && user.role === 'admin') {
+  //     syncOnLoad();
+  //   }
+  // }, [setAuth, user, _hasHydrated]);
 
   return (
     <div className="min-h-screen bg-gray-50">
+      {/* Refresh Prompt */}
+      {showPrompt && (
+        <RefreshPrompt
+          onRefresh={() => {
+            setShowPrompt(false);
+            window.location.reload();
+          }}
+          onDismiss={() => setShowPrompt(false)}
+        />
+      )}
+
       {/* Sidebar */}
       <AdminSidebar />
 
@@ -43,29 +85,38 @@ export default function AdminLayout({
 }: {
   children: React.ReactNode
 }) {
-  const { isAuthenticated, user } = useAuthStore()
+  const { isAuthenticated, user, _hasHydrated } = useAuthStore()
   const router = useRouter()
   const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
+    // Wait for store to hydrate
+    if (!_hasHydrated) {
+      console.log('⏳ Waiting for auth store to hydrate...');
+      return;
+    }
+    
     const timer = setTimeout(() => {
       if (!isAuthenticated || !user) {
-        router.push('/auth/login')
-        return
+        console.log('⚠️ Not authenticated, redirecting to login');
+        router.push('/auth/login');
+        return;
       }
 
       if (user.role !== 'admin') {
-        router.push('/auth/login')
-        return
+        console.log('⚠️ User is not admin, redirecting to login');
+        router.push('/auth/login');
+        return;
       }
 
-      setIsLoading(false)
-    }, 200)
+      console.log('✅ User authenticated as admin');
+      setIsLoading(false);
+    }, 200);
 
-    return () => clearTimeout(timer)
-  }, [isAuthenticated, user, router])
+    return () => clearTimeout(timer);
+  }, [isAuthenticated, user, router, _hasHydrated]);
 
-  if (isLoading || !isAuthenticated || !user) {
+  if (!_hasHydrated || isLoading || !isAuthenticated || !user) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="text-center">
@@ -79,6 +130,8 @@ export default function AdminLayout({
   return (
     <AdminSidebarProvider>
       <AdminLayoutContent>{children}</AdminLayoutContent>
+      {/* Real-time notification toasts */}
+      <NotificationContainer />
     </AdminSidebarProvider>
   )
 }

@@ -93,7 +93,7 @@ const hasPermission = (user: any, permission: { module: string; action: string }
   }
   
   const hasIt = user.permissions[permission.module]?.[permission.action] === true
-  console.log(`🔐 Permission check: ${permission.module}.${permission.action} = ${hasIt}`, user.permissions)
+  // console.log(`🔐 Permission check: ${permission.module}.${permission.action} = ${hasIt}`, user.permissions)
   return hasIt
 }
 
@@ -181,6 +181,14 @@ export function AdminSidebar() {
   const { user, logout } = useAuthStore()
   const { metrics, loading: metricsLoading } = useAdminDashboard()
   const { hasFeature, planName, isTrialPeriod, trialEndsAt } = useFeatures()
+
+  // Debug: Log when sidebar re-renders
+  console.log('🔄 AdminSidebar rendered with user:', {
+    email: user?.email,
+    role: user?.role,
+    featuresCount: Object.keys(user?.features || {}).length,
+    enabledFeatures: Object.keys(user?.features || {}).filter(k => user?.features?.[k])
+  });
 
   const toggleCollapse = () => {
     setIsCollapsed(!isCollapsed)
@@ -374,9 +382,14 @@ export function AdminSidebar() {
 
       {/* Navigation */}
       <nav className="flex-1 px-2 py-4 space-y-1 overflow-y-auto min-h-0">
-        {navigation
-          .filter(item => hasPermission(user, item.permission) && checkFeature(hasFeature, item.feature))
-          .map(item => renderNavItem(item, isMobile))}
+        {(() => {
+          const filteredNav = navigation
+            .filter(item => hasPermission(user, item.permission) && checkFeature(hasFeature, item.feature));
+          
+          console.log('📋 Filtered navigation items:', filteredNav.map(i => i.name));
+          
+          return filteredNav.map(item => renderNavItem(item, isMobile));
+        })()}
       </nav>
 
       {/* Quick Stats - Only show when expanded */}

@@ -1,7 +1,8 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Plus, Search, MapPin, Users, Activity, Settings, Trash2, Edit } from 'lucide-react'
+import { createPortal } from 'react-dom'
+import { Plus, Search, MapPin, Users, Activity, Settings, Trash2, Edit, Package } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -60,6 +61,13 @@ export default function BranchesPage() {
   const [statusFilter, setStatusFilter] = useState('all')
   const [showCreateModal, setShowCreateModal] = useState(false)
   const [editingBranch, setEditingBranch] = useState<Branch | null>(null)
+  
+  // Services management state
+  const [showServicesModal, setShowServicesModal] = useState(false)
+  const [selectedBranchForServices, setSelectedBranchForServices] = useState<Branch | null>(null)
+  const [services, setServices] = useState<any[]>([])
+  const [branchServices, setBranchServices] = useState<any[]>([])
+  const [servicesLoading, setServicesLoading] = useState(false)
 
   useEffect(() => {
     fetchBranches()
@@ -96,6 +104,111 @@ export default function BranchesPage() {
   const handleEditBranch = () => {
     fetchBranches()
     setEditingBranch(null)
+  }
+
+  // Services management functions
+  const handleOpenServicesModal = async (branch: Branch) => {
+    setSelectedBranchForServices(branch)
+    setShowServicesModal(true)
+    setServicesLoading(true)
+    
+    try {
+      const token = getAuthToken()
+      
+      // Fetch all services
+      const servicesResponse = await fetch(`${API_URL}/admin/services`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      })
+      
+      if (servicesResponse.ok) {
+        const servicesData = await servicesResponse.json()
+        console.log('📦 Services data:', servicesData)
+        setServices(servicesData.data.services || [])
+      } else {
+        console.error('Failed to fetch services:', servicesResponse.status)
+      }
+      
+      // Fetch branch-specific services
+      const branchServicesResponse = await fetch(`${API_URL}/admin/branches/${branch._id}/services`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      })
+      
+      if (branchServicesResponse.ok) {
+        const branchServicesData = await branchServicesResponse.json()
+        console.log('🏢 Branch services data:', branchServicesData)
+        setBranchServices(branchServicesData.data.services || branchServicesData.data || [])
+      } else {
+        console.error('Failed to fetch branch services:', branchServicesResponse.status)
+        // If endpoint doesn't exist, set empty array
+        setBranchServices([])
+      }
+    } catch (error) {
+      console.error('Error fetching services:', error)
+      toast.error('Failed to load services')
+      setBranchServices([])
+    } finally {
+      setServicesLoading(false)
+    }
+  }
+
+  const handleToggleServiceForBranch = async (serviceId: string, isEnabled: boolean) => {
+    if (!selectedBranchForServices) return
+    
+    try {
+      const token = getAuthToken()
+      const response = await fetch(
+        `${API_URL}/admin/branches/${selectedBranchForServices._id}/services/${serviceId}`,
+        {
+          method: 'PUT',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ isEnabled })
+        }
+      )
+      
+      if (response.ok) {
+        toast.success(`Service ${isEnabled ? 'enabled' : 'disabled'} for ${selectedBranchForServices.name}`)
+        
+        // Update local state instead of refetching
+        setBranchServices(prev => {
+          // Check if service already exists in branch services
+          const existingIndex = prev.findIndex(bs => {
+            const bsServiceId = bs.service?._id || bs.service || bs.serviceId
+            return bsServiceId === serviceId
+          })
+          
+          if (existingIndex >= 0) {
+            // Update existing service
+            const updated = [...prev]
+            updated[existingIndex] = { ...updated[existingIndex], isEnabled }
+            return updated
+          } else {
+            // Add new service
+            return [...prev, { service: serviceId, serviceId, isEnabled }]
+          }
+        })
+      } else {
+        const error = await response.json()
+        toast.error(error.message || 'Failed to update service')
+      }
+    } catch (error) {
+      console.error('Error toggling service:', error)
+      toast.error('Failed to update service')
+    }
+  }
+
+  const isServiceEnabledForBranch = (serviceId: string) => {
+    return branchServices.some(bs => {
+      // Handle both populated and non-populated service references
+      const bsServiceId = bs.service?._id || bs.service || bs.serviceId
+      return bsServiceId === serviceId && bs.isEnabled
+    })
   }
 
   const handleDeleteBranch = async (branchId: string) => {
@@ -400,6 +513,15 @@ export default function BranchesPage() {
                 <Button
                   variant="outline"
                   size="sm"
+                  onClick={() => handleOpenServicesModal(branch)}
+                  className="flex-1"
+                >
+                  <Package className="h-4 w-4 mr-1" />
+                  Services
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
                   onClick={() => {
                     toast((t) => (
                       <div className="flex flex-col gap-3">
@@ -477,6 +599,103 @@ export default function BranchesPage() {
           onSuccess={handleEditBranch}
           branch={editingBranch}
         />
+      )}
+
+      {/* Services Management Modal */}
+      {showServicesModal && selectedBranchForServices && typeof window !== 'undefined' && createPortal(
+        <div className="fixed top-0 left-0 right-0 bottom-0 bg-black/80 flex items-center justify-center p-4 overflow-y-auto" style={{ zIndex: 999999 }}>
+          <div className="bg-white rounded-xl w-full max-w-3xl max-h-[90vh] overflow-y-auto">
+            {/* Modal Header */}
+            <div className="flex items-center justify-between p-6 border-b border-gray-200 sticky top-0 bg-white z-10">
+              <div>
+                <h3 className="text-xl font-semibold text-gray-800">Manage Services</h3>
+                <p className="text-sm text-gray-600 mt-1">
+                  Enable or disable services for {selectedBranchForServices.name}
+                </p>
+              </div>
+              <button 
+                onClick={() => {
+                  setShowServicesModal(false)
+                  setSelectedBranchForServices(null)
+                }}
+                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+              >
+                <svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            {/* Modal Content */}
+            <div className="p-6">
+              {servicesLoading ? (
+                <div className="flex items-center justify-center py-12">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                  <span className="ml-3 text-gray-600">Loading services...</span>
+                </div>
+              ) : services.length === 0 ? (
+                <div className="text-center py-12">
+                  <Package className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                  <p className="text-gray-600">No services found</p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {services.map((service) => {
+                    const isEnabled = isServiceEnabledForBranch(service._id)
+                    return (
+                      <div 
+                        key={service._id}
+                        className="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
+                            isEnabled ? 'bg-green-100' : 'bg-gray-200'
+                          }`}>
+                            <Package className={`w-5 h-5 ${
+                              isEnabled ? 'text-green-600' : 'text-gray-400'
+                            }`} />
+                          </div>
+                          <div>
+                            <h4 className="font-medium text-gray-800">{service.name}</h4>
+                            <p className="text-sm text-gray-600">
+                              {service.category} • ₹{service.pricing?.standard || 0}
+                            </p>
+                          </div>
+                        </div>
+                        <button
+                          onClick={() => handleToggleServiceForBranch(service._id, !isEnabled)}
+                          className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                            isEnabled ? 'bg-green-500' : 'bg-gray-300'
+                          }`}
+                        >
+                          <span
+                            className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                              isEnabled ? 'translate-x-6' : 'translate-x-1'
+                            }`}
+                          />
+                        </button>
+                      </div>
+                    )
+                  })}
+                </div>
+              )}
+            </div>
+
+            {/* Modal Footer */}
+            <div className="flex justify-end gap-3 p-6 border-t border-gray-200 sticky bottom-0 bg-white">
+              <Button 
+                variant="outline" 
+                onClick={() => {
+                  setShowServicesModal(false)
+                  setSelectedBranchForServices(null)
+                }}
+              >
+                Close
+              </Button>
+            </div>
+          </div>
+        </div>,
+        document.body
       )}
     </div>
   )

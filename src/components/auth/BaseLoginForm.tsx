@@ -264,7 +264,7 @@ export default function BaseLoginForm({
                     type="radio"
                     name="demoAccount"
                     className={`w-4 h-4 text-${theme.primary}-600 focus:ring-${theme.primary}-500`}
-                    onChange={() => setFormData({ email: 'deepakthavrani72@gmail.com', password: 'password123' })}
+                    onChange={() => setFormData({ email: 'admin@gmail.com', password: 'password123' })}
                   />
                   <span className="text-sm text-gray-600">Admin</span>
                 </label>

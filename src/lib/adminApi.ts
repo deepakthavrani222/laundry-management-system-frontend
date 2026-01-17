@@ -1,4 +1,6 @@
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL
+// Properly handle API URL - ensure it ends with /api
+const BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api'
+const API_BASE_URL = BASE_URL.endsWith('/api') ? BASE_URL : `${BASE_URL}/api`
 
 class AdminAPI {
   private getAuthHeaders() {
@@ -18,6 +20,14 @@ class AdminAPI {
     if (!token) {
       token = localStorage.getItem('token')
     }
+    
+    // Debug: Log token status (only first/last few chars for security)
+    if (token) {
+      console.log('🔑 Token found:', token.substring(0, 20) + '...' + token.substring(token.length - 10))
+    } else {
+      console.error('❌ No token found in localStorage!')
+    }
+    
     return {
       'Content-Type': 'application/json',
       ...(token && { Authorization: `Bearer ${token}` })
@@ -36,7 +46,13 @@ class AdminAPI {
     const data = await response.json()
     
     if (!response.ok) {
-      throw new Error(data.message || 'API request failed')
+      // Log detailed error for debugging
+      console.error('API Error:', {
+        status: response.status,
+        message: data.message,
+        url: response.url
+      })
+      throw new Error(data.message || `API request failed with status ${response.status}`)
     }
     
     return data
@@ -130,6 +146,14 @@ class AdminAPI {
       `${API_BASE_URL}/admin/customers?${searchParams}`,
       { headers: this.getAuthHeaders() }
     )
+    
+    return this.handleResponse(response)
+  }
+
+  async getCustomerDetails(customerId: string) {
+    const response = await fetch(`${API_BASE_URL}/admin/customers/${customerId}/details`, {
+      headers: this.getAuthHeaders()
+    })
     
     return this.handleResponse(response)
   }

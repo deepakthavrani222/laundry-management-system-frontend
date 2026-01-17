@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button'
 import Link from 'next/link'
 import { 
   MapPin, Shirt, Sparkles, Truck, CheckCircle, Clock, CreditCard, Headphones,
-  Star, Shield, Zap, Award, Phone, Mail, Instagram, Facebook, Twitter,
+  Star, Shield, Zap, Award, Phone, Mail, Instagram, Facebook, Twitter, Linkedin, Youtube,
   ChevronLeft, ChevronRight, User, ShoppingBag, LogOut, ChevronDown, Package, Menu, X,
   Settings, Sun, Moon, Monitor, RotateCcw
 } from 'lucide-react'
@@ -28,7 +28,19 @@ interface OriginalTemplateProps {
   isTenantPage?: boolean
   tenantName?: string
   tenantLogo?: string
+  tenantSecondaryLogo?: string
   tenancyId?: string
+  tenantBusinessName?: string
+  tenantTagline?: string
+  tenantSlogan?: string
+  tenantSocialMedia?: {
+    facebook?: string
+    instagram?: string
+    twitter?: string
+    linkedin?: string
+    youtube?: string
+    whatsapp?: string
+  }
 }
 
 type SchemeMode = 'light' | 'dark' | 'auto'
@@ -407,7 +419,23 @@ const colorRGB = {
 }
 
 // Hero Carousel Component with Infinite Slide Effect
-function HeroCarousel({ isAuthenticated, user, onBookNow, colors, t, theme }: { isAuthenticated: boolean; user: any; onBookNow: () => void; colors: any; t: (key: string) => string; theme: ThemeColors }) {
+function HeroCarousel({ 
+  isAuthenticated, 
+  user, 
+  onBookNow, 
+  colors, 
+  t, 
+  theme,
+  tenantTagline,
+}: { 
+  isAuthenticated: boolean; 
+  user: any; 
+  onBookNow: () => void; 
+  colors: any; 
+  t: (key: string) => string; 
+  theme: ThemeColors;
+  tenantTagline?: string;
+}) {
   const [currentSlide, setCurrentSlide] = useState(1) // Start at 1 because of clone
   const [isHovered, setIsHovered] = useState(false)
   const [isTransitioning, setIsTransitioning] = useState(true)
@@ -511,6 +539,15 @@ function HeroCarousel({ isAuthenticated, user, onBookNow, colors, t, theme }: { 
               <div className="grid lg:grid-cols-2 gap-4 pt-8 pb-0">
                 <div className="px-4 lg:pl-16 flex flex-col justify-center">
                   <h1 className="text-4xl lg:text-5xl font-extrabold text-gray-900 mb-4 leading-tight">{slide.title}</h1>
+                  
+                  {/* Tagline Display */}
+                  {tenantTagline && (
+                    <p className="text-2xl font-semibold mb-4 flex items-center gap-2 animate-fade-in" style={{ color: theme.accent }}>
+                      <Sparkles className="w-6 h-6" />
+                      {tenantTagline}
+                    </p>
+                  )}
+                  
                   <p className="text-lg font-medium text-gray-800 mb-6">{slide.description}</p>
                   <div className="space-y-3 mb-8">
                     {slide.features.map((feature, idx) => (
@@ -849,7 +886,25 @@ function ScrollBannerSection({ isAuthenticated, onGalleryVisible, colors, themeC
 
 
 // Main Component
-export default function OriginalTemplate({ themeColor, isAuthenticated, user, onBookNow, onColorChange, onLanguageChange, onTemplateChange, currentTemplate, isTenantPage, tenantName, tenancyId }: OriginalTemplateProps) {
+export default function OriginalTemplate({ 
+  themeColor, 
+  isAuthenticated, 
+  user, 
+  onBookNow, 
+  onColorChange, 
+  onLanguageChange, 
+  onTemplateChange, 
+  currentTemplate, 
+  isTenantPage, 
+  tenantName,
+  tenantLogo,
+  tenantSecondaryLogo,
+  tenancyId,
+  tenantBusinessName,
+  tenantTagline,
+  tenantSlogan,
+  tenantSocialMedia,
+}: OriginalTemplateProps) {
   // Use language hook for reactive translations
   const { language, setLanguage, t } = useLanguage()
   const router = useRouter()
@@ -1130,7 +1185,15 @@ export default function OriginalTemplate({ themeColor, isAuthenticated, user, on
       {/* Hero Section */}
       <section className="relative pt-20 pb-0 overflow-hidden transition-colors duration-300" style={{ backgroundColor: theme.heroBg }}>
         <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-          <HeroCarousel isAuthenticated={isAuthenticated} user={user} onBookNow={onBookNow} colors={colors} t={t} theme={theme} />
+          <HeroCarousel 
+            isAuthenticated={isAuthenticated} 
+            user={user} 
+            onBookNow={onBookNow} 
+            colors={colors} 
+            t={t} 
+            theme={theme}
+            tenantTagline={tenantTagline}
+          />
         </div>
       </section>
 
@@ -1250,10 +1313,24 @@ export default function OriginalTemplate({ themeColor, isAuthenticated, user, on
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8 mb-8">
             <div>
               <div className="flex items-center gap-2 mb-4">
-                <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ backgroundColor: theme.accent }}><Sparkles className="w-5 h-5 text-white" /></div>
-                <span className="text-xl font-bold" style={{ color: theme.footerText }}>LaundryLobby</span>
+                {(tenantSecondaryLogo || tenantLogo) ? (
+                  <img 
+                    src={tenantSecondaryLogo || tenantLogo} 
+                    alt={tenantBusinessName || tenantName || 'Logo'} 
+                    className="w-8 h-8 object-contain"
+                  />
+                ) : (
+                  <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ backgroundColor: theme.accent }}>
+                    <Sparkles className="w-5 h-5 text-white" />
+                  </div>
+                )}
+                <span className="text-xl font-bold" style={{ color: theme.footerText }}>
+                  {tenantBusinessName || tenantName || 'LaundryLobby'}
+                </span>
               </div>
-              <p className="text-sm" style={{ color: `${theme.footerText}99` }}>{t('footer.desc')}</p>
+              <p className="text-sm" style={{ color: `${theme.footerText}99` }}>
+                {tenantSlogan || t('footer.desc')}
+              </p>
             </div>
             <div>
               <h4 className="font-semibold mb-4" style={{ color: theme.footerText }}>{t('footer.services')}</h4>
@@ -1279,9 +1356,72 @@ export default function OriginalTemplate({ themeColor, isAuthenticated, user, on
                 <li className="flex items-center gap-2"><Mail className="w-4 h-4" />support@LaundryLobby.com</li>
               </ul>
               <div className="flex gap-3 mt-4">
-                <a href="#" className="w-8 h-8 rounded-full flex items-center justify-center hover:opacity-80 transition-colors" style={{ backgroundColor: `${theme.footerText}20`, color: theme.footerText }}><Instagram className="w-4 h-4" /></a>
-                <a href="#" className="w-8 h-8 rounded-full flex items-center justify-center hover:opacity-80 transition-colors" style={{ backgroundColor: `${theme.footerText}20`, color: theme.footerText }}><Facebook className="w-4 h-4" /></a>
-                <a href="#" className="w-8 h-8 rounded-full flex items-center justify-center hover:opacity-80 transition-colors" style={{ backgroundColor: `${theme.footerText}20`, color: theme.footerText }}><Twitter className="w-4 h-4" /></a>
+                {tenantSocialMedia?.instagram && (
+                  <a 
+                    href={tenantSocialMedia.instagram} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="w-8 h-8 rounded-full flex items-center justify-center hover:opacity-80 transition-colors" 
+                    style={{ backgroundColor: `${theme.footerText}20`, color: theme.footerText }}
+                  >
+                    <Instagram className="w-4 h-4" />
+                  </a>
+                )}
+                {tenantSocialMedia?.facebook && (
+                  <a 
+                    href={tenantSocialMedia.facebook} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="w-8 h-8 rounded-full flex items-center justify-center hover:opacity-80 transition-colors" 
+                    style={{ backgroundColor: `${theme.footerText}20`, color: theme.footerText }}
+                  >
+                    <Facebook className="w-4 h-4" />
+                  </a>
+                )}
+                {tenantSocialMedia?.twitter && (
+                  <a 
+                    href={tenantSocialMedia.twitter} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="w-8 h-8 rounded-full flex items-center justify-center hover:opacity-80 transition-colors" 
+                    style={{ backgroundColor: `${theme.footerText}20`, color: theme.footerText }}
+                  >
+                    <Twitter className="w-4 h-4" />
+                  </a>
+                )}
+                {tenantSocialMedia?.linkedin && (
+                  <a 
+                    href={tenantSocialMedia.linkedin} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="w-8 h-8 rounded-full flex items-center justify-center hover:opacity-80 transition-colors" 
+                    style={{ backgroundColor: `${theme.footerText}20`, color: theme.footerText }}
+                  >
+                    <Linkedin className="w-4 h-4" />
+                  </a>
+                )}
+                {tenantSocialMedia?.youtube && (
+                  <a 
+                    href={tenantSocialMedia.youtube} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="w-8 h-8 rounded-full flex items-center justify-center hover:opacity-80 transition-colors" 
+                    style={{ backgroundColor: `${theme.footerText}20`, color: theme.footerText }}
+                  >
+                    <Youtube className="w-4 h-4" />
+                  </a>
+                )}
+                {tenantSocialMedia?.whatsapp && (
+                  <a 
+                    href={`https://wa.me/${tenantSocialMedia.whatsapp.replace(/\D/g, '')}`} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="w-8 h-8 rounded-full flex items-center justify-center hover:opacity-80 transition-colors" 
+                    style={{ backgroundColor: '#25D366', color: '#ffffff' }}
+                  >
+                    <Phone className="w-4 h-4" />
+                  </a>
+                )}
               </div>
             </div>
           </div>

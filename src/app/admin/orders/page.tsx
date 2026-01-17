@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useRef, useEffect } from 'react'
+import { createPortal } from 'react-dom'
 import { useSearchParams, useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { usePermissions } from '@/hooks/usePermissions'
@@ -701,8 +702,8 @@ export default function AdminOrdersPage() {
       </div>
 
       {/* View Order Modal */}
-      {showViewModal && selectedOrder && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+      {showViewModal && selectedOrder && typeof window !== 'undefined' && createPortal(
+        <div className="fixed top-0 left-0 right-0 bottom-0 bg-black/80 flex items-center justify-center p-4" style={{ zIndex: 999999 }}>
           <div className="bg-white rounded-xl w-full max-w-4xl max-h-[90vh] flex flex-col">
             {/* Header - Fixed */}
             <div className="flex items-center justify-between p-6 border-b border-gray-200 flex-shrink-0">
@@ -1058,12 +1059,13 @@ export default function AdminOrdersPage() {
               <Button variant="outline" onClick={() => setShowViewModal(false)}>Close</Button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* Assignment Modal - Logistics Partner Only */}
-      {showAssignModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      {showAssignModal && typeof window !== 'undefined' && createPortal(
+        <div className="fixed top-0 left-0 right-0 bottom-0 bg-black/80 flex items-center justify-center" style={{ zIndex: 999999 }}>
           <div className="bg-white rounded-lg p-6 w-full max-w-md">
             <h3 className="text-lg font-semibold mb-2">
               Assign Logistics Partner for {logisticsType === 'pickup' ? 'Pickup' : 'Delivery'}
@@ -1107,7 +1109,8 @@ export default function AdminOrdersPage() {
               </div>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   )

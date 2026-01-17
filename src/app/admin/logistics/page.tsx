@@ -2,6 +2,7 @@
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api'
 import { useState, useEffect } from 'react'
+import { createPortal } from 'react-dom'
 import { Button } from '@/components/ui/button'
 import { Pagination } from '@/components/ui/Pagination'
 import { usePermissions } from '@/hooks/usePermissions'
@@ -135,8 +136,8 @@ export default function AdminLogisticsPage() {
         {filteredPartners.length > ITEMS_PER_PAGE && <Pagination current={currentPage} pages={totalPages} total={filteredPartners.length} limit={ITEMS_PER_PAGE} onPageChange={setCurrentPage} itemName="partners" />}
       </div>
 
-      {(showCreateModal || showEditModal) && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+      {(showCreateModal || showEditModal) && typeof window !== 'undefined' && createPortal(
+        <div className="fixed top-0 left-0 right-0 bottom-0 bg-black/80 flex items-center justify-center p-4" style={{ zIndex: 999999 }}>
           <div className="bg-white rounded-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between p-6 border-b"><h2 className="text-xl font-bold">{showCreateModal ? 'Add New Partner' : 'Edit Partner'}</h2><button onClick={() => { setShowCreateModal(false); setShowEditModal(false) }} className="p-2 hover:bg-gray-100 rounded-lg"><X className="w-5 h-5" /></button></div>
             <div className="p-6 space-y-6">
@@ -148,10 +149,11 @@ export default function AdminLogisticsPage() {
             </div>
             <div className="flex justify-end gap-3 p-6 border-t"><Button variant="outline" onClick={() => { setShowCreateModal(false); setShowEditModal(false) }}>Cancel</Button><Button onClick={showCreateModal ? handleCreate : handleUpdate} disabled={saving} className="bg-blue-600 hover:bg-blue-700">{saving ? 'Saving...' : showCreateModal ? 'Create' : 'Update'}</Button></div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
-      {showModal && selectedPartner && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+      {showModal && selectedPartner && typeof window !== 'undefined' && createPortal(
+        <div className="fixed top-0 left-0 right-0 bottom-0 bg-black/80 flex items-center justify-center p-4" style={{ zIndex: 999999 }}>
           <div className="bg-white rounded-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between p-6 border-b"><h2 className="text-xl font-bold">{selectedPartner.companyName}</h2><button onClick={() => setShowModal(false)} className="p-2 hover:bg-gray-100 rounded-lg"><X className="w-5 h-5" /></button></div>
             <div className="p-6 space-y-6">
@@ -162,7 +164,8 @@ export default function AdminLogisticsPage() {
             </div>
             <div className="flex justify-end p-6 border-t"><Button variant="outline" onClick={() => setShowModal(false)}>Close</Button></div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   )

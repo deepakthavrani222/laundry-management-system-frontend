@@ -3,6 +3,7 @@
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api'
 
 import { useState, useEffect } from 'react'
+import { createPortal } from 'react-dom'
 import { Button } from '@/components/ui/button'
 import { Pagination } from '@/components/ui/Pagination'
 import { Plus, Edit2, Trash2, Loader2, Search, X, Save } from 'lucide-react'
@@ -408,8 +409,8 @@ export default function ServiceItemsPage() {
       )}
 
       {/* Add Modal */}
-      {showModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+      {showModal && typeof window !== 'undefined' && createPortal(
+        <div className="fixed top-0 left-0 right-0 bottom-0 bg-black/80 flex items-center justify-center p-4" style={{ zIndex: 999999 }}>
           <div className="bg-white rounded-xl w-full max-w-lg p-6">
             {/* Header with Step Indicator */}
             <div className="flex justify-between items-center mb-6">
@@ -662,7 +663,8 @@ export default function ServiceItemsPage() {
               )}
             </form>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   )

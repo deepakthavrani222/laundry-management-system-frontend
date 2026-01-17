@@ -3,7 +3,7 @@
 import { Button } from '@/components/ui/button'
 import Link from 'next/link'
 import { 
-  Truck, Clock, Star, Phone, ArrowRight, Sparkles, Package, ChevronRight, Shield, Award, Zap, CheckCircle, Mail, Instagram, Facebook, Twitter, MapPin, ChevronLeft, Shirt, Play, Users, Building2, Droplets, Wind, ArrowDown, Heart, Leaf, Timer, BadgeCheck, ChevronDown, User, LogOut, ShoppingBag, Menu, X, Settings, Sun, Moon, Monitor, RotateCcw
+  Truck, Clock, Star, Phone, ArrowRight, Sparkles, Package, ChevronRight, Shield, Award, Zap, CheckCircle, Mail, Instagram, Facebook, Twitter, Linkedin, Youtube, MapPin, ChevronLeft, Shirt, Play, Users, Building2, Droplets, Wind, ArrowDown, Heart, Leaf, Timer, BadgeCheck, ChevronDown, User, LogOut, ShoppingBag, Menu, X, Settings, Sun, Moon, Monitor, RotateCcw
 } from 'lucide-react'
 import { useState, useEffect, useRef } from 'react'
 import { ThemeColor } from '../ThemeCustomizer'
@@ -21,6 +21,22 @@ interface MinimalTemplateProps {
   onLanguageChange?: (language: Language) => void
   onTemplateChange?: (template: string) => void
   currentTemplate?: string
+  user?: any
+  isTenantPage?: boolean
+  tenantName?: string
+  tenantLogo?: string
+  tenancyId?: string
+  tenantBusinessName?: string
+  tenantTagline?: string
+  tenantSlogan?: string
+  tenantSocialMedia?: {
+    facebook?: string
+    instagram?: string
+    twitter?: string
+    linkedin?: string
+    youtube?: string
+    whatsapp?: string
+  }
 }
 
 type SchemeMode = 'light' | 'dark' | 'auto'
@@ -458,7 +474,24 @@ function SettingsPanel({
   )
 }
 
-export default function MinimalTemplate({ themeColor, isAuthenticated, onBookNow, onColorChange, onLanguageChange, onTemplateChange, currentTemplate }: MinimalTemplateProps) {
+export default function MinimalTemplate({ 
+  themeColor, 
+  isAuthenticated, 
+  onBookNow, 
+  onColorChange, 
+  onLanguageChange, 
+  onTemplateChange, 
+  currentTemplate,
+  user,
+  isTenantPage,
+  tenantName,
+  tenantLogo,
+  tenancyId,
+  tenantBusinessName,
+  tenantTagline,
+  tenantSlogan,
+  tenantSocialMedia,
+}: MinimalTemplateProps) {
   // Use language hook for reactive translations
   const { language, t } = useLanguage()
   const [isScrolled, setIsScrolled] = useState(false)
@@ -694,6 +727,14 @@ export default function MinimalTemplate({ themeColor, isAuthenticated, onBookNow
               <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold leading-tight mb-3 text-gray-900">
                 {t('minimal.hero.title')}
               </h1>
+              
+              {/* Tagline Display */}
+              {tenantTagline && (
+                <p className="text-xl md:text-2xl font-semibold mb-3 flex items-center gap-2" style={{ color: theme.accent }}>
+                  <Sparkles className="w-5 h-5" />
+                  {tenantTagline}
+                </p>
+              )}
               
               {/* Subheading */}
               <p className="text-sm md:text-base mb-5 leading-relaxed max-w-sm text-gray-600">
@@ -1185,22 +1226,80 @@ export default function MinimalTemplate({ themeColor, isAuthenticated, onBookNow
                 >
                   <Sparkles className="w-5 h-5 text-white" />
                 </div>
-                <span className="text-xl font-bold" style={{ color: theme.footerText }}>LaundryLobby</span>
+                <span className="text-xl font-bold" style={{ color: theme.footerText }}>
+                  {tenantBusinessName || tenantName || 'LaundryLobby'}
+                </span>
               </div>
               <p className="mb-6" style={{ color: `${theme.footerText}99` }}>
-                {t('minimal.footer.desc')}
+                {tenantSlogan || t('minimal.footer.desc')}
               </p>
               <div className="flex gap-4">
-                {[Facebook, Instagram, Twitter].map((Icon, i) => (
+                {tenantSocialMedia?.facebook && (
                   <a 
-                    key={i} 
-                    href="#" 
+                    href={tenantSocialMedia.facebook} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
                     className="w-10 h-10 rounded-full flex items-center justify-center hover:opacity-80 transition-colors"
                     style={{ backgroundColor: `${theme.footerText}20` }}
                   >
-                    <Icon className="w-5 h-5" style={{ color: `${theme.footerText}99` }} />
+                    <Facebook className="w-5 h-5" style={{ color: `${theme.footerText}99` }} />
                   </a>
-                ))}
+                )}
+                {tenantSocialMedia?.instagram && (
+                  <a 
+                    href={tenantSocialMedia.instagram} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="w-10 h-10 rounded-full flex items-center justify-center hover:opacity-80 transition-colors"
+                    style={{ backgroundColor: `${theme.footerText}20` }}
+                  >
+                    <Instagram className="w-5 h-5" style={{ color: `${theme.footerText}99` }} />
+                  </a>
+                )}
+                {tenantSocialMedia?.twitter && (
+                  <a 
+                    href={tenantSocialMedia.twitter} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="w-10 h-10 rounded-full flex items-center justify-center hover:opacity-80 transition-colors"
+                    style={{ backgroundColor: `${theme.footerText}20` }}
+                  >
+                    <Twitter className="w-5 h-5" style={{ color: `${theme.footerText}99` }} />
+                  </a>
+                )}
+                {tenantSocialMedia?.linkedin && (
+                  <a 
+                    href={tenantSocialMedia.linkedin} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="w-10 h-10 rounded-full flex items-center justify-center hover:opacity-80 transition-colors"
+                    style={{ backgroundColor: `${theme.footerText}20` }}
+                  >
+                    <Linkedin className="w-5 h-5" style={{ color: `${theme.footerText}99` }} />
+                  </a>
+                )}
+                {tenantSocialMedia?.youtube && (
+                  <a 
+                    href={tenantSocialMedia.youtube} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="w-10 h-10 rounded-full flex items-center justify-center hover:opacity-80 transition-colors"
+                    style={{ backgroundColor: `${theme.footerText}20` }}
+                  >
+                    <Youtube className="w-5 h-5" style={{ color: `${theme.footerText}99` }} />
+                  </a>
+                )}
+                {tenantSocialMedia?.whatsapp && (
+                  <a 
+                    href={`https://wa.me/${tenantSocialMedia.whatsapp.replace(/\D/g, '')}`} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="w-10 h-10 rounded-full flex items-center justify-center hover:opacity-80 transition-colors"
+                    style={{ backgroundColor: '#25D366' }}
+                  >
+                    <Phone className="w-5 h-5" style={{ color: '#ffffff' }} />
+                  </a>
+                )}
               </div>
             </div>
 
