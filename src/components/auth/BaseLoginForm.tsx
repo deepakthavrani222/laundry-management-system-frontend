@@ -40,15 +40,15 @@ export default function BaseLoginForm({
   const content = getTemplateContent(template)
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setIsLoading(true)
+    e.preventDefault();
+    setIsLoading(true);
 
     try {
-      const response = await authAPI.login(formData)
-      const { token, user } = response.data.data
+      const response = await authAPI.login(formData);
+      const { token, user } = response.data.data;
 
-      setAuth(user, token)
-      toast.success('Login successful!')
+      setAuth(user, token);
+      toast.success('Login successful!');
 
       // Strict role-based redirect logic - no exceptions
       const roleRoutes: Record<string, string> = {
@@ -59,49 +59,41 @@ export default function BaseLoginForm({
         branch_manager: '/center-admin/dashboard',
         staff: '/staff/dashboard',
         superadmin: '/superadmin/dashboard',
-      }
+      };
 
       // Always redirect to role-specific dashboard (ignore redirect URL for non-customers)
-      const redirectPath = roleRoutes[user.role] || '/auth/login'
+      const redirectPath = roleRoutes[user.role] || '/auth/login';
       
-      console.log(`🔄 Login successful - redirecting ${user.role} to: ${redirectPath}`)
+      console.log(`🔄 Login successful - redirecting ${user.role} to: ${redirectPath}`);
       
       setTimeout(() => {
-        router.push(redirectPath)
-      }, 100)
-      return
-      }
-
-      // Default customer redirect
-      const redirectPath = roleRoutes[user.role] || '/'
-      setTimeout(() => {
-        router.push(redirectPath)
-      }, 100)
+        router.push(redirectPath);
+      }, 100);
     } catch (error: any) {
-      const errorMessage = error.response?.data?.message || 'Login failed'
+      const errorMessage = error.response?.data?.message || 'Login failed';
       
       if (error.response?.data?.requiresEmailVerification) {
-        toast.error('Please verify your email address before logging in')
-        router.push(`/auth/verify-email?email=${encodeURIComponent(formData.email)}`)
-        return
+        toast.error('Please verify your email address before logging in');
+        router.push(`/auth/verify-email?email=${encodeURIComponent(formData.email)}`);
+        return;
       }
       
-      toast.error(errorMessage)
+      toast.error(errorMessage);
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData(prev => ({
       ...prev,
       [e.target.name]: e.target.value
-    }))
-  }
+    }));
+  };
 
-  const containerClass = customStyling?.containerClass || `min-h-screen bg-gradient-to-br ${theme.gradient}`
-  const formCardClass = customStyling?.formCardClass || 'bg-white rounded-2xl shadow-xl p-8 border border-gray-100'
-  const buttonClass = customStyling?.buttonClass || `w-full bg-gradient-to-r ${theme.buttonGradient} hover:${theme.hoverGradient} text-white py-3 px-4 rounded-lg font-medium shadow-lg hover:shadow-xl transform hover:scale-[1.02] transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed`
+  const containerClass = customStyling?.containerClass || `min-h-screen bg-gradient-to-br ${theme.gradient}`;
+  const formCardClass = customStyling?.formCardClass || 'bg-white rounded-2xl shadow-xl p-8 border border-gray-100';
+  const buttonClass = customStyling?.buttonClass || `w-full bg-gradient-to-r ${theme.buttonGradient} hover:${theme.hoverGradient} text-white py-3 px-4 rounded-lg font-medium shadow-lg hover:shadow-xl transform hover:scale-[1.02] transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed`;
 
   return (
     <div className={containerClass}>
