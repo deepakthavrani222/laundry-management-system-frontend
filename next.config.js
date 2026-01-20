@@ -4,7 +4,7 @@ const nextConfig = {
     domains: ['localhost'],
   },
   env: {
-    NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL || 'https://laundry-backend.vercel.app/api',
+    NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL || 'https://laundrylobby-backend-1.vercel.app/api',
   },
   typescript: {
     ignoreBuildErrors: true,
