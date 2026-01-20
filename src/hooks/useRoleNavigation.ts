@@ -25,7 +25,8 @@ export function useRoleNavigation() {
       branch_manager: '/center-admin/dashboard',
       staff: '/staff/dashboard',
       customer: '/customer/dashboard',
-      superadmin: '/superadmin/dashboard'
+      superadmin: '/superadmin/dashboard',
+      support: '/support/dashboard'
     }
 
     return roleRoutes[user.role] || '/auth/login'
@@ -91,7 +92,8 @@ export function useRoleNavigation() {
       branch_manager: 'Branch Manager',
       staff: 'Staff',
       customer: 'Customer',
-      superadmin: 'Super Admin'
+      superadmin: 'Super Admin',
+      support: 'Support Agent'
     }
 
     return roleNames[user.role] || user.role

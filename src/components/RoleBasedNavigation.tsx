@@ -47,9 +47,14 @@ export function RoleBasedNavigation({ children }: { children: React.ReactNode })
         forbidden: ['/admin', '/center-admin', '/customer', '/track', '/pricing', '/'],
         defaultDashboard: '/staff/dashboard'
       },
+      support: {
+        // Support cannot access admin or customer areas
+        forbidden: ['/admin', '/center-admin', '/branch-admin', '/staff', '/customer', '/track', '/pricing', '/'],
+        defaultDashboard: '/support/dashboard'
+      },
       customer: {
         // Customer cannot access admin areas
-        forbidden: ['/admin', '/center-admin', '/branch-admin', '/staff', '/superadmin'],
+        forbidden: ['/admin', '/center-admin', '/branch-admin', '/staff', '/support', '/superadmin'],
         defaultDashboard: '/customer/dashboard'
       },
       superadmin: {

@@ -1,11 +1,11 @@
 'use client'
 
 import {
-  AdminSidebar,
-  AdminSidebarProvider,
-  useAdminSidebar,
-} from '@/components/layout/AdminSidebar'
-import AdminHeader from '@/components/layout/AdminHeader'
+  SupportSidebar,
+  SupportSidebarProvider,
+  useSupportSidebar,
+} from '@/components/layout/SupportSidebar'
+import SupportHeader from '@/components/layout/SupportHeader'
 import NotificationContainer from '@/components/NotificationContainer'
 import RefreshPrompt from '@/components/RefreshPrompt'
 import ModernToaster from '@/components/ModernToast'
@@ -19,36 +19,22 @@ import { cn } from '@/lib/utils'
 import { usePermissionSync } from '@/hooks/usePermissionSync'
 import DashboardSkeleton from '@/components/DashboardSkeleton'
 
-function AdminLayoutContent({ children }: { children: React.ReactNode }) {
-  const { isCollapsed, setMobileOpen } = useAdminSidebar()
-  const { setAuth, user, _hasHydrated } = useAuthStore() // Add _hasHydrated to check if store is ready
-  const { showPrompt, setShowPrompt } = useRefreshPromptStore() // Add refresh prompt store
-  const { isConnected } = useRealTimeNotifications() // Get connection status
+function SupportLayoutContent({ children }: { children: React.ReactNode }) {
+  const { isCollapsed, setMobileOpen } = useSupportSidebar()
+  const { setAuth, user, _hasHydrated } = useAuthStore()
+  const { showPrompt, setShowPrompt } = useRefreshPromptStore()
+  const { isConnected } = useRealTimeNotifications()
   
-  // Enable real-time permission sync
+  // Enable real-time permission sync for support users too
   usePermissionSync({
-    autoReload: false, // Show refresh prompt instead of auto-reload (user wants manual control)
+    autoReload: false,
     onPermissionsUpdated: () => {
-      console.log('🔄 Permissions updated, showing refresh prompt')
+      console.log('🔄 Support permissions updated, showing refresh prompt')
     },
     onRoleChanged: (oldRole, newRole) => {
-      console.log(`👤 Role changed: ${oldRole} → ${newRole}`)
+      console.log(`👤 Support role changed: ${oldRole} → ${newRole}`)
     }
   })
-
-  // DISABLED: Sync permissions on page load
-  // This was causing "Invalid token" errors on dashboard load
-  // Permission sync now happens only via WebSocket events when SuperAdmin changes features
-  // If you need to sync on load, user can manually refresh after seeing the refresh prompt
-  
-  // useEffect(() => {
-  //   const syncOnLoad = async () => {
-  //     // ... sync logic
-  //   };
-  //   if (_hasHydrated && user && user.role === 'admin') {
-  //     syncOnLoad();
-  //   }
-  // }, [setAuth, user, _hasHydrated]);
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -63,8 +49,8 @@ function AdminLayoutContent({ children }: { children: React.ReactNode }) {
         />
       )}
 
-      {/* Sidebar */}
-      <AdminSidebar />
+      {/* Sidebar - Using Support Sidebar for support-specific navigation */}
+      <SupportSidebar />
 
       {/* Main Content */}
       <div
@@ -73,8 +59,8 @@ function AdminLayoutContent({ children }: { children: React.ReactNode }) {
           isCollapsed ? 'lg:pl-16' : 'lg:pl-64'
         )}
       >
-        {/* Header - Fixed */}
-        <AdminHeader onMenuClick={() => setMobileOpen(true)} sidebarCollapsed={isCollapsed} />
+        {/* Header - Using Support Header for consistent theme */}
+        <SupportHeader onMenuClick={() => setMobileOpen(true)} sidebarCollapsed={isCollapsed} />
 
         {/* Page Content - Add padding for fixed header (h-16 = 64px) */}
         <main className="p-4 lg:p-6 mt-16">
@@ -91,7 +77,7 @@ function AdminLayoutContent({ children }: { children: React.ReactNode }) {
   )
 }
 
-export default function AdminLayout({
+export default function SupportLayout({
   children,
 }: {
   children: React.ReactNode
@@ -114,13 +100,13 @@ export default function AdminLayout({
       return;
     }
 
-    if (user.role !== 'admin') {
-      console.log('⚠️ User is not admin, redirecting to login');
+    if (user.role !== 'support') {
+      console.log('⚠️ User is not support, redirecting to login');
       router.push('/auth/login');
       return;
     }
 
-    console.log('✅ User authenticated as admin');
+    console.log('✅ User authenticated as support');
     setIsLoading(false);
   }, [isAuthenticated, user, router, _hasHydrated]);
 
@@ -145,10 +131,10 @@ export default function AdminLayout({
   }
 
   return (
-    <AdminSidebarProvider>
-      <AdminLayoutContent>{children}</AdminLayoutContent>
+    <SupportSidebarProvider>
+      <SupportLayoutContent>{children}</SupportLayoutContent>
       {/* Real-time notification toasts */}
       <NotificationContainer />
-    </AdminSidebarProvider>
+    </SupportSidebarProvider>
   )
 }

@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react'
 import { 
-  Bell, 
+  BellRing, 
   CheckCircle, 
   AlertTriangle, 
   XCircle, 
@@ -60,7 +60,7 @@ const getNotificationIcon = (iconName: string, severity: string) => {
     case 'x-circle':
       return <XCircle {...iconProps} className="w-4 h-4 text-red-500" />
     default:
-      return <Bell {...iconProps} className="w-4 h-4 text-blue-500" />
+      return <BellRing {...iconProps} className="w-4 h-4 text-blue-500" />
   }
 }
 
@@ -150,9 +150,9 @@ export default function NotificationBell() {
       {/* Notification Bell Button */}
       <button
         onClick={() => setShowNotificationPanel(!showNotificationPanel)}
-        className="relative p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
+        className="relative p-2 text-yellow-600 hover:text-yellow-700 hover:bg-yellow-50 rounded-lg transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-yellow-500"
       >
-        <Bell className="w-6 h-6" />
+        <BellRing className="w-6 h-6 text-yellow-500" />
         
         {/* Unread Count Badge */}
         {unreadCount > 0 && (
@@ -212,7 +212,7 @@ export default function NotificationBell() {
           <div className="max-h-80 overflow-y-auto">
             {notifications.length === 0 ? (
               <div className="p-8 text-center text-gray-500">
-                <Bell className="w-12 h-12 mx-auto mb-3 text-gray-300" />
+                <BellRing className="w-12 h-12 mx-auto mb-3 text-gray-300" />
                 <p className="text-sm">No notifications yet</p>
               </div>
             ) : (

@@ -35,6 +35,7 @@ export default function LaundryMasterLoginForm() {
           branch_admin: '/branch-admin/dashboard',
           center_admin: '/center-admin/dashboard',
           branch_manager: '/branch-manager/dashboard',
+          support: '/support/dashboard',
           customer: '/customer/dashboard'
         }
         router.push(routes[user.role] || '/')
@@ -159,20 +160,27 @@ export default function LaundryMasterLoginForm() {
             {/* Quick Demo Login */}
             <div className="mt-4 bg-purple-50 rounded-lg p-3 border border-purple-200">
               <h3 className="text-sm font-semibold text-gray-800 mb-2">Quick Demo Login:</h3>
-              <div className="flex gap-2">
+              <div className="grid grid-cols-3 gap-2">
                 <button
                   type="button"
                   onClick={() => setFormData({ email: 'testcustomer@demo.com', password: 'password123' })}
-                  className="flex-1 flex items-center justify-center py-2 px-3 rounded-md bg-white hover:bg-purple-100 border border-purple-300 transition-colors"
+                  className="flex items-center justify-center py-2 px-2 rounded-md bg-white hover:bg-purple-100 border border-purple-300 transition-colors"
                 >
-                  <span className="text-sm font-medium text-gray-700">👤 Customer</span>
+                  <span className="text-xs font-medium text-gray-700">👤 Customer</span>
                 </button>
                 <button
                   type="button"
                   onClick={() => setFormData({ email: 'admin@demo.com', password: 'password123' })}
-                  className="flex-1 flex items-center justify-center py-2 px-3 rounded-md bg-white hover:bg-purple-100 border border-purple-300 transition-colors"
+                  className="flex items-center justify-center py-2 px-2 rounded-md bg-white hover:bg-purple-100 border border-purple-300 transition-colors"
                 >
-                  <span className="text-sm font-medium text-gray-700">👑 Admin</span>
+                  <span className="text-xs font-medium text-gray-700">👑 Admin</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setFormData({ email: 'supportadmin@laundrypro.com', password: 'deep2025' })}
+                  className="flex items-center justify-center py-2 px-2 rounded-md bg-white hover:bg-purple-100 border border-purple-300 transition-colors"
+                >
+                  <span className="text-xs font-medium text-gray-700">🎧 Support</span>
                 </button>
               </div>
             </div>

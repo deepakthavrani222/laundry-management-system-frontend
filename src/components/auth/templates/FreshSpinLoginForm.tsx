@@ -36,6 +36,7 @@ export default function FreshSpinLoginForm() {
           branch_admin: '/branch-admin/dashboard',
           center_admin: '/center-admin/dashboard',
           branch_manager: '/branch-manager/dashboard',
+          support: '/support/dashboard',
           customer: '/customer/dashboard'
         }
         router.push(routes[user.role] || '/')
@@ -128,7 +129,7 @@ export default function FreshSpinLoginForm() {
             {/* Quick Demo Login */}
             <div className="mt-6 bg-gray-50 rounded-xl p-4 border border-gray-100">
               <h3 className="text-sm font-medium text-gray-700 mb-3">Quick Demo Login:</h3>
-              <div className="grid grid-cols-2 gap-2">
+              <div className="grid grid-cols-3 gap-2">
                 <label className="flex items-center space-x-2 cursor-pointer p-2 rounded-lg hover:bg-gray-100 transition-colors">
                   <input
                     type="radio"
@@ -150,6 +151,17 @@ export default function FreshSpinLoginForm() {
                     }}
                   />
                   <span className="text-sm text-gray-600">Admin</span>
+                </label>
+                <label className="flex items-center space-x-2 cursor-pointer p-2 rounded-lg hover:bg-gray-100 transition-colors">
+                  <input
+                    type="radio"
+                    name="demoAccount"
+                    className="w-4 h-4 text-violet-600 focus:ring-violet-500"
+                    onChange={() => {
+                      setFormData({ email: 'supportadmin@laundrypro.com', password: 'deep2025' })
+                    }}
+                  />
+                  <span className="text-sm text-gray-600">Support</span>
                 </label>
               </div>
             </div>

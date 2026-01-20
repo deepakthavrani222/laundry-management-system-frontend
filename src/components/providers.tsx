@@ -4,6 +4,8 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { Toaster } from 'react-hot-toast'
 import { useState } from 'react'
 import { TenancyThemeProvider } from '@/contexts/TenancyThemeContext'
+import { PermissionSyncProvider } from './PermissionSyncProvider'
+import NotificationManager from './notifications/NotificationManager'
 
 export function Providers({ children }: { children: React.ReactNode }) {
   const [queryClient] = useState(() => new QueryClient({
@@ -18,8 +20,11 @@ export function Providers({ children }: { children: React.ReactNode }) {
   return (
     <QueryClientProvider client={queryClient}>
       <TenancyThemeProvider>
-        {children}
+        <PermissionSyncProvider>
+          {children}
+        </PermissionSyncProvider>
       </TenancyThemeProvider>
+      <NotificationManager />
       <Toaster 
         position="top-center"
         toastOptions={{

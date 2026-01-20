@@ -35,6 +35,7 @@ export default function MinimalLoginForm() {
           branch_admin: '/branch-admin/dashboard',
           center_admin: '/center-admin/dashboard',
           branch_manager: '/branch-manager/dashboard',
+          support: '/support/dashboard',
           customer: '/customer/dashboard'
         }
         router.push(routes[user.role] || '/')
@@ -185,7 +186,7 @@ export default function MinimalLoginForm() {
           {/* Quick Demo Login */}
           <div className="mt-4 bg-gray-50 rounded-xl p-4 border border-gray-200">
             <h3 className="text-sm font-medium text-gray-700 mb-2">Quick Demo Login:</h3>
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-3 gap-2">
               <label className="flex items-center space-x-2 cursor-pointer p-2 rounded-lg hover:bg-gray-100">
                 <input type="radio" name="demo" className="text-indigo-600" onChange={() => setFormData({ email: 'testcustomer@demo.com', password: 'password123' })} />
                 <span className="text-sm text-gray-600">Customer</span>
@@ -193,6 +194,10 @@ export default function MinimalLoginForm() {
               <label className="flex items-center space-x-2 cursor-pointer p-2 rounded-lg hover:bg-gray-100">
                 <input type="radio" name="demo" className="text-indigo-600" onChange={() => setFormData({ email: 'admin@demo.com', password: 'password123' })} />
                 <span className="text-sm text-gray-600">Admin</span>
+              </label>
+              <label className="flex items-center space-x-2 cursor-pointer p-2 rounded-lg hover:bg-gray-100">
+                <input type="radio" name="demo" className="text-indigo-600" onChange={() => setFormData({ email: 'supportadmin@laundrypro.com', password: 'deep2025' })} />
+                <span className="text-sm text-gray-600">Support</span>
               </label>
             </div>
           </div>

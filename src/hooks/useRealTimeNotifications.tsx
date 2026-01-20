@@ -4,6 +4,7 @@ import React from 'react'
 import { useEffect, useRef, useState } from 'react'
 import { io, Socket } from 'socket.io-client'
 import toast from 'react-hot-toast'
+import { useAuthStore, UserRole } from '@/store/authStore'
 import { 
   Bell, 
   CheckCircle, 
@@ -208,29 +209,37 @@ export const useRealTimeNotifications = () => {
     // Listen for permission updates
     socket.on('permissionsUpdated', (data: any) => {
       console.log('🔄 Permissions updated:', data)
-      toast.success('Your permissions have been updated', {
-        icon: '🔄',
-        duration: 4000
-      })
       
-      // Refresh page after 2 seconds to apply new permissions
-      setTimeout(() => {
-        window.location.reload()
-      }, 2000)
+      // Update user permissions in auth store directly
+      if (data.permissions) {
+        const { updateUser } = useAuthStore.getState()
+        updateUser({ permissions: data.permissions })
+        
+        toast.success('Your permissions have been updated', {
+          icon: '🔄',
+          duration: 4000
+        })
+        
+        console.log('✅ Permissions updated in store without reload')
+      }
     })
 
     // Listen for role changes
     socket.on('roleChanged', (data: any) => {
       console.log('👤 Role changed:', data)
-      toast.success(`Your role has been updated to ${data.newRole}`, {
-        icon: '👤',
-        duration: 5000
-      })
       
-      // Refresh page after 3 seconds to apply new role
-      setTimeout(() => {
-        window.location.reload()
-      }, 3000)
+      // Update user role in auth store directly
+      if (data.newRole) {
+        const { updateUser } = useAuthStore.getState()
+        updateUser({ role: data.newRole as UserRole })
+        
+        toast.success(`Your role has been updated to ${data.newRole}`, {
+          icon: '👤',
+          duration: 5000
+        })
+        
+        console.log('✅ Role updated in store without reload')
+      }
     })
 
     // Cleanup on unmount

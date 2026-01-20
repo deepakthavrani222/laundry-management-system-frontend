@@ -48,7 +48,16 @@ export default function BaseLoginForm({
       const { token, user } = response.data.data;
 
       setAuth(user, token);
-      toast.success('Login successful!');
+      
+      // Show success message very briefly and dismiss quickly
+      const successToast = toast.success('Login successful!', {
+        duration: 800, // Show for only 800ms
+      });
+      
+      // Dismiss success toast even more quickly for faster UX
+      setTimeout(() => {
+        toast.dismiss(successToast);
+      }, 500);
 
       // Strict role-based redirect logic - no exceptions
       const roleRoutes: Record<string, string> = {
@@ -59,6 +68,7 @@ export default function BaseLoginForm({
         branch_manager: '/center-admin/dashboard',
         staff: '/staff/dashboard',
         superadmin: '/superadmin/dashboard',
+        support: '/support/dashboard', // Add support role
       };
 
       // Always redirect to role-specific dashboard (ignore redirect URL for non-customers)
@@ -66,9 +76,8 @@ export default function BaseLoginForm({
       
       console.log(`🔄 Login successful - redirecting ${user.role} to: ${redirectPath}`);
       
-      setTimeout(() => {
-        router.push(redirectPath);
-      }, 100);
+      // Immediate redirect for faster UX
+      router.push(redirectPath);
     } catch (error: any) {
       const errorMessage = error.response?.data?.message || 'Login failed';
       
@@ -233,7 +242,7 @@ export default function BaseLoginForm({
             {/* Demo Accounts */}
             <div className="mt-6 bg-gray-50 rounded-xl p-4 border border-gray-200">
               <h3 className="text-sm font-medium text-gray-700 mb-3">Quick Demo Login:</h3>
-              <div className="grid grid-cols-2 gap-2">
+              <div className="grid grid-cols-3 gap-2">
                 <label className="flex items-center space-x-2 cursor-pointer p-2 rounded-lg hover:bg-gray-100 transition-colors">
                   <input
                     type="radio"
@@ -251,6 +260,15 @@ export default function BaseLoginForm({
                     onChange={() => setFormData({ email: 'admin@gmail.com', password: 'password123' })}
                   />
                   <span className="text-sm text-gray-600">Admin</span>
+                </label>
+                <label className="flex items-center space-x-2 cursor-pointer p-2 rounded-lg hover:bg-gray-100 transition-colors">
+                  <input
+                    type="radio"
+                    name="demoAccount"
+                    className={`w-4 h-4 text-${theme.primary}-600 focus:ring-${theme.primary}-500`}
+                    onChange={() => setFormData({ email: 'supportadmin@laundrypro.com', password: 'deep2025' })}
+                  />
+                  <span className="text-sm text-gray-600">Support</span>
                 </label>
               </div>
             </div>

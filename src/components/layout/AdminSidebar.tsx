@@ -68,7 +68,17 @@ const navigation = [
     ]
   },
   { name: 'Logistics', href: '/admin/logistics', icon: Truck, permission: { module: 'logistics', action: 'view' }, feature: 'logistics' as FeatureKey },
-  { name: 'Support Tickets', href: '/admin/tickets', icon: Ticket, permission: { module: 'tickets', action: 'view' }, feature: 'tickets' as FeatureKey },
+  { 
+    name: 'Support', 
+    icon: Shield, 
+    permission: { module: 'support', action: 'view' },
+    feature: null,
+    isExpandable: true,
+    subItems: [
+      { name: 'Support Users', href: '/admin/support/users', icon: Users, permission: { module: 'support', action: 'view' }, feature: null },
+      { name: 'Support Tickets', href: '/admin/tickets', icon: Ticket, permission: { module: 'tickets', action: 'view' }, feature: 'tickets' as FeatureKey },
+    ]
+  },
   { name: 'Reviews', href: '/admin/reviews', icon: MessageSquare, permission: { module: 'customers', action: 'view' }, feature: 'reviews' as FeatureKey },
   { name: 'Refunds', href: '/admin/refunds', icon: RefreshCw, permission: { module: 'orders', action: 'cancel' }, feature: 'refunds' as FeatureKey },
   { name: 'Payments', href: '/admin/payments', icon: CreditCard, permission: { module: 'performance', action: 'view' }, feature: 'payments' as FeatureKey },
@@ -93,7 +103,14 @@ const hasPermission = (user: any, permission: { module: string; action: string }
   }
   
   const hasIt = user.permissions[permission.module]?.[permission.action] === true
-  // console.log(`🔐 Permission check: ${permission.module}.${permission.action} = ${hasIt}`, user.permissions)
+  
+  // Debug logging for support permissions specifically
+  if (permission.module === 'support') {
+    console.log(`🔐 SUPPORT Permission check: ${permission.module}.${permission.action} = ${hasIt}`)
+    console.log('🔐 Support permissions object:', JSON.stringify(user.permissions.support, null, 2))
+    console.log('🔐 All user permissions:', JSON.stringify(user.permissions, null, 2))
+  }
+  
   return hasIt
 }
 
@@ -178,9 +195,45 @@ export function AdminSidebarProvider({
 export function AdminSidebar() {
   const pathname = usePathname()
   const { isCollapsed, setIsCollapsed, mobileOpen, setMobileOpen, expandedItems, toggleExpanded } = useAdminSidebar()
-  const { user, logout } = useAuthStore()
+  const { user, logout, updateUser } = useAuthStore()
   const { metrics, loading: metricsLoading } = useAdminDashboard()
   const { hasFeature, planName, isTrialPeriod, trialEndsAt } = useFeatures()
+
+  // Auto-refresh permissions on component mount (silent)
+  useEffect(() => {
+    const autoRefreshPermissions = async () => {
+      try {
+        const response = await fetch('/api/auth/profile', {
+          credentials: 'include'
+        })
+        
+        if (response.ok) {
+          const data = await response.json()
+          if (data.success && data.data.permissions) {
+            // Silently update permissions if they've changed
+            const currentPermissions = JSON.stringify(user?.permissions || {})
+            const newPermissions = JSON.stringify(data.data.permissions || {})
+            
+            if (currentPermissions !== newPermissions) {
+              console.log('🔄 Auto-updating permissions silently')
+              updateUser({
+                permissions: data.data.permissions,
+                role: data.data.role,
+                features: data.data.features
+              })
+            }
+          }
+        }
+      } catch (error) {
+        // Silent fail - don't show errors for auto-refresh
+        console.log('Auto permission refresh failed (silent)')
+      }
+    }
+    
+    // Run auto-refresh after 1 second delay
+    const timer = setTimeout(autoRefreshPermissions, 1000)
+    return () => clearTimeout(timer)
+  }, [user?.permissions, updateUser])
 
   // Debug: Log when sidebar re-renders
   console.log('🔄 AdminSidebar rendered with user:', {
@@ -383,8 +436,25 @@ export function AdminSidebar() {
       {/* Navigation */}
       <nav className="flex-1 px-2 py-4 space-y-1 overflow-y-auto min-h-0">
         {(() => {
+          console.log('🔍 Starting navigation filter...');
+          
           const filteredNav = navigation
-            .filter(item => hasPermission(user, item.permission) && checkFeature(hasFeature, item.feature));
+            .filter(item => {
+              const hasPermissionResult = hasPermission(user, item.permission);
+              const hasFeatureResult = checkFeature(hasFeature, item.feature);
+              
+              if (item.name === 'Support') {
+                console.log(`🛡️ Support item check:`, {
+                  name: item.name,
+                  permission: item.permission,
+                  hasPermissionResult,
+                  hasFeatureResult,
+                  willShow: hasPermissionResult && hasFeatureResult
+                });
+              }
+              
+              return hasPermissionResult && hasFeatureResult;
+            });
           
           console.log('📋 Filtered navigation items:', filteredNav.map(i => i.name));
           

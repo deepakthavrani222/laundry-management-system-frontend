@@ -91,9 +91,17 @@ export const useNotificationsWebSocket = () => {
 
       browserNotif.onclick = () => {
         window.focus();
-        if (notification.data.link) {
+        
+        // Handle different notification types
+        if (notification.type === 'permission_update') {
+          // For permission updates, just refresh the current page
+          console.log('🔄 Permission notification clicked, refreshing page...');
+          window.location.reload();
+        } else if (notification.data?.link) {
+          // For other notifications, navigate to the link
           window.location.href = notification.data.link;
         }
+        // If no link and not permission update, just focus the window
       };
     }
   }, []);
@@ -198,6 +206,84 @@ export const useNotificationsWebSocket = () => {
 
     socket.on('error', (error) => {
       console.error('Socket error:', error);
+    });
+
+    // Permission sync events
+    socket.on('permissionsUpdated', (data) => {
+      console.log('🔄 Permissions updated via WebSocket:', data);
+      
+      // Prevent duplicate notifications
+      const existingPermissionNotification = notifications.find(n => 
+        n.type === 'permission_update' && 
+        Date.now() - new Date(n.createdAt).getTime() < 5000 // Within last 5 seconds
+      );
+      
+      if (existingPermissionNotification) {
+        console.log('⚠️ Duplicate permission notification prevented');
+        return;
+      }
+      
+      // Show slide notification instead of toast
+      if (typeof window !== 'undefined' && (window as any).__addSlideNotification) {
+        (window as any).__addSlideNotification({
+          title: 'Permissions Updated',
+          message: 'Your access has been updated by an administrator',
+          type: 'permission_update',
+          duration: 5000,
+          actionText: 'Refresh Now',
+          onAction: () => {
+            console.log('🔄 User clicked refresh from slide notification');
+            window.location.reload();
+          }
+        });
+      }
+      
+      // Show notification to user (for notification center)
+      const permissionNotification: Notification = {
+        _id: `perm-${Date.now()}`,
+        title: 'Permissions Updated',
+        message: data.message || 'Your access has been updated by an administrator',
+        type: 'permission_update',
+        severity: 'info',
+        isRead: false,
+        createdAt: new Date().toISOString(),
+        data: data
+      };
+      
+      // Add to notifications list
+      setNotifications(prev => [permissionNotification, ...prev]);
+      setUnreadCount(prev => prev + 1);
+      
+      // Show browser notification
+      showBrowserNotification(permissionNotification);
+      
+      // Handle permission refresh (prevent multiple refreshes)
+      if (typeof window !== 'undefined') {
+        // Check if refresh is already in progress
+        if ((window as any).__permissionRefreshInProgress) {
+          console.log('⚠️ Permission refresh already in progress, skipping');
+          return;
+        }
+        
+        // Mark refresh as in progress
+        (window as any).__permissionRefreshInProgress = true;
+        
+        // Emit custom event for permission refresh
+        window.dispatchEvent(new CustomEvent('permissionsUpdated', { detail: data }));
+        
+        // Auto-refresh after 5 seconds if user doesn't interact
+        setTimeout(() => {
+          if ((window as any).__permissionRefreshInProgress) {
+            console.log('🔄 Auto-refreshing page for permission updates...');
+            window.location.reload();
+          }
+        }, 5000);
+        
+        // Clear the flag after timeout
+        setTimeout(() => {
+          (window as any).__permissionRefreshInProgress = false;
+        }, 6000);
+      }
     });
 
     socketRef.current = socket;
