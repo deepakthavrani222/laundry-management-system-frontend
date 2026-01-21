@@ -7,9 +7,9 @@ import {
 } from '@/components/layout/AdminSidebar'
 import AdminHeader from '@/components/layout/AdminHeader'
 import NotificationContainer from '@/components/NotificationContainer'
+import NotificationManager from '@/components/notifications/NotificationManager'
 import RefreshPrompt from '@/components/RefreshPrompt'
 import ModernToaster from '@/components/ModernToast'
-import ConnectionStatus from '@/components/ConnectionStatus'
 import { useAuthStore } from '@/store/authStore'
 import { useRefreshPromptStore } from '@/store/refreshPromptStore'
 import { useRealTimeNotifications } from '@/hooks/useRealTimeNotifications'
@@ -82,9 +82,6 @@ function AdminLayoutContent({ children }: { children: React.ReactNode }) {
         </main>
       </div>
 
-      {/* Real-time Connection Status */}
-      <ConnectionStatus isConnected={isConnected} />
-
       {/* Modern Toast Notifications */}
       <ModernToaster />
     </div>
@@ -149,6 +146,8 @@ export default function AdminLayout({
       <AdminLayoutContent>{children}</AdminLayoutContent>
       {/* Real-time notification toasts */}
       <NotificationContainer />
+      {/* Slide notifications (flash notifications) */}
+      <NotificationManager />
     </AdminSidebarProvider>
   )
 }

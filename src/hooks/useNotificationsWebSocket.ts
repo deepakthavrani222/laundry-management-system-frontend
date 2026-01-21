@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { io, Socket } from 'socket.io-client';
+import { useAuthStore } from '@/store/authStore';
 
 // Properly handle API URL - remove /api if present for socket, keep for API calls
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
@@ -44,6 +45,9 @@ export const useNotificationsWebSocket = () => {
   
   const socketRef = useRef<Socket | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  
+  // Get auth store methods
+  const { updateUser } = useAuthStore();
 
   // Get auth token
   const getToken = useCallback(() => {
@@ -174,6 +178,31 @@ export const useNotificationsWebSocket = () => {
         setUnreadCount(prev => prev + 1);
       }
       
+      // Show slide notification for important notifications
+      if (typeof window !== 'undefined' && (window as any).__addSlideNotification) {
+        console.log('📢 Admin: Calling __addSlideNotification for regular notification:', notification.title);
+        
+        // Map notification severity to slide notification type
+        const slideType = notification.severity === 'error' ? 'error' :
+                         notification.severity === 'warning' ? 'warning' :
+                         notification.severity === 'success' ? 'success' : 'info';
+        
+        (window as any).__addSlideNotification({
+          title: notification.title,
+          message: notification.message,
+          type: slideType,
+          duration: 5000,
+          actionText: notification.data?.link ? 'View Details' : undefined,
+          onAction: notification.data?.link ? () => {
+            window.location.href = notification.data.link;
+          } : undefined
+        });
+        
+        console.log('✅ Admin: Slide notification sent successfully');
+      } else {
+        console.log('⚠️ Admin: __addSlideNotification not available for regular notification');
+      }
+      
       // Play sound
       playSound(notification.severity);
       
@@ -210,7 +239,7 @@ export const useNotificationsWebSocket = () => {
 
     // Permission sync events
     socket.on('permissionsUpdated', (data) => {
-      console.log('🔄 Permissions updated via WebSocket:', data);
+      console.log('🔄 Admin: Permissions updated via WebSocket:', data);
       
       // Prevent duplicate notifications
       const existingPermissionNotification = notifications.find(n => 
@@ -219,12 +248,14 @@ export const useNotificationsWebSocket = () => {
       );
       
       if (existingPermissionNotification) {
-        console.log('⚠️ Duplicate permission notification prevented');
+        console.log('⚠️ Admin: Duplicate permission notification prevented');
         return;
       }
       
       // Show slide notification instead of toast
       if (typeof window !== 'undefined' && (window as any).__addSlideNotification) {
+        console.log('📢 Admin: Calling __addSlideNotification for permission update');
+        
         (window as any).__addSlideNotification({
           title: 'Permissions Updated',
           message: 'Your access has been updated by an administrator',
@@ -232,10 +263,14 @@ export const useNotificationsWebSocket = () => {
           duration: 5000,
           actionText: 'Refresh Now',
           onAction: () => {
-            console.log('🔄 User clicked refresh from slide notification');
+            console.log('🔄 Admin: User clicked refresh from slide notification');
             window.location.reload();
           }
         });
+        
+        console.log('✅ Admin: Permission slide notification sent successfully');
+      } else {
+        console.log('⚠️ Admin: __addSlideNotification not available for permission update');
       }
       
       // Show notification to user (for notification center)
@@ -271,23 +306,311 @@ export const useNotificationsWebSocket = () => {
         // Emit custom event for permission refresh
         window.dispatchEvent(new CustomEvent('permissionsUpdated', { detail: data }));
         
-        // Auto-refresh after 5 seconds if user doesn't interact
-        setTimeout(() => {
-          if ((window as any).__permissionRefreshInProgress) {
-            console.log('🔄 Auto-refreshing page for permission updates...');
-            window.location.reload();
+        // Try to refresh permissions without page reload first
+        const refreshPermissions = async () => {
+          try {
+            console.log('🔄 Attempting to refresh permissions without page reload...');
+            
+            const response = await fetch('/api/auth/profile', {
+              credentials: 'include',
+              headers: {
+                'Content-Type': 'application/json'
+              }
+            });
+            
+            if (response.ok) {
+              const profileData = await response.json();
+              if (profileData.success && profileData.data) {
+                console.log('✅ Successfully refreshed permissions from server');
+                
+                // Update Zustand store
+                updateUser({
+                  permissions: profileData.data.permissions,
+                  features: profileData.data.features,
+                  tenancy: profileData.data.tenancy
+                });
+                
+                // Also update localStorage directly
+                const authData = localStorage.getItem('laundry-auth');
+                if (authData) {
+                  const parsed = JSON.parse(authData);
+                  if (parsed.state?.user) {
+                    parsed.state.user.permissions = profileData.data.permissions;
+                    parsed.state.user.features = profileData.data.features;
+                    parsed.state.user.tenancy = profileData.data.tenancy;
+                    localStorage.setItem('laundry-auth', JSON.stringify(parsed));
+                    console.log('📦 Updated localStorage with fresh permissions');
+                  }
+                }
+                
+                // Force re-render by dispatching storage event
+                window.dispatchEvent(new Event('storage'));
+                
+                console.log('✅ Permissions updated successfully - sidebar will re-render');
+                
+                // Clear the refresh flag
+                (window as any).__permissionRefreshInProgress = false;
+                return;
+              }
+            }
+            
+            throw new Error(`Profile API failed with status: ${response.status}`);
+          } catch (error) {
+            console.log('⚠️ Permission refresh failed, falling back to page reload:', error);
+            
+            // Fallback to page refresh after 3 seconds
+            setTimeout(() => {
+              console.log('🔄 Auto-refreshing page for permission updates...');
+              window.location.reload();
+            }, 3000);
           }
-        }, 5000);
+        };
         
-        // Clear the flag after timeout
+        // Call the refresh function
+        refreshPermissions();
+        
+        // Clear the flag after timeout as backup
         setTimeout(() => {
           (window as any).__permissionRefreshInProgress = false;
-        }, 6000);
+        }, 10000);
       }
     });
 
+    // Tenancy update events for real-time updates
+    socket.on('tenancyFeaturesUpdated', (data) => {
+      console.log('🔄 Admin: Tenancy features updated via WebSocket:', data);
+      
+      // Show slide notification
+      if (typeof window !== 'undefined' && (window as any).__addSlideNotification) {
+        console.log('📢 Admin: Calling __addSlideNotification for tenancy features');
+        
+        (window as any).__addSlideNotification({
+          title: 'Features Updated',
+          message: `Your tenancy features have been updated`,
+          type: 'system_alert',
+          duration: 4000,
+          actionText: 'Got it!',
+          onAction: () => {
+            console.log('✅ Admin: User acknowledged feature update');
+          }
+        });
+        
+        console.log('✅ Admin: Tenancy features slide notification sent successfully');
+      } else {
+        console.log('⚠️ Admin: __addSlideNotification not available for tenancy features');
+      }
+      
+      // Auto-refresh user data to get updated features
+      if (typeof window !== 'undefined') {
+        console.log('🔄 Admin: Auto-refreshing user data for updated features...');
+        
+        // Dispatch custom event for components to refresh
+        window.dispatchEvent(new CustomEvent('tenancyFeaturesUpdated', { detail: data }));
+        
+        // Try to refresh user data without page reload first
+        const refreshUserData = async () => {
+          try {
+            const response = await fetch('/api/auth/profile', {
+              credentials: 'include'
+            });
+            
+            if (response.ok) {
+              const profileData = await response.json();
+              if (profileData.success) {
+                console.log('🔄 Admin: Successfully refreshed user profile data');
+                console.log('📊 New profile data:', {
+                  permissions: Object.keys(profileData.data.permissions || {}),
+                  features: Object.keys(profileData.data.features || {}),
+                  tenancyId: profileData.data.tenancy?._id
+                });
+                
+                // Update Zustand store with new data (this will trigger re-renders)
+                const { updateUser } = useAuthStore.getState();
+                updateUser({
+                  features: profileData.data.features,
+                  permissions: profileData.data.permissions,
+                  tenancy: profileData.data.tenancy
+                });
+                
+                // Also update localStorage directly for immediate access
+                const authData = localStorage.getItem('laundry-auth');
+                if (authData) {
+                  const parsed = JSON.parse(authData);
+                  if (parsed.state && parsed.state.user) {
+                    parsed.state.user.features = profileData.data.features;
+                    parsed.state.user.permissions = profileData.data.permissions;
+                    parsed.state.user.tenancy = profileData.data.tenancy;
+                    localStorage.setItem('laundry-auth', JSON.stringify(parsed));
+                    console.log('✅ Admin: Updated localStorage with new data');
+                  }
+                }
+                
+                // Force re-render by dispatching storage event
+                window.dispatchEvent(new Event('storage'));
+                
+                console.log('✅ Admin: Updated Zustand store with new data - sidebar will re-render automatically');
+              } else {
+                console.log('⚠️ Admin: Profile refresh failed, will auto-refresh page');
+                // Fallback to page refresh after 3 seconds
+                setTimeout(() => {
+                  console.log('🔄 Admin: Auto-refreshing page for feature updates...');
+                  window.location.reload();
+                }, 3000);
+              }
+            } else {
+              console.log('⚠️ Admin: Profile API failed, will auto-refresh page');
+              // Fallback to page refresh after 3 seconds
+              setTimeout(() => {
+                console.log('🔄 Admin: Auto-refreshing page for feature updates...');
+                window.location.reload();
+              }, 3000);
+            }
+          } catch (error) {
+            console.error('❌ Admin: Error refreshing profile, will auto-refresh page:', error);
+            // Fallback to page refresh after 3 seconds
+            setTimeout(() => {
+              console.log('🔄 Admin: Auto-refreshing page for feature updates...');
+              window.location.reload();
+            }, 3000);
+          }
+        };
+        
+        // Call the async function
+        refreshUserData();
+      }
+      
+      // Also add to notification center
+      const tenancyNotification: Notification = {
+        _id: `tenancy-features-${Date.now()}`,
+        title: 'Tenancy Features Updated',
+        message: `Features updated for your tenancy by SuperAdmin`,
+        type: 'system_alert',
+        severity: 'info',
+        isRead: false,
+        createdAt: new Date().toISOString(),
+        data: data
+      };
+      
+      setNotifications(prev => [tenancyNotification, ...prev]);
+      setUnreadCount(prev => prev + 1);
+      showBrowserNotification(tenancyNotification);
+    });
+
+    socket.on('tenancyPermissionsUpdated', (data) => {
+      console.log('🔄 Admin: Tenancy permissions updated via WebSocket:', data);
+      
+      // Show slide notification
+      if (typeof window !== 'undefined' && (window as any).__addSlideNotification) {
+        console.log('📢 Admin: Calling __addSlideNotification for tenancy permissions');
+        
+        (window as any).__addSlideNotification({
+          title: 'Permissions Updated',
+          message: `Your access permissions have been updated`,
+          type: 'permission_update',
+          duration: 5000,
+          actionText: 'Refresh Now',
+          onAction: () => {
+            console.log('✅ Admin: User clicked refresh from tenancy permission notification');
+            window.location.reload();
+          }
+        });
+        
+        console.log('✅ Admin: Tenancy permissions slide notification sent successfully');
+      } else {
+        console.log('⚠️ Admin: __addSlideNotification not available for tenancy permissions');
+      }
+      
+      // Try to refresh user data without page reload first
+      if (typeof window !== 'undefined') {
+        console.log('🔄 Admin: Auto-refreshing user data for updated permissions...');
+        
+        // Dispatch custom event for components to refresh
+        window.dispatchEvent(new CustomEvent('tenancyPermissionsUpdated', { detail: data }));
+        
+        const refreshUserData = async () => {
+          try {
+            console.log('🔄 Attempting to refresh tenancy permissions from server...');
+            
+            const response = await fetch('/api/auth/profile', {
+              credentials: 'include',
+              headers: {
+                'Content-Type': 'application/json'
+              }
+            });
+            
+            if (response.ok) {
+              const profileData = await response.json();
+              if (profileData.success) {
+                console.log('🔄 Admin: Successfully refreshed user profile data for permissions');
+                console.log('📊 New profile data:', {
+                  permissions: Object.keys(profileData.data.permissions || {}),
+                  features: Object.keys(profileData.data.features || {}),
+                  tenancyId: profileData.data.tenancy?._id
+                });
+                
+                // Update Zustand store with new data (this will trigger re-renders)
+                updateUser({
+                  permissions: profileData.data.permissions,
+                  features: profileData.data.features,
+                  tenancy: profileData.data.tenancy
+                });
+                
+                // Also update localStorage directly for immediate access
+                const authData = localStorage.getItem('laundry-auth');
+                if (authData) {
+                  const parsed = JSON.parse(authData);
+                  if (parsed.state && parsed.state.user) {
+                    parsed.state.user.permissions = profileData.data.permissions;
+                    parsed.state.user.features = profileData.data.features;
+                    parsed.state.user.tenancy = profileData.data.tenancy;
+                    localStorage.setItem('laundry-auth', JSON.stringify(parsed));
+                    console.log('✅ Admin: Updated localStorage with new permissions and features');
+                  }
+                }
+                
+                // Force re-render by dispatching storage event
+                window.dispatchEvent(new Event('storage'));
+                
+                console.log('✅ Admin: Updated Zustand store with new permissions - sidebar will re-render automatically');
+              } else {
+                throw new Error('Profile API returned success: false');
+              }
+            } else {
+              throw new Error(`Profile API failed with status: ${response.status}`);
+            }
+          } catch (error) {
+            console.error('❌ Admin: Error refreshing profile, will auto-refresh page:', error);
+            // Fallback to page refresh after 3 seconds
+            setTimeout(() => {
+              console.log('🔄 Admin: Auto-refreshing page for permission updates...');
+              window.location.reload();
+            }, 3000);
+          }
+        };
+        
+        // Call the async function
+        refreshUserData();
+      }
+      
+      // Also add to notification center
+      const permissionNotification: Notification = {
+        _id: `tenancy-permissions-${Date.now()}`,
+        title: 'Your Permissions Updated',
+        message: `Your access permissions have been updated by SuperAdmin`,
+        type: 'permission_update',
+        severity: 'info',
+        isRead: false,
+        createdAt: new Date().toISOString(),
+        data: data
+      };
+      
+      setNotifications(prev => [permissionNotification, ...prev]);
+      setUnreadCount(prev => prev + 1);
+      showBrowserNotification(permissionNotification);
+    });
+
     socketRef.current = socket;
-  }, [getToken, playSound, showBrowserNotification]);
+  }, [getToken, playSound, showBrowserNotification, updateUser]);
 
   // Disconnect from WebSocket
   const disconnect = useCallback(() => {
@@ -387,7 +710,7 @@ export const useNotificationsWebSocket = () => {
     return () => {
       disconnect();
     };
-  }, [connect, disconnect, fetchNotifications, requestNotificationPermission, getToken]);
+  }, [connect, disconnect, fetchNotifications, requestNotificationPermission, getToken, updateUser]);
 
   return {
     notifications,

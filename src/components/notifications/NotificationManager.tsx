@@ -25,6 +25,8 @@ const NotificationManager: React.FC<NotificationManagerProps> = ({
 
   // Add notification function
   const addNotification = useCallback((notification: Omit<NotificationData, 'id' | 'timestamp'>) => {
+    console.log('📢 Admin NotificationManager: Adding slide notification:', notification);
+    
     const newNotification: NotificationData = {
       ...notification,
       id: `notification-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
@@ -34,6 +36,7 @@ const NotificationManager: React.FC<NotificationManagerProps> = ({
     setNotifications(prev => {
       // Remove oldest if exceeding max
       const updated = [newNotification, ...prev].slice(0, maxNotifications)
+      console.log('📢 Admin NotificationManager: Updated notifications list, count:', updated.length);
       return updated
     })
 
@@ -92,11 +95,13 @@ const NotificationManager: React.FC<NotificationManagerProps> = ({
   // Expose addNotification globally for WebSocket integration
   useEffect(() => {
     if (typeof window !== 'undefined') {
+      console.log('📢 Admin NotificationManager: Exposing __addSlideNotification globally');
       (window as any).__addSlideNotification = addNotification
     }
     
     return () => {
       if (typeof window !== 'undefined') {
+        console.log('📢 Admin NotificationManager: Cleaning up __addSlideNotification');
         delete (window as any).__addSlideNotification
       }
     }

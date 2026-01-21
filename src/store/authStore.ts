@@ -81,14 +81,15 @@ export const useAuthStore = create<AuthState>()(
         try {
           console.log('🔄 Refreshing user data...');
           
-          // Call permission sync API to get latest user data
-          const response = await fetch('/api/permissions/sync', {
-            method: 'GET',
-            credentials: 'include', // Include cookies
+          // Call profile API to get latest user data (includes tenancy features)
+          const response = await fetch('/api/auth/profile', {
+            credentials: 'include',
             headers: {
               'Content-Type': 'application/json'
             }
           });
+
+          console.log('🔄 Profile API response status:', response.status);
 
           if (!response.ok) {
             if (response.status === 401) {
@@ -96,23 +97,43 @@ export const useAuthStore = create<AuthState>()(
               // Don't throw error, just log it
               return;
             }
-            throw new Error(`HTTP error! status: ${response.status}`);
+            
+            const errorText = await response.text();
+            console.log('❌ Profile API error response:', errorText);
+            throw new Error(`HTTP error! status: ${response.status}, body: ${errorText}`);
           }
 
           const data = await response.json();
+          console.log('🔄 Profile API response data:', {
+            success: data.success,
+            hasData: !!data.data,
+            dataKeys: data.data ? Object.keys(data.data) : []
+          });
           
-          if (data.success && data.data.user) {
-            const updatedUser = data.data.user;
+          if (data.success && data.data) {
+            const updatedUserData = data.data;
             console.log('✅ User data refreshed:', {
-              name: updatedUser.name,
-              email: updatedUser.email,
-              permissionModules: Object.keys(updatedUser.permissions || {}).length,
-              featureCount: Object.keys(updatedUser.features || {}).length
+              id: updatedUserData.id,
+              email: updatedUserData.email,
+              permissionModules: Object.keys(updatedUserData.permissions || {}).length,
+              featureCount: Object.keys(updatedUserData.features || {}).length,
+              tenancyId: updatedUserData.tenancy?._id,
+              tenancyName: updatedUserData.tenancy?.name
             });
             
-            // Update user in store
+            // Update user in store with the complete data structure
             set((state) => ({
-              user: state.user ? { ...state.user, ...updatedUser } : updatedUser
+              user: state.user ? { 
+                ...state.user, 
+                permissions: updatedUserData.permissions || {},
+                features: updatedUserData.features || {},
+                tenancy: updatedUserData.tenancy,
+                // Update other fields that might have changed
+                name: updatedUserData.name,
+                phone: updatedUserData.phone,
+                isEmailVerified: updatedUserData.isEmailVerified,
+                phoneVerified: updatedUserData.phoneVerified
+              } : null
             }));
             
             console.log('🔄 User data updated in store');
@@ -125,6 +146,12 @@ export const useAuthStore = create<AuthState>()(
           // Don't throw error if it's a network issue or auth issue
           if (error instanceof TypeError && error.message.includes('fetch')) {
             console.log('🌐 Network error during refresh, will retry later');
+            return;
+          }
+          
+          // If it's a 401, don't throw - let the auth guard handle it
+          if (error.message && error.message.includes('401')) {
+            console.log('🔐 Authentication error during refresh, auth guard will handle');
             return;
           }
           
@@ -142,6 +169,15 @@ export const useAuthStore = create<AuthState>()(
           supportPermissions: state?.user?.permissions?.support
         })
         state?.setHasHydrated(true)
+        
+        // Expose updateUser function globally for WebSocket access
+        if (typeof window !== 'undefined') {
+          (window as any).__updateAuthStore = (userData: Partial<User>) => {
+            console.log('🔥 Global auth store update called with:', userData);
+            state?.updateUser(userData);
+          };
+          console.log('🌐 Exposed __updateAuthStore globally');
+        }
       }
     }
   )

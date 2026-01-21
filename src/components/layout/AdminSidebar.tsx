@@ -104,6 +104,13 @@ const hasPermission = (user: any, permission: { module: string; action: string }
   
   const hasIt = user.permissions[permission.module]?.[permission.action] === true
   
+  // Debug logging for inventory permissions specifically
+  if (permission.module === 'inventory') {
+    console.log(`📦 INVENTORY Permission check: ${permission.module}.${permission.action} = ${hasIt}`)
+    console.log('📦 Inventory permissions object:', JSON.stringify(user.permissions.inventory, null, 2))
+    console.log('📦 User email:', user.email)
+  }
+  
   // Debug logging for support permissions specifically
   if (permission.module === 'support') {
     console.log(`🔐 SUPPORT Permission check: ${permission.module}.${permission.action} = ${hasIt}`)
@@ -199,6 +206,17 @@ export function AdminSidebar() {
   const { metrics, loading: metricsLoading } = useAdminDashboard()
   const { hasFeature, planName, isTrialPeriod, trialEndsAt } = useFeatures()
 
+  // Expose updateUser function globally for WebSocket access
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      (window as any).__updateAuthStore = (userData: any) => {
+        console.log('🔥 Global auth store update called with:', userData);
+        updateUser(userData);
+      };
+      console.log('🌐 Exposed __updateAuthStore globally from AdminSidebar');
+    }
+  }, [updateUser]);
+
   // Auto-refresh permissions on component mount (silent)
   useEffect(() => {
     const autoRefreshPermissions = async () => {
@@ -234,6 +252,80 @@ export function AdminSidebar() {
     const timer = setTimeout(autoRefreshPermissions, 1000)
     return () => clearTimeout(timer)
   }, [user?.permissions, updateUser])
+
+  // Listen for real-time feature updates
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const handleFeatureUpdate = async (event: CustomEvent) => {
+        console.log('🔄 AdminSidebar: Received feature update event:', event.detail);
+        
+        try {
+          // Refresh user profile data from server
+          const response = await fetch('/api/auth/profile', {
+            credentials: 'include'
+          });
+          
+          if (response.ok) {
+            const data = await response.json();
+            if (data.success) {
+              console.log('🔄 AdminSidebar: Updating user data from server');
+              
+              // Update user with new data
+              updateUser({
+                features: data.data.features,
+                permissions: data.data.permissions,
+                tenancy: data.data.tenancy
+              });
+              
+              console.log('✅ AdminSidebar: User data updated, sidebar will re-render');
+            }
+          }
+        } catch (error) {
+          console.error('❌ AdminSidebar: Error refreshing user data:', error);
+        }
+      };
+      
+      const handlePermissionUpdate = async (event: CustomEvent) => {
+        console.log('🔄 AdminSidebar: Received permission update event:', event.detail);
+        
+        try {
+          // Refresh user profile data from server
+          const response = await fetch('/api/auth/profile', {
+            credentials: 'include'
+          });
+          
+          if (response.ok) {
+            const data = await response.json();
+            if (data.success) {
+              console.log('🔄 AdminSidebar: Updating user permissions from server');
+              
+              // Update user with new data
+              updateUser({
+                features: data.data.features,
+                permissions: data.data.permissions,
+                tenancy: data.data.tenancy
+              });
+              
+              console.log('✅ AdminSidebar: User permissions updated, sidebar will re-render');
+            }
+          }
+        } catch (error) {
+          console.error('❌ AdminSidebar: Error refreshing user permissions:', error);
+        }
+      };
+      
+      // Listen for tenancy feature updates
+      window.addEventListener('tenancyFeaturesUpdated', handleFeatureUpdate as EventListener);
+      
+      // Listen for tenancy permission updates
+      window.addEventListener('tenancyPermissionsUpdated', handlePermissionUpdate as EventListener);
+      
+      return () => {
+        window.removeEventListener('tenancyFeaturesUpdated', handleFeatureUpdate as EventListener);
+        window.removeEventListener('tenancyPermissionsUpdated', handlePermissionUpdate as EventListener);
+      };
+    }
+  }, [updateUser]);
 
   // Debug: Log when sidebar re-renders
   console.log('🔄 AdminSidebar rendered with user:', {
@@ -443,6 +535,41 @@ export function AdminSidebar() {
               const hasPermissionResult = hasPermission(user, item.permission);
               const hasFeatureResult = checkFeature(hasFeature, item.feature);
               
+              // For expandable items, check if any subitems would be visible
+              if (item.isExpandable && item.subItems) {
+                const visibleSubItems = item.subItems.filter(subItem => 
+                  hasPermission(user, subItem.permission) && checkFeature(hasFeature, subItem.feature)
+                );
+                
+                // Only show parent if it has permission/feature AND has visible subitems
+                const shouldShow = hasPermissionResult && hasFeatureResult && visibleSubItems.length > 0;
+                
+                console.log(`📁 EXPANDABLE ${item.name} check:`, {
+                  name: item.name,
+                  hasPermission: hasPermissionResult,
+                  hasFeature: hasFeatureResult,
+                  visibleSubItems: visibleSubItems.map(s => s.name),
+                  willShow: shouldShow
+                });
+                
+                return shouldShow;
+              }
+              
+              // Debug logging for specific items
+              if (item.name === 'Inventory') {
+                console.log(`📦 INVENTORY item check:`, {
+                  name: item.name,
+                  permission: item.permission,
+                  feature: item.feature,
+                  hasPermissionResult,
+                  hasFeatureResult,
+                  willShow: hasPermissionResult && hasFeatureResult,
+                  userPermissions: user?.permissions?.inventory,
+                  userFeatures: user?.features,
+                  tenancyFeatures: user?.tenancy?.subscription?.features
+                });
+              }
+              
               if (item.name === 'Support') {
                 console.log(`🛡️ Support item check:`, {
                   name: item.name,
@@ -458,7 +585,43 @@ export function AdminSidebar() {
           
           console.log('📋 Filtered navigation items:', filteredNav.map(i => i.name));
           
-          return filteredNav.map(item => renderNavItem(item, isMobile));
+          // Show message if only basic items are visible
+          const basicItems = ['Dashboard', 'Help'];
+          const onlyBasicVisible = filteredNav.length <= 2 && 
+            filteredNav.every(item => basicItems.includes(item.name));
+          
+          if (onlyBasicVisible) {
+            console.log('ℹ️ Only basic navigation items visible - features may be disabled');
+          }
+          
+          const navItems = filteredNav.map(item => renderNavItem(item, isMobile));
+          
+          // Add informational message if features are limited
+          if (onlyBasicVisible && (isMobile || !isCollapsed)) {
+            navItems.push(
+              <div key="limited-access-notice" className="px-3 py-4 mt-4">
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                  <div className="flex items-start">
+                    <div className="flex-shrink-0">
+                      <svg className="h-5 w-5 text-blue-400" viewBox="0 0 20 20" fill="currentColor">
+                        <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                      </svg>
+                    </div>
+                    <div className="ml-3">
+                      <h3 className="text-sm font-medium text-blue-800">
+                        Limited Access
+                      </h3>
+                      <div className="mt-1 text-sm text-blue-700">
+                        <p>Some features may be disabled for your account. Contact your administrator for access.</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            );
+          }
+          
+          return navItems;
         })()}
       </nav>
 

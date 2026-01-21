@@ -92,7 +92,6 @@ export default function NotificationBell() {
   const {
     notifications,
     unreadCount,
-    isConnected,
     showNotificationPanel,
     setShowNotificationPanel,
     markAsRead,
@@ -160,11 +159,6 @@ export default function NotificationBell() {
             {unreadCount > 99 ? '99+' : unreadCount}
           </span>
         )}
-        
-        {/* Connection Status Indicator */}
-        <div className={`absolute -bottom-1 -right-1 w-3 h-3 rounded-full border-2 border-white ${
-          isConnected ? 'bg-green-400' : 'bg-red-400'
-        }`} />
       </button>
 
       {/* Notification Panel */}

@@ -1,5 +1,5 @@
 import { useAuthStore } from '@/store/authStore';
-import { useMemo } from 'react';
+import { useMemo, useEffect } from 'react';
 
 /**
  * Feature keys that can be toggled per plan
@@ -58,7 +58,48 @@ export type FeatureKey =
  * Features are completely hidden when disabled (not shown as locked)
  */
 export function useFeatures() {
-  const { user } = useAuthStore();
+  const { user, updateUser } = useAuthStore();
+  
+  // Listen for real-time feature updates
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const handleFeatureUpdate = async (event: CustomEvent) => {
+        console.log('🎯 useFeatures: Received feature update event:', event.detail);
+        
+        try {
+          // Refresh user profile data from server
+          const response = await fetch('/api/auth/profile', {
+            credentials: 'include'
+          });
+          
+          if (response.ok) {
+            const data = await response.json();
+            if (data.success && data.data.features) {
+              console.log('🔄 useFeatures: Updating features from server:', data.data.features);
+              
+              // Update user with new features
+              updateUser({
+                features: data.data.features,
+                permissions: data.data.permissions,
+                tenancy: data.data.tenancy
+              });
+              
+              console.log('✅ useFeatures: Features updated successfully');
+            }
+          }
+        } catch (error) {
+          console.error('❌ useFeatures: Error refreshing features:', error);
+        }
+      };
+      
+      // Listen for tenancy feature updates
+      window.addEventListener('tenancyFeaturesUpdated', handleFeatureUpdate as EventListener);
+      
+      return () => {
+        window.removeEventListener('tenancyFeaturesUpdated', handleFeatureUpdate as EventListener);
+      };
+    }
+  }, [updateUser]);
   
   // Get features from user's tenancy subscription
   const features = useMemo(() => {
@@ -76,7 +117,10 @@ export function useFeatures() {
     console.log('🎯 Features recomputed:', {
       enabledFeatures: Object.keys(result).filter(k => result[k]),
       totalFeatures: Object.keys(result).length,
-      source: directFeatures ? 'user.features' : tenancyFeatures ? 'tenancy.subscription.features' : 'subscription.features'
+      source: directFeatures ? 'user.features' : tenancyFeatures ? 'tenancy.subscription.features' : 'subscription.features',
+      userHasFeatures: !!directFeatures,
+      tenancyHasFeatures: !!tenancyFeatures,
+      userHasSubscription: !!userFeatures
     });
     
     return result;
